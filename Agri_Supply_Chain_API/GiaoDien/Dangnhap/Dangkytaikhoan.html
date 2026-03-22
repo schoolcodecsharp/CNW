@@ -1,0 +1,209 @@
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Đăng ký tài khoản - Quản lý Nông sản</title>
+    <link rel="stylesheet" href="Dangkytaikhoan.css">
+    <script src="Dangkytaikhoan.js" defer></script>
+</head>
+<body>
+    <div class="register-container">
+        <aside class="register-header">
+            <h2>Đăng ký tài khoản</h2>
+            <p>Hệ thống Quản lý Nông sản & Chuỗi cung ứng</p>
+        </aside>
+
+        <main class="register-body">
+            <div id="registerAlert" class="alert" role="alert" aria-live="polite"></div>
+
+            <form id="registerForm" novalidate>
+                <section class="role-selection">
+                    <h3>Chọn vai trò của bạn</h3>
+                    <div class="role-grid" role="list">
+                        <div class="role-card" data-role="farmer" role="listitem" tabindex="0">
+                            <i class="icon-tractor"></i>
+                            <h4>Nông dân</h4>
+                            <p>Quản lý trang trại, sản phẩm</p>
+                        </div>
+                        <div class="role-card" data-role="distributor" role="listitem" tabindex="0">
+                            <i class="icon-truck"></i>
+                            <h4>Đại lý</h4>
+                            <p>Vận chuyển, phân phối</p>
+                        </div>
+                        <div class="role-card" data-role="retailer" role="listitem" tabindex="0">
+                            <i class="icon-store"></i>
+                            <h4>Siêu thị</h4>
+                            <p>Bán lẻ, kinh doanh</p>
+                        </div>
+                    </div>
+                    <input type="hidden" id="userRole" name="role" required>
+                </section>
+
+                <section class="personal-info">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fullName">Họ và tên <span class="required">*</span></label>
+                            <div class="input-group">
+                                <input id="fullName" class="form-control" type="text" placeholder="Họ và tên" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Số điện thoại <span class="required">*</span></label>
+                            <div class="input-group">
+                                <input id="phone" class="form-control" type="tel" placeholder="0xxxxxxxxx" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email <span class="required">*</span></label>
+                        <div class="input-group">
+                            <input id="email" class="form-control" type="email" placeholder="email@example.com" required>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="account-info">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="username">Tài khoản (username) <span class="required">*</span></label>
+                            <div class="input-group">
+                                <input id="username" class="form-control" type="text" placeholder="Tên tài khoản" required>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="password">Mật khẩu <span class="required">*</span></label>
+                            <div class="input-group">
+                                <input id="password" class="form-control" type="password" placeholder="Ít nhất 8 ký tự" required>
+                            </div>
+                            <div class="password-strength">
+                                <div id="passwordStrength" class="password-strength-bar"></div>
+                            </div>
+                            <div class="password-hint">Ít nhất 8 ký tự, chữ hoa, chữ thường, số</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Xác nhận mật khẩu <span class="required">*</span></label>
+                            <div class="input-group">
+                                <input id="confirmPassword" class="form-control" type="password" placeholder="Nhập lại mật khẩu" required>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="address-info">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="province">Tỉnh/Thành phố <span class="required">*</span></label>
+                            <select id="province" class="form-control" required>
+                                <option value="">Chọn Tỉnh/Thành phố</option>
+                                <option value="Hà Nội">Hà Nội</option>
+                                <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="district">Quận/Huyện <span class="required">*</span></label>
+                            <input id="district" class="form-control" type="text" placeholder="Quận/Huyện" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="address">Địa chỉ chi tiết <span class="required">*</span></label>
+                        <input id="address" class="form-control" type="text" placeholder="Số nhà, đường, phường/xã" required>
+                    </div>
+                </section>
+
+                <section id="farmerFields" class="role-specific-fields">
+                    <h4>Thông tin trang trại</h4>
+                    <div class="form-group">
+                        <label for="farmName">Tên trang trại</label>
+                        <input id="farmName" class="form-control" type="text" placeholder="Tên trang trại">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="farmArea">Diện tích (ha)</label>
+                            <input id="farmArea" class="form-control" type="number" step="0.1" min="0" placeholder="Diện tích">
+                        </div>
+                        <div class="form-group">
+                            <label for="cropType">Loại nông sản chính</label>
+                            <select id="cropType" class="form-control">
+                                <option value="">Chọn</option>
+                                <option value="Rau củ">Rau củ</option>
+                                <option value="Trái cây">Trái cây</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="certification">Chứng nhận</label>
+                        <select id="certification" class="form-control">
+                            <option value="">Không</option>
+                            <option value="VietGAP">VietGAP</option>
+                        </select>
+                    </div>
+                </section>
+
+                <section id="distributorFields" class="role-specific-fields">
+                    <h4>Thông tin đại lý</h4>
+                    <div class="form-group">
+                        <label for="companyName">Tên công ty/Đại lý</label>
+                        <input id="companyName" class="form-control" type="text" placeholder="Tên công ty">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="taxCode">Mã số thuế</label>
+                            <input id="taxCode" class="form-control" type="text" placeholder="Mã số thuế">
+                        </div>
+                        <div class="form-group">
+                            <label for="vehicleCount">Số xe vận chuyển</label>
+                            <input id="vehicleCount" class="form-control" type="number" min="0" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="serviceArea">Khu vực hoạt động</label>
+                        <textarea id="serviceArea" class="form-control" placeholder="Danh sách tỉnh/thành (phân cách bằng dấu phẩy)"></textarea>
+                    </div>
+                </section>
+
+                <section id="retailerFields" class="role-specific-fields">
+                    <h4>Thông tin siêu thị</h4>
+                    <div class="form-group">
+                        <label for="storeName">Tên cửa hàng/Siêu thị</label>
+                        <input id="storeName" class="form-control" type="text" placeholder="Tên cửa hàng">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="businessType">Loại hình kinh doanh</label>
+                            <select id="businessType" class="form-control">
+                                <option value="">Chọn</option>
+                                <option value="Siêu thị">Siêu thị</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="businessLicense">Giấy phép kinh doanh</label>
+                            <input id="businessLicense" class="form-control" type="text" placeholder="Số giấy phép">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="storeSize">Quy mô (m²)</label>
+                        <input id="storeSize" class="form-control" type="number" min="0" placeholder="m²">
+                    </div>
+                </section>
+
+                <div class="checkbox-group">
+                    <input id="agreeTerms" type="checkbox" required>
+                    <label for="agreeTerms">Tôi đồng ý với <a href="#" target="_blank">Điều khoản</a> và <a href="#" target="_blank">Chính sách</a></label>
+                </div>
+
+                <button id="submitBtn" type="submit" class="btn btn-primary">
+                    Đăng ký tài khoản
+                </button>
+
+                <div class="register-footer">
+                    Đã có tài khoản? <a href="Dangnhap.html">Đăng nhập ngay</a>
+                </div>
+            </form>
+        </main>
+    </div>
+</body>

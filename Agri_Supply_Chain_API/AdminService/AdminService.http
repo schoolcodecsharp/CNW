@@ -1,0 +1,41 @@
+@AdminService_HostAddress = http://localhost:5274
+
+### Lấy tất cả tài khoản
+GET {{AdminService_HostAddress}}/api/user
+Accept: application/json
+
+###
+
+### Lấy thông tin tài khoản theo ID
+GET {{AdminService_HostAddress}}/api/user/1
+Accept: application/json
+
+###
+
+### Cập nhật thông tin tài khoản
+PUT {{AdminService_HostAddress}}/api/user/1
+Content-Type: application/json
+
+{
+  "matKhau": "newpassword123",
+  "trangThai": "hoat_dong",
+  "hoTen": "Nguyễn Văn A Updated",
+  "soDienThoai": "0987654321",
+  "email": "updated@example.com",
+  "diaChi": "123 Đường ABC, Quận 1, TP.HCM",
+  "tenCuaHang": "Siêu thị ABC"
+}
+
+###
+
+### Xóa tài khoản (có khóa phụ -> ngừng hoạt động)
+DELETE {{AdminService_HostAddress}}/api/user/2
+Accept: application/json
+
+###
+
+### Xóa tài khoản (không có khóa phụ -> xóa hẳn)
+DELETE {{AdminService_HostAddress}}/api/user/5
+Accept: application/json
+
+###

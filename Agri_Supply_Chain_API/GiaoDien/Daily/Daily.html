@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="vi" ng-app="DaiLyApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đại lý - Quản lý</title>
+    <link rel="stylesheet" href="Daily.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="../js/globalvar.js"></script>
+    <script src="Daily.js"></script>
+</head>
+<body ng-controller="DaiLyCtrl">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <span style="color:#4CAF50;font-size:20px;">🏪</span>
+                <div style="font-weight:bold;font-size:18px;">Đại Lý</div>
+            </div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="#" ng-click="showPage('dashboard')" ng-class="{'active': currentPage=='dashboard'}">Bảng điều khiển</a></li>
+            <li><a href="#" ng-click="showPage('donhang')" ng-class="{'active': currentPage=='donhang'}">Đơn hàng Nông Dân</a></li>
+            <li><a href="#" ng-click="showPage('donhangst')" ng-class="{'active': currentPage=='donhangst'}">Đơn hàng Siêu Thị</a></li>
+            <li><a href="#" ng-click="showPage('kho')" ng-class="{'active': currentPage=='kho'}">Quản lý Kho</a></li>
+            <li><a href="#" ng-click="showPage('kiemdinh')" ng-class="{'active': currentPage=='kiemdinh'}">Kiểm định</a></li>
+            <li style="border-top:1px solid rgba(255,255,255,0.1);margin-top:10px;padding-top:10px;">
+                <a href="#" ng-click="logout()">Đăng xuất</a>
+            </li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <!-- Dashboard -->
+        <section class="page" ng-class="{'active-page': currentPage=='dashboard'}">
+            <div class="page-header">
+                <h2>Bảng điều khiển</h2>
+            </div>
+            <div class="kpis">
+                <div class="kpi"><h3>{{listDonHangDaiLy.length}}</h3><p>Đơn hàng Nông Dân</p></div>
+                <div class="kpi"><h3>{{listDonHangSieuThi.length}}</h3><p>Đơn hàng Siêu Thị</p></div>
+                <div class="kpi"><h3>{{listKho.length}}</h3><p>Kho hàng</p></div>
+                <div class="kpi"><h3>{{listKiemDinh.length}}</h3><p>Kiểm định</p></div>
+            </div>
+            
+            <div class="lists">
+                <div class="list">
+                    <h4>Đơn hàng gần đây</h4>
+                    <table class="table">
+                        <thead><tr><th>Mã ĐH</th><th>Nông Dân</th><th>Tổng SL</th><th>Trạng thái</th></tr></thead>
+                        <tbody>
+                            <tr ng-repeat="dh in listDonHangDaiLy | limitTo:5">
+                                <td>{{dh.maDonHang}}</td>
+                                <td>{{dh.tenNongDan}}</td>
+                                <td>{{dh.tongSoLuong}}</td>
+                                <td>{{dh.trangThai}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="list">
+                    <h4>Kho hàng</h4>
+                    <table class="table">
+                        <thead><tr><th>Mã Kho</th><th>Tên Kho</th><th>Địa chỉ</th></tr></thead>
+                        <tbody>
+                            <tr ng-repeat="k in listKho | limitTo:5">
+                                <td>{{k.maKho}}</td>
+                                <td>{{k.tenKho}}</td>
+                                <td>{{k.diaChi}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Đơn hàng Nông Dân -->
+        <section class="page" ng-class="{'active-page': currentPage=='donhang'}">
+            <div class="page-header">
+                <h2>Đơn hàng từ Nông Dân</h2>
+                <button class="btn" ng-click="openModal('donhangdaily')">+ Thêm Đơn hàng</button>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Mã ĐH</th>
+                        <th>Nông Dân</th>
+                        <th>Ngày đặt</th>
+                        <th>Ngày giao</th>
+                        <th>Tổng SL</th>
+                        <th>Tổng giá trị</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="dh in listDonHangDaiLy">
+                        <td>{{dh.maDonHang}}</td>
+                        <td>{{dh.tenNongDan}}</td>
+                        <td>{{dh.ngayDat | date:'dd/MM/yyyy'}}</td>
+                        <td>{{dh.ngayGiao | date:'dd/MM/yyyy'}}</td>
+                        <td>{{dh.tongSoLuong}}</td>
+                        <td>{{dh.tongGiaTri | number}} VNĐ</td>
+                        <td>{{dh.trangThai}}</td>
+                        <td>
+                            <button class="btn small" ng-click="updateTrangThaiDonHangDaiLy(dh.maDonHang, 'da_nhan')">Đã nhận</button>
+                            <button class="btn small btn-delete" ng-click="deleteDonHangDaiLy(dh.maDonHang)">Xóa</button>
+                        </td>
+                    </tr>
+                    <tr ng-if="listDonHangDaiLy.length == 0">
+                        <td colspan="8" style="text-align:center;color:#999;">Không có dữ liệu</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Đơn hàng Siêu Thị -->
+        <section class="page" ng-class="{'active-page': currentPage=='donhangst'}">
+            <div class="page-header">
+                <h2>Đơn hàng từ Siêu Thị</h2>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Mã ĐH</th>
+                        <th>Siêu Thị</th>
+                        <th>Ngày đặt</th>
+                        <th>Ngày giao</th>
+                        <th>Tổng SL</th>
+                        <th>Tổng giá trị</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="dh in listDonHangSieuThi">
+                        <td>{{dh.maDonHang}}</td>
+                        <td>{{dh.tenSieuThi}}</td>
+                        <td>{{dh.ngayDat | date:'dd/MM/yyyy'}}</td>
+                        <td>{{dh.ngayGiao | date:'dd/MM/yyyy'}}</td>
+                        <td>{{dh.tongSoLuong}}</td>
+                        <td>{{dh.tongGiaTri | number}} VNĐ</td>
+                        <td>{{dh.trangThai}}</td>
+                        <td>
+                            <button class="btn small" ng-click="updateTrangThaiDonHangSieuThi(dh.maDonHang, 'dang_giao')">Đang giao</button>
+                            <button class="btn small" ng-click="updateTrangThaiDonHangSieuThi(dh.maDonHang, 'da_giao')">Đã giao</button>
+                        </td>
+                    </tr>
+                    <tr ng-if="listDonHangSieuThi.length == 0">
+                        <td colspan="8" style="text-align:center;color:#999;">Không có dữ liệu</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Quản lý Kho -->
+        <section class="page" ng-class="{'active-page': currentPage=='kho'}">
+            <div class="page-header">
+                <h2>Quản lý Kho</h2>
+                <button class="btn" ng-click="openModal('kho')">+ Thêm Kho</button>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Mã Kho</th>
+                        <th>Loại Kho</th>
+                        <th>Tên Kho</th>
+                        <th>Địa chỉ</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày tạo</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="k in listKho">
+                        <td>{{k.maKho}}</td>
+                        <td>{{k.loaiKho}}</td>
+                        <td>{{k.tenKho}}</td>
+                        <td>{{k.diaChi}}</td>
+                        <td>{{k.trangThai}}</td>
+                        <td>{{k.ngayTao | date:'dd/MM/yyyy'}}</td>
+                        <td>
+                            <button class="btn small btn-edit" ng-click="editKho(k)">Sửa</button>
+                            <button class="btn small btn-delete" ng-click="deleteKho(k.maKho)">Xóa</button>
+                        </td>
+                    </tr>
+                    <tr ng-if="listKho.length == 0">
+                        <td colspan="7" style="text-align:center;color:#999;">Không có dữ liệu</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Kiểm định -->
+        <section class="page" ng-class="{'active-page': currentPage=='kiemdinh'}">
+            <div class="page-header">
+                <h2>Kiểm định Chất lượng</h2>
+                <button class="btn" ng-click="openModal('kiemdinh')">+ Thêm Kiểm định</button>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Mã KĐ</th>
+                        <th>Mã Lô</th>
+                        <th>Người kiểm định</th>
+                        <th>Ngày kiểm định</th>
+                        <th>Kết quả</th>
+                        <th>Trạng thái</th>
+                        <th>Ghi chú</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="kd in listKiemDinh">
+                        <td>{{kd.maKiemDinh}}</td>
+                        <td>{{kd.maLo}}</td>
+                        <td>{{kd.nguoiKiemDinh}}</td>
+                        <td>{{kd.ngayKiemDinh | date:'dd/MM/yyyy'}}</td>
+                        <td>{{kd.ketQua}}</td>
+                        <td>{{kd.trangThai}}</td>
+                        <td>{{kd.ghiChu}}</td>
+                        <td>
+                            <button class="btn small btn-edit" ng-click="editKiemDinh(kd)">Sửa</button>
+                            <button class="btn small btn-delete" ng-click="deleteKiemDinh(kd.maKiemDinh)">Xóa</button>
+                        </td>
+                    </tr>
+                    <tr ng-if="listKiemDinh.length == 0">
+                        <td colspan="8" style="text-align:center;color:#999;">Không có dữ liệu</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <!-- Modal -->
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <button class="modal-close" ng-click="closeModal()">&times;</button>
+            <div id="modal-body">
+                <!-- Form Kho -->
+                <form ng-show="currentModal=='kho'" class="modal-form" ng-submit="saveKho()">
+                    <h3>{{isEditKho ? 'Sửa Kho' : 'Thêm Kho'}}</h3>
+                    <label>Loại kho</label>
+                    <select ng-model="formKho.loaiKho" required>
+                        <option value="">-- Chọn loại kho --</option>
+                        <option value="daily">Đại lý</option>
+                        <option value="sieuthi">Siêu thị</option>
+                    </select>
+                    <label>Tên kho</label>
+                    <input type="text" ng-model="formKho.tenKho" placeholder="Tên kho" required />
+                    <label>Địa chỉ</label>
+                    <input type="text" ng-model="formKho.diaChi" placeholder="Địa chỉ" />
+                    <label>Mã Đại Lý</label>
+                    <input type="number" ng-model="formKho.maDaiLy" placeholder="Mã đại lý" />
+                    <div class="modal-actions">
+                        <button type="button" class="btn cancel" ng-click="closeModal()">Hủy</button>
+                        <button type="submit" class="btn">Lưu</button>
+                    </div>
+                </form>
+
+                <!-- Form Đơn hàng Đại Lý -->
+                <form ng-show="currentModal=='donhangdaily'" class="modal-form" ng-submit="saveDonHangDaiLy()">
+                    <h3>{{isEditDonHang ? 'Sửa Đơn hàng' : 'Thêm Đơn hàng'}}</h3>
+                    <label>Mã Nông Dân</label>
+                    <input type="number" ng-model="formDonHang.maNongDan" placeholder="Mã nông dân" required />
+                    <label>Mã Đại Lý</label>
+                    <input type="number" ng-model="formDonHang.maDaiLy" placeholder="Mã đại lý" required />
+                    <label>Tổng số lượng</label>
+                    <input type="number" ng-model="formDonHang.tongSoLuong" placeholder="Tổng số lượng" />
+                    <label>Tổng giá trị</label>
+                    <input type="number" ng-model="formDonHang.tongGiaTri" placeholder="Tổng giá trị" />
+                    <label>Ghi chú</label>
+                    <input type="text" ng-model="formDonHang.ghiChu" placeholder="Ghi chú" />
+                    <div class="modal-actions">
+                        <button type="button" class="btn cancel" ng-click="closeModal()">Hủy</button>
+                        <button type="submit" class="btn">Lưu</button>
+                    </div>
+                </form>
+
+                <!-- Form Kiểm định -->
+                <form ng-show="currentModal=='kiemdinh'" class="modal-form" ng-submit="saveKiemDinh()">
+                    <h3>{{isEditKiemDinh ? 'Sửa Kiểm định' : 'Thêm Kiểm định'}}</h3>
+                    <label>Mã Lô</label>
+                    <input type="number" ng-model="formKiemDinh.maLo" placeholder="Mã lô" required />
+                    <label>Người kiểm định</label>
+                    <input type="text" ng-model="formKiemDinh.nguoiKiemDinh" placeholder="Người kiểm định" />
+                    <label>Mã Đại Lý</label>
+                    <input type="number" ng-model="formKiemDinh.maDaiLy" placeholder="Mã đại lý" />
+                    <label>Kết quả</label>
+                    <select ng-model="formKiemDinh.ketQua" required>
+                        <option value="">-- Chọn kết quả --</option>
+                        <option value="dat">Đạt</option>
+                        <option value="khong_dat">Không đạt</option>
+                        <option value="cho_xu_ly">Chờ xử lý</option>
+                    </select>
+                    <label>Biên bản</label>
+                    <textarea ng-model="formKiemDinh.bienBan" placeholder="Biên bản kiểm định" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;"></textarea>
+                    <label>Ghi chú</label>
+                    <input type="text" ng-model="formKiemDinh.ghiChu" placeholder="Ghi chú" />
+                    <div class="modal-actions">
+                        <button type="button" class="btn cancel" ng-click="closeModal()">Hủy</button>
+                        <button type="submit" class="btn">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

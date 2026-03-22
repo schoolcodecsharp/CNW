@@ -1,0 +1,149 @@
+@SieuThiService_HostAddress = http://localhost:5291
+
+### API 1: Weather Forecast (Test API)
+GET {{SieuThiService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+
+### API 2: Tạo đơn hàng (chỉ thông tin cơ bản) - QUẢN LÝ
+POST {{SieuThiService_HostAddress}}/api/DonHangSieuThi/tao-don-hang
+Content-Type: application/json
+
+{
+  "maSieuThi": 1,
+  "maDaiLy": 1,
+  "ngayGiao": "2024-01-15T00:00:00",
+  "ghiChu": "Đơn hàng tạo riêng biệt"
+}
+
+### API 3: Thêm chi tiết đơn hàng - QUẢN LÝ
+POST {{SieuThiService_HostAddress}}/api/DonHangSieuThi/them-chi-tiet
+Content-Type: application/json
+
+{
+  "maDonHang": 1,
+  "maLo": 1,
+  "soLuong": 10.5,
+  "donGia": 25000
+}
+
+### API 4: Thêm chi tiết đơn hàng khác - QUẢN LÝ
+POST {{SieuThiService_HostAddress}}/api/DonHangSieuThi/them-chi-tiet
+Content-Type: application/json
+
+{
+  "maDonHang": 1,
+  "maLo": 2,
+  "soLuong": 5.0,
+  "donGia": 30000
+}
+
+### API 5: Nhận hàng từ đại lý - QUẢN LÝ (Phải chọn kho)
+PUT {{SieuThiService_HostAddress}}/api/DonHangSieuThi/nhan-hang/1
+Content-Type: application/json
+
+{
+  "maKho": 1,
+  "ghiChuNhan": "Hàng đã kiểm tra đầy đủ, chất lượng tốt, nhận vào kho chính"
+}
+
+### API 6: Sửa chi tiết đơn hàng - QUẢN LÝ
+PUT {{SieuThiService_HostAddress}}/api/DonHangSieuThi/sua-chi-tiet
+Content-Type: application/json
+
+{
+  "maDonHang": 1,
+  "maLo": 1,
+  "soLuong": 15.0,
+  "donGia": 27000
+}
+
+### API 7: Xóa chi tiết đơn hàng - QUẢN LÝ
+DELETE {{SieuThiService_HostAddress}}/api/DonHangSieuThi/xoa-chi-tiet
+Content-Type: application/json
+
+{
+  "maDonHang": 1,
+  "maLo": 2
+}
+
+### API 8: Hủy đơn hàng - QUẢN LÝ
+PUT {{SieuThiService_HostAddress}}/api/DonHangSieuThi/huy-don-hang/1
+Accept: application/json
+
+### API 9: Xem danh sách kho hàng của siêu thị - KHO HÀNG (Thông tin cơ bản)
+GET {{SieuThiService_HostAddress}}/api/KhoHang/sieu-thi/1
+Accept: application/json
+
+### API 10: Xem chi tiết một kho hàng cụ thể - KHO HÀNG
+GET {{SieuThiService_HostAddress}}/api/KhoHang/1
+Accept: application/json
+
+### API 11: Tạo kho mới - KHO HÀNG
+POST {{SieuThiService_HostAddress}}/api/KhoHang/tao-kho
+Content-Type: application/json
+
+{
+  "maSieuThi": 1,
+  "tenKho": "Kho phụ 2",
+  "loaiKho": "phu",
+  "diaChi": "456 Đường XYZ",
+  "trangThai": "hoat_dong"
+}
+
+### API 12: Cập nhật thông tin kho - KHO HÀNG
+PUT {{SieuThiService_HostAddress}}/api/KhoHang/cap-nhat-kho
+Content-Type: application/json
+
+{
+  "maKho": 2,
+  "tenKho": "Kho phụ 2 - Đã cập nhật",
+  "loaiKho": "phu",
+  "diaChi": "456 Đường XYZ - Cập nhật",
+  "trangThai": "tam_ngung"
+}
+
+### API 13: Xóa kho - KHO HÀNG
+DELETE {{SieuThiService_HostAddress}}/api/KhoHang/xoa-kho/2
+Accept: application/json
+
+### API 14: Xóa sản phẩm khỏi kho - KHO HÀNG
+DELETE {{SieuThiService_HostAddress}}/api/KhoHang/xoa-ton-kho
+Content-Type: application/json
+
+{
+  "maKho": 1,
+  "maLo": 2
+}
+
+### API 15: Tạo đơn hàng siêu thị (API gộp - tương thích cũ)
+POST {{SieuThiService_HostAddress}}/api/DonHangSieuThi
+Content-Type: application/json
+
+{
+  "maSieuThi": 1,
+  "maDaiLy": 1,
+  "ngayGiao": "2024-01-15T00:00:00",
+  "ghiChu": "Đơn hàng test",
+  "chiTietDonHangs": [
+    {
+      "maLo": 1,
+      "soLuong": 10.5,
+      "donGia": 25000
+    },
+    {
+      "maLo": 2,
+      "soLuong": 5.0,
+      "donGia": 30000
+    }
+  ]
+}
+
+### API 16: Lấy thông tin đơn hàng theo ID
+GET {{SieuThiService_HostAddress}}/api/DonHangSieuThi/1
+Accept: application/json
+
+### API 17: Lấy danh sách đơn hàng theo mã siêu thị
+GET {{SieuThiService_HostAddress}}/api/DonHangSieuThi/sieu-thi/1
+Accept: application/json

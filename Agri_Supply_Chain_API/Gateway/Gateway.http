@@ -1,0 +1,127 @@
+@Gateway_HostAddress = http://localhost:5041
+
+### ===== ADMIN SERVICE ROUTES =====
+
+### Lấy tất cả tài khoản (qua Gateway)
+GET {{Gateway_HostAddress}}/api-admin/user
+Accept: application/json
+
+###
+
+### Lấy thông tin tài khoản theo ID (qua Gateway)
+GET {{Gateway_HostAddress}}/api-admin/user/1
+Accept: application/json
+
+###
+
+### Cập nhật thông tin tài khoản (qua Gateway)
+PUT {{Gateway_HostAddress}}/api-admin/user/1
+Content-Type: application/json
+
+{
+  "matKhau": "newpassword123",
+  "trangThai": "hoat_dong",
+  "hoTen": "Nguyễn Văn A Updated",
+  "soDienThoai": "0987654321",
+  "email": "updated@example.com",
+  "diaChi": "123 Đường ABC, Quận 1, TP.HCM",
+  "tenCuaHang": "Siêu thị ABC"
+}
+
+###
+
+### Xóa tài khoản (qua Gateway)
+DELETE {{Gateway_HostAddress}}/api-admin/user/5
+Accept: application/json
+
+###
+
+### ===== NONG DAN SERVICE ROUTES =====
+
+### Test NongDan Service (qua Gateway)
+GET {{Gateway_HostAddress}}/api-nongdan/nongdan
+Accept: application/json
+
+###
+
+### Lấy danh sách sản phẩm nông dân (qua Gateway)
+GET {{Gateway_HostAddress}}/api-nongdan/sanpham
+Accept: application/json
+
+###
+
+### Lấy danh sách lô nông sản (qua Gateway)
+GET {{Gateway_HostAddress}}/api-nongdan/lonongsan
+Accept: application/json
+
+###
+
+### Tạo đơn hàng đại lý (qua Gateway)
+POST {{Gateway_HostAddress}}/api-nongdan/donhangdaily
+Content-Type: application/json
+
+{
+  "maDaiLy": 1,
+  "maNongDan": 1,
+  "tongTien": 1000000,
+  "ghiChu": "Đơn hàng test qua Gateway"
+}
+
+###
+
+### ===== SIEU THI SERVICE ROUTES =====
+
+### Test SieuThi Service (qua Gateway)
+GET {{Gateway_HostAddress}}/api-sieuthi/sieuthi
+Accept: application/json
+
+###
+
+### Lấy danh sách kho hàng (qua Gateway)
+GET {{Gateway_HostAddress}}/api-sieuthi/khohang
+Accept: application/json
+
+###
+
+### Tạo đơn hàng siêu thị (qua Gateway)
+POST {{Gateway_HostAddress}}/api-sieuthi/donhangsieuthi
+Content-Type: application/json
+
+{
+  "maSieuThi": 1,
+  "maDaiLy": 1,
+  "tongTien": 500000,
+  "ghiChu": "Đơn hàng siêu thị qua Gateway"
+}
+
+###
+
+### ===== DAILY SERVICE ROUTES =====
+
+### Test DaiLy Service (qua Gateway)
+GET {{Gateway_HostAddress}}/api-daily/daily
+Accept: application/json
+
+###
+
+### ===== GATEWAY HEALTH CHECK =====
+
+### Kiểm tra Gateway hoạt động
+GET {{Gateway_HostAddress}}/
+Accept: application/json
+
+###
+
+### ===== TEST ROUTING ERRORS =====
+
+### Test route không tồn tại
+GET {{Gateway_HostAddress}}/api-invalid/test
+Accept: application/json
+
+###
+
+### Test service không hoạt động
+GET {{Gateway_HostAddress}}/api-admin/invalid-endpoint
+Accept: application/json
+
+###

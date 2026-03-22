@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Siêu thị</title>
+    <link rel="stylesheet" href="Sieuthi.css">
+    <script src="../Dangnhap/AuthHelper.js" defer></script>
+    <script src="Sieuthijs.js" defer></script>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div id="user-info" style="display:flex;align-items:center;gap:8px;">
+                <span style="color:#673ab7;font-size:20px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg></span>
+                <div id="current-user" style="font-weight:bold;"></div>
+            </div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="#" class="menu-link active" data-section="dashboard">Bảng điều khiển</a></li>
+            <li><a href="#" class="menu-link" data-section="orders">Quản lý Đơn hàng</a></li>
+            <li><a href="#" class="menu-link" data-section="receive">Nhận hàng</a></li>
+            <li><a href="#" class="menu-link" data-section="inventory">Quản lý Kho</a></li>
+            <li><a href="#" class="menu-link" data-section="reports">Báo cáo thống kê</a></li>
+            <li style="border-top:1px solid rgba(255,255,255,0.08);margin-top:10px;padding-top:10px;"><a href="javascript:AuthHelper.logout()" class="menu-link">Đăng xuất</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <section id="dashboard" class="page active-page">
+            <div class="page-header">
+                <h2>Bảng điều khiển</h2>
+                <div class="header-actions"></div>
+            </div>
+
+            <div class="kpis">
+                <div class="kpi">
+                    <h3 id="kpi-orders">0</h3>
+                    <p>Đơn hàng</p>
+                </div>
+                <div class="kpi">
+                    <h3 id="kpi-received">0</h3>
+                    <p>Đã nhận</p>
+                </div>
+                <div class="kpi">
+                    <h3 id="kpi-stock">0</h3>
+                    <p>Tồn kho</p>
+                </div>
+                <div class="kpi">
+                    <h3 id="kpi-quality">0</h3>
+                    <p>Cảnh báo chất lượng</p>
+                </div>
+            </div>
+
+            <div class="lists">
+                <div class="list">
+                    <h4>Đơn hàng gần đây</h4>
+                    <table id="table-orders" class="table">
+                        <thead><tr><th>MãPhiếu</th><th>MãLô — Sản phẩm</th><th>SL</th><th>Đại lý</th><th>Ngày</th><th>Trạng thái</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        <section id="orders" class="page">
+            <div class="page-header">
+                <h2>Quản lý Đặt hàng</h2>
+                <div class="header-actions"><button id="btn-create-order" class="btn">+ Tạo đơn đặt hàng</button></div>
+            </div>
+            <div class="list">
+                <table id="table-orders-all" class="table">
+                    <thead><tr><th>MãPhiếu</th><th>Mã lô</th><th>Sản phẩm</th><th>SL</th><th>Đại lý</th><th>Ngày</th><th>Trạng thái</th><th>Hành động</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="receive" class="page">
+            <div class="page-header"><h2>Nhận hàng từ Đại lý</h2></div>
+            <div class="list">
+                <table id="table-incoming" class="table">
+                    <thead><tr><th>MãPhiếu</th><th>MãLô — Sản phẩm</th><th>SL</th><th>Đại lý</th><th>Ngày gửi</th><th>Trạng thái</th><th>Hành động</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="inventory" class="page">
+            <div class="page-header"><h2>Quản lý Tồn kho</h2></div>
+            <div class="list">
+                <table id="table-inventory" class="table">
+                    <thead><tr><th>MãLô</th><th>Sản phẩm</th><th>SL</th><th>Ngày</th><th>Hành động</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="reports" class="page">
+            <div class="page-header"><h2>Báo cáo thống kê</h2><div class="header-actions"><button id="btn-create-quality" class="btn">+ Thêm kiểm định</button></div></div>
+            <div class="report-cards">
+                <div class="report-card"><h4>Tổng sản lượng</h4><div id="report-production">—</div></div>
+                <div class="report-card"><h4>Tồn kho</h4><div id="report-stock">—</div></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal -->
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+</body>
+</html>

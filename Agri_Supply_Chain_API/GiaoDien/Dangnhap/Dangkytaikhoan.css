@@ -1,0 +1,364 @@
+* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #33FF33 0%, #33CC33 100%);
+            padding: 20px 16px; /* giảm padding để bảng không quá sát khung */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .register-container {
+            background: white;
+            border-radius: 18px;
+            margin: 20px 0; /* khoảng cách trên/dưới hợp lý */
+                    max-width: 920px;
+            width: 100%;
+            box-shadow: 0 18px 50px rgba(0,0,0,0.10);
+            overflow: visible;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        :root{
+            --reg-max: 920px;
+        }
+
+        .register-header {
+            background: linear-gradient(135deg, #33FF33 0%, #33CC33 100%);
+            padding: clamp(20px, 4vw, 40px);
+            text-align: center;
+            color: white;
+        }
+
+        .register-header i {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+
+        .register-header h2 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .register-header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .register-body {
+            padding: clamp(16px, 3.5vw, 28px) clamp(12px, 2.5vw, 32px);
+            max-height: calc(100vh - 140px);
+            overflow: auto;
+            max-width: min(96vw, var(--reg-max));
+            margin: 0 auto;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideDown 0.3s;
+        }
+
+        .alert.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-left: 4px solid #4caf50;
+        }
+
+        .alert.error {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #f44336;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .role-selection {
+            margin-bottom: 30px;
+        }
+
+        .role-selection h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .role-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px; /* nhỏ hơn để hợp lý */
+        }
+
+        .role-card {
+            border: 3px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+
+        .role-card:hover {
+            border-color: #33FF33;
+            background: #f0f4ff;
+            transform: translateY(-3px);
+        }
+
+        .role-card.active {
+            border-color: #33FF33;
+            background: linear-gradient(135deg, #33FF33 0%, #33CC33 100%);
+            color: white;
+        }
+
+        .role-card i {
+            font-size: 40px;
+            margin-bottom: 10px;
+            color: #33FF33;
+        }
+
+        .role-card.active i {
+            color: white;
+        }
+
+        .role-card h4 {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .role-card p {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px; /* điều chỉnh gap giữa cột */
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: clamp(13px, 1.6vw, 14px);
+        }
+
+        .form-group label .required {
+            color: #f44336;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #33FF33;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: clamp(10px, 1.6vw, 12px) clamp(12px, 2.2vw, 15px) clamp(10px, 1.6vw, 12px) 45px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: clamp(13px, 1.6vw, 14px);
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #33FF33;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        select.form-control {
+            cursor: pointer;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .password-strength {
+            margin-top: 8px;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0;
+            transition: all 0.3s;
+        }
+
+        .password-strength-bar.weak {
+            width: 33%;
+            background: #f44336;
+        }
+
+        .password-strength-bar.medium {
+            width: 66%;
+            background: #ff9800;
+        }
+
+        .password-strength-bar.strong {
+            width: 100%;
+            background: #4caf50;
+        }
+
+        .password-hint {
+            font-size: 12px;
+            color: #777;
+            margin-top: 5px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            margin-top: 2px;
+        }
+
+        .checkbox-group label {
+            font-size: 14px;
+            color: #555;
+            cursor: pointer;
+            line-height: 1.5;
+        }
+
+        .checkbox-group label a {
+            color: #33FF33;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .checkbox-group label a:hover {
+            text-decoration: underline;
+        }
+
+        .btn {
+            width: 100%;
+            padding: clamp(10px, 1.8vw, 14px);
+            border: none;
+            border-radius: 10px;
+            font-size: clamp(14px, 1.8vw, 16px);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #33FF33 0%, #33CC33 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .register-footer {
+            text-align: center;
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 1px solid #e9efe9;
+            font-size: 14px;
+        }
+
+        .register-footer a {
+            color: #33FF33;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .register-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .role-specific-fields {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .role-specific-fields.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .role-grid { grid-template-columns: 1fr; gap: 12px; }
+            .form-row { grid-template-columns: 1fr; gap: 12px; }
+            .register-body { padding: 22px; }
+        }
+
+        /* trên màn hình nhỏ giữ khoảng cách bằng padding */
+        @media (max-height: 700px) {
+    body { padding: 18px; }
+    .register-container { margin: 12px 0; }
+}

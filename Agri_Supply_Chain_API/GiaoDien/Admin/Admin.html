@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Admin</title>
+	<link rel="stylesheet" href="Admin.css">
+	<script src="../Dangnhap/AuthHelper.js" defer></script>
+	<script src="Admin.js" defer></script>
+</head>
+<body>
+	<aside class="sidebar">
+		<div class="sidebar-header">			
+			<div id="user-info" style="display:flex;align-items:center;gap:8px;">
+				<span style="color:#673ab7;font-size:20px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg></span>
+				<div id="current-user" style="font-weight:bold;"></div>
+			</div>
+		</div>
+		<ul class="sidebar-menu">
+			<li><a href="#" class="menu-link active" data-section="dashboard"><span>Bảng điều khiển</span></a></li>
+			<li><a href="#" class="menu-link" data-section="users"><span>Quản lý người dùng</span></a></li>
+			<li><a href="#" class="menu-link" data-section="farms"><span>Quản lý trang trại</span></a></li>
+			<li><a href="#" class="menu-link" data-section="batches"><span>Quản lý lô hàng</span></a></li>
+			<li><a href="#" class="menu-link" data-section="orders"><span>Quản lý đơn hàng</span></a></li>
+			<li><a href="#" class="menu-link" data-section="logs"><span>Audit / Log</span></a></li>
+			<li><a href="#" class="menu-link" data-section="reports"><span>Báo cáo</span></a></li>
+			<li style="border-top:1px solid rgba(255,255,255,0.1);margin-top:10px;padding-top:10px;">
+				<a href="/Dangnhap/Dangnhap.html" class="menu-link"><span>Đăng xuất</span></a>
+			</li>
+		</ul>
+	</aside>
+
+	<main class="main-content">
+		<!-- Dashboard -->
+		<section id="dashboard" class="page active-page">
+			<div class="page-header">
+				<h2>Bảng điều khiển</h2>
+				<div class="header-actions">
+					<button id="btn-seed-data" class="btn">Seed demo</button>
+					<button id="btn-new-report" class="btn">+ Báo cáo</button>
+				</div>
+			</div>
+
+			<div class="kpis">
+				<div class="kpi">
+					<h3 id="kpi-total-users">0</h3>
+					<p>Người dùng</p>
+				</div>
+				<div class="kpi">
+					<h3 id="kpi-total-farms">0</h3>
+					<p>Trang trại</p>
+				</div>
+				<div class="kpi">
+					<h3 id="kpi-total-batches">0</h3>
+					<p>Lô hàng</p>
+				</div>
+				<div class="kpi">
+					<h3 id="kpi-total-orders">0</h3>
+					<p>Đơn hàng</p>
+				</div>
+			</div>
+
+			<div class="lists">
+				<div class="list">
+					<h4>Hoạt động gần đây</h4>
+					<table id="table-recent" class="table">
+						<thead><tr><th>Thời gian</th><th>Người</th><th>Hành động</th></tr></thead>
+						<tbody></tbody>
+					</table>
+				</div>
+				<div class="list">
+					<h4>Thông tin hệ thống</h4>
+					<p class="note">Quản lý toàn diện các vai trò: Nông dân / Đại lý / Siêu thị</p>
+				</div>
+			</div>
+		</section>
+
+		<!-- Users -->
+		<section id="users" class="page">
+			<div class="page-header">
+				<h2>Quản lý người dùng</h2>
+				<button id="btn-add-admin-user" class="btn">+ Thêm người dùng</button>
+			</div>
+			<table id="table-admin-users" class="table">
+				<thead><tr><th>ID</th><th>Họ tên</th><th>Vai trò</th><th>Email</th><th>Hành động</th></tr></thead>
+				<tbody></tbody>
+			</table>
+		</section>
+
+		<!-- Farms -->
+		<section id="farms" class="page">
+			<div class="page-header">
+				<h2>Quản lý trang trại</h2>
+				<button id="btn-add-farm" class="btn">+ Thêm trang trại</button>
+			</div>
+			<table id="table-farms" class="table">
+				<thead><tr><th>Mã</th><th>Tên</th><th>Chủ</th><th>Địa chỉ</th><th>Hành động</th></tr></thead>
+				<tbody></tbody>
+			</table>
+		</section>
+
+		<!-- Batches -->
+		<section id="batches" class="page">
+			<div class="page-header">
+				<h2>Quản lý lô hàng</h2>
+			</div>
+			<table id="table-batches" class="table">
+				<thead><tr><th>Mã lô</th><th>Sản phẩm</th><th>SL</th><th>Ngày thu hoạch</th><th>Hành động</th></tr></thead>
+				<tbody></tbody>
+			</table>
+		</section>
+
+		<!-- Orders -->
+		<section id="orders" class="page">
+			<div class="page-header">
+				<h2>Quản lý đơn hàng</h2>
+			</div>
+			<table id="table-orders" class="table">
+				<thead><tr><th>Mã</th><th>Người đặt</th><th>Đại lý</th><th>SL</th><th>Trạng thái</th><th>Hành động</th></tr></thead>
+				<tbody></tbody>
+			</table>
+		</section>
+
+		<!-- Logs -->
+		<section id="logs" class="page">
+			<div class="page-header">
+				<h2>Audit / Log</h2>
+			</div>
+			<table id="table-logs" class="table">
+				<thead><tr><th>Thời gian</th><th>Người</th><th>Sự kiện</th></tr></thead>
+				<tbody></tbody>
+			</table>
+		</section>
+		
+
+		<!-- Reports -->
+		<section id="reports" class="page">
+			<div class="page-header">
+				<h2>Báo cáo tổng hợp</h2>
+			</div>
+			<div class="lists">
+				<div class="list">
+					<h4>Báo cáo doanh thu</h4>
+					<div id="report-revenue">—</div>
+				</div>
+				<div class="list">
+					<h4>Báo cáo tồn kho</h4>
+					<div id="report-stock">—</div>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<!-- Modal -->
+	<div id="modal" class="modal hidden">
+		<div class="modal-content">
+			<button class="modal-close">&times;</button>
+			<div id="modal-body"></div>
+		</div>
+	</div>
+
+	<template id="add-user-template">
+		<form class="modal-form">
+			<h3>Thêm người dùng</h3>
+			<label>Họ tên</label>
+			<input name="hoTen" required />
+			<label>Vai trò</label>
+			<select name="role">
+				<option value="admin">Admin</option>
+				<option value="nongdan">Nông dân</option>
+				<option value="daily">Đại lý</option>
+				<option value="sieuthi">Siêu thị</option>
+			</select>
+			<div class="modal-actions">
+				<button type="button" class="btn cancel modal-close-btn">Hủy</button>
+				<button type="submit" class="btn">Thêm</button>
+			</div>
+		</form>
+	</template>
+
+	<template id="add-farm-template">
+		<form class="modal-form">
+			<h3>Thêm trang trại</h3>
+			<label>Tên trang trại</label>
+			<input name="ten" required />
+			<label>Chủ</label>
+			<input name="chu" />
+			<div class="modal-actions">
+				<button type="button" class="btn cancel modal-close-btn">Hủy</button>
+				<button type="submit" class="btn">Thêm</button>
+			</div>
+		</form>
+	</template>
+
+</body>
+</html>
+</html>
