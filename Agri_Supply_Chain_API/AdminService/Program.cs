@@ -1,20 +1,31 @@
 using AdminService.Data;
 using AdminService.Services;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// =====================
+// Add services
+// =====================
+
+// Repository
 builder.Services.AddScoped<IAdminRepository, AdminRepository>();
+
+// Service
 builder.Services.AddScoped<IAdminService, AdminService.Services.AdminService>();
 
+// Controllers
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// =====================
+// Middleware
+// =====================
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
