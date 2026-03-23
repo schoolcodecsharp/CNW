@@ -1,0 +1,2308 @@
+﻿-- ============================================================================
+-- STORED PROCEDURES FOR TAIKHOAN TABLE
+-- ============================================================================
+
+USE BTL_HDV1;
+
+-- SP GET ALL
+CREATE OR ALTER PROCEDURE sp_TaiKhoan_GetAll
+AS
+BEGIN
+    SELECT 
+        MaTaiKhoan,
+        TenDangNhap,
+        LoaiTaiKhoan,
+        TrangThai,
+        NgayTao,
+        LanDangNhapCuoi
+    FROM TaiKhoan
+    ORDER BY MaTaiKhoan DESC;
+END;
+GO
+
+-- SP GET BY ID
+CREATE OR ALTER PROCEDURE sp_TaiKhoan_GetById
+    @MaTaiKhoan INT
+AS
+BEGIN
+    SELECT 
+        MaTaiKhoan,
+        TenDangNhap,
+        LoaiTaiKhoan,
+        TrangThai,
+        NgayTao,
+        LanDangNhapCuoi
+    FROM TaiKhoan
+    WHERE MaTaiKhoan = @MaTaiKhoan;
+END;
+GO
+
+-- SP CREATE
+CREATE OR ALTER PROCEDURE sp_TaiKhoan_Create
+    @TenDangNhap NVARCHAR(50),
+    @MatKhau NVARCHAR(255),
+    @LoaiTaiKhoan NVARCHAR(20),
+    @TrangThai NVARCHAR(20) = N'hoat_dong',
+    @MaTaiKhoan INT OUTPUT
+AS
+BEGIN
+    BEGIN TRY
+        INSERT INTO TaiKhoan (TenDangNhap, MatKhau, LoaiTaiKhoan, TrangThai)
+        VALUES (@TenDangNhap, @MatKhau, @LoaiTaiKhoan, @TrangThai);
+        
+        SET @MaTaiKhoan = SCOPE_IDENTITY();
+        
+        SELECT 'SUCCESS' AS Status, @MaTaiKhoan AS MaTaiKhoan;
+    END TRY
+    BEGIN CATCH
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+
+-- SP UPDATE
+CREATE OR ALTER PROCEDURE sp_TaiKhoan_Update
+    @MaTaiKhoan INT,
+    @MatKhau NVARCHAR(255) = NULL,
+    @TrangThai NVARCHAR(20) = NULL,
+    @LanDangNhapCuoi DATETIME2 = NULL
+AS
+BEGIN
+    BEGIN TRY
+        UPDATE TaiKhoan
+        SET 
+            MatKhau = ISNULL(@MatKhau, MatKhau),
+            TrangThai = ISNULL(@TrangThai, TrangThai),
+            LanDangNhapCuoi = ISNULL(@LanDangNhapCuoi, LanDangNhapCuoi)
+        WHERE MaTaiKhoan = @MaTaiKhoan;
+        
+        SELECT 'SUCCESS' AS Status, 'Cập nhật thành công' AS Message;
+    END TRY
+    BEGIN CATCH
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+
+-- SP DELETE
+CREATE OR ALTER PROCEDURE sp_TaiKhoan_Delete
+    @MaTaiKhoan INT
+AS
+BEGIN
+    BEGIN TRY
+        DELETE FROM TaiKhoan WHERE MaTaiKhoan = @MaTaiKhoan;
+        SELECT 'SUCCESS' AS Status, 'Xóa thành công' AS Message;
+    END TRY
+    BEGIN CATCH
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+
+-- SP SEARCH
+CREATE OR ALTER PROCEDURE sp_TaiKhoan_Search
+    @TenDangNhap NVARCHAR(50) = NULL,
+    @LoaiTaiKhoan NVARCHAR(20) = NULL,
+    @TrangThai NVARCHAR(20) = NULL
+AS
+BEGIN
+    SELECT 
+        MaTaiKhoan,
+        TenDangNhap,
+        LoaiTaiKhoan,
+        TrangThai,
+        NgayTao,
+        LanDangNhapCuoi
+    FROM TaiKhoan
+    WHERE 
+        (@TenDangNhap IS NULL OR TenDangNhap LIKE '%' + @TenDangNhap + '%')
+        AND (@LoaiTaiKhoan IS NULL OR LoaiTaiKhoan = @LoaiTaiKhoan)
+        AND (@TrangThai IS NULL OR TrangThai = @TrangThai)
+    ORDER BY MaTaiKhoan DESC;
+END;
+GO
+
+
+
+
+
+-- ============================================================================
+-- STORED PROCEDURES FOR NONGDAN TABLE
+-- ============================================================================
+
+USE BTL_HDV1;
+
+-- SP GET ALL
+CREATE OR ALTER PROCEDURE sp_NongDan_GetAll
+AS
+BEGIN
+    SELECT 
+        ND.MaNongDan,
+        ND.MaTaiKhoan,
+        ND.HoTen,
+        ND.SoDienThoai,
+        ND.Email,
+        ND.DiaChi,
+        TK.TenDangNhap,
+        TK.TrangThai
+    FROM NongDan ND
+    JOIN TaiKhoan TK ON ND.MaTaiKhoan = TK.MaTaiKhoan
+    ORDER BY ND.MaNongDan DESC;
+END;
+GO
+
+-- SP GET BY ID
+CREATE OR ALTER PROCEDURE sp_NongDan_GetById
+    @MaNongDan INT
+AS
+BEGIN
+    SELECT 
+        ND.MaNongDan,
+        ND.MaTaiKhoan,
+        ND.HoTen,
+        ND.SoDienThoai,
+        ND.Email,
+        ND.DiaChi,
+        TK.TenDangNhap,
+        TK.TrangThai
+    FROM NongDan ND
+    JOIN TaiKhoan TK ON ND.MaTaiKhoan = TK.MaTaiKhoan
+    WHERE ND.MaNongDan = @MaNongDan;
+END;
+GO
+
+-- SP CREATE
+CREATE OR ALTER PROCEDURE sp_NongDan_Create
+    @MaTaiKhoan INT,
+    @HoTen NVARCHAR(100),
+    @SoDienThoai NVARCHAR(20),
+    @Email NVARCHAR(100),
+    @DiaChi NVARCHAR(255),
+    @MaNongDan INT OUTPUT
+AS
+BEGIN
+    BEGIN TRY
+        INSERT INTO NongDan (MaTaiKhoan, HoTen, SoDienThoai, Email, DiaChi)
+        VALUES (@MaTaiKhoan, @HoTen, @SoDienThoai, @Email, @DiaChi);
+        
+        SET @MaNongDan = SCOPE_IDENTITY();
+        SELECT 'SUCCESS' AS Status, @MaNongDan AS MaNongDan;
+    END TRY
+    BEGIN CATCH
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+
+-- SP UPDATE
+CREATE OR ALTER PROCEDURE sp_NongDan_Update
+    @MaNongDan INT,
+    @HoTen NVARCHAR(100) = NULL,
+    @SoDienThoai NVARCHAR(20) = NULL,
+    @Email NVARCHAR(100) = NULL,
+    @DiaChi NVARCHAR(255) = NULL
+AS
+BEGIN
+    BEGIN TRY
+        UPDATE NongDan
+        SET 
+            HoTen = ISNULL(@HoTen, HoTen),
+            SoDienThoai = ISNULL(@SoDienThoai, SoDienThoai),
+            Email = ISNULL(@Email, Email),
+            DiaChi = ISNULL(@DiaChi, DiaChi)
+        WHERE MaNongDan = @MaNongDan;
+        
+        SELECT 'SUCCESS' AS Status, 'Cập nhật thành công' AS Message;
+    END TRY
+    BEGIN CATCH
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+
+-- SP DELETE
+CREATE OR ALTER PROCEDURE sp_NongDan_Delete
+    @MaNongDan INT
+AS
+BEGIN
+    BEGIN TRY
+        DELETE FROM NongDan WHERE MaNongDan = @MaNongDan;
+        SELECT 'SUCCESS' AS Status, 'Xóa thành công' AS Message;
+    END TRY
+    BEGIN CATCH
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+
+-- SP SEARCH
+CREATE OR ALTER PROCEDURE sp_NongDan_Search
+    @HoTen NVARCHAR(100) = NULL,
+    @SoDienThoai NVARCHAR(20) = NULL,
+    @Email NVARCHAR(100) = NULL,
+    @DiaChi NVARCHAR(255) = NULL
+AS
+BEGIN
+    SELECT 
+        ND.MaNongDan,
+        ND.MaTaiKhoan,
+        ND.HoTen,
+        ND.SoDienThoai,
+        ND.Email,
+        ND.DiaChi,
+        TK.TenDangNhap,
+        TK.TrangThai
+    FROM NongDan ND
+    JOIN TaiKhoan TK ON ND.MaTaiKhoan = TK.MaTaiKhoan
+    WHERE 
+        (@HoTen IS NULL OR ND.HoTen LIKE '%' + @HoTen + '%')
+        AND (@SoDienThoai IS NULL OR ND.SoDienThoai LIKE '%' + @SoDienThoai + '%')
+        AND (@Email IS NULL OR ND.Email LIKE '%' + @Email + '%')
+        AND (@DiaChi IS NULL OR ND.DiaChi LIKE '%' + @DiaChi + '%')
+    ORDER BY ND.MaNongDan DESC;
+END;
+GO
+
+
+-- ============================================================================
+-- STORED PROCEDURES FOR DAILY TABLE
+-- ============================================================================
+
+USE BTL_HDV1;
+
+-- SP GET ALL
+CREATE OR ALTER PROCEDURE sp_DaiLy_GetAll
+AS
+BEGIN
+    SELECT 
+        DL.MaDaiLy,
+        DL.MaTaiKhoan,
+        DL.TenDaiLy,
+        DL.SoDienThoai,
+        DL.Email,
+        DL.DiaChi,
+        TK.TenDangNhap,
+        TK.TrangThai
+    FROM DaiLy DL
+    JOIN TaiKhoan TK ON DL.MaTaiKhoan = TK.MaTaiKhoan
+    ORDER BY DL.MaDaiLy DESC;
+END;
+GO
+
+-- SP GET BY ID
+CREATE OR ALTER PROCEDURE sp_DaiLy_GetById
+    @MaDaiLy INT
+AS
+BEGIN
+    SELECT 
+        DL.MaDaiLy,
+        DL.MaTaiKhoan,
+        DL.TenDaiLy,
+        DL.SoDienThoai,
+        DL.Email,
+        DL.DiaChi,
+        TK.TenDangNhap,
+        TK.TrangThai
+    FROM DaiLy DL
+    JOIN TaiKhoan TK ON DL.MaTaiKhoan = TK.MaTaiKhoan
+    WHERE DL.MaDaiLy = @MaDaiLy;
+END;
+GO
+
+-- SP CREATE
+CREATE OR ALTER PROCEDURE sp_DaiLy_Create
+    @MaTaiKhoan INT,
+    @TenDaiLy NVARCHAR(100),
+    @SoDienThoai NVARCHAR(20),
+    @Email NVARCHAR(100),
+    @DiaChi NVARCHAR(255),
+    @MaDaiLy INT OUTPUT
+AS
+BEGIN
+    BEGIN TRY
+        INSERT INTO DaiLy (MaTaiKhoan, TenDaiLy, SoDienThoai, Email, DiaChi)
+        VALUES (@MaTaiKhoan, @TenDaiLy, @SoDienThoai, @Email, @DiaChi);
+        
+        SET @MaDaiLy = SCOPE_IDENTITY();
+        SELECT 'SUCCESS' AS Status, @MaDaiLy AS MaDaiLy;
+    END TRY
+    BEGIN CATCH
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+
+-- SP UPDATE
+CREATE OR ALTER PROCEDURE sp_DaiLy_Update
+    @MaDaiLy INT,
+    @TenDaiLy NVARCHAR(100) = NULL,
+    @SoDienThoai NVARCHAR(20) = NULL,
+    @Email NVARCHAR(100) = NULL,
+    @DiaChi NVARCHAR(255) = NULL
+AS
+BEGIN
+    BEGIN TRY
+        UPDATE DaiLy
+        SET 
+            TenDaiLy = ISNULL(@TenDaiLy, TenDaiLy),
+            SoDienThoai = ISNULL(@SoDienThoai, SoDienThoai),
+            Email = ISNULL(@Email, Email),
+            DiaChi = ISNULL(@DiaChi, DiaChi)
+        WHERE MaDaiLy = @MaDaiLy;
+        
+        SELECT 'SUCCESS' AS Status, 'Cập nhật thành công' AS Message;
+    END TRY
+    BEGIN CATCH
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+
+-- SP DELETE
+CREATE OR ALTER PROCEDURE sp_DaiLy_Delete
+    @MaDaiLy INT
+AS
+BEGIN
+    BEGIN TRY
+        DELETE FROM DaiLy WHERE MaDaiLy = @MaDaiLy;
+        SELECT 'SUCCESS' AS Status, 'Xóa thành công' AS Message;
+    END TRY
+    BEGIN CATCH
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+
+-- SP SEARCH
+CREATE OR ALTER PROCEDURE sp_DaiLy_Search
+    @TenDaiLy NVARCHAR(100) = NULL,
+    @SoDienThoai NVARCHAR(20) = NULL,
+    @Email NVARCHAR(100) = NULL,
+    @DiaChi NVARCHAR(255) = NULL
+AS
+BEGIN
+    SELECT 
+        DL.MaDaiLy,
+        DL.MaTaiKhoan,
+        DL.TenDaiLy,
+        DL.SoDienThoai,
+        DL.Email,
+        DL.DiaChi,
+        TK.TenDangNhap,
+        TK.TrangThai
+    FROM DaiLy DL
+    JOIN TaiKhoan TK ON DL.MaTaiKhoan = TK.MaTaiKhoan
+    WHERE 
+        (@TenDaiLy IS NULL OR DL.TenDaiLy LIKE '%' + @TenDaiLy + '%')
+        AND (@SoDienThoai IS NULL OR DL.SoDienThoai LIKE '%' + @SoDienThoai + '%')
+        AND (@Email IS NULL OR DL.Email LIKE '%' + @Email + '%')
+        AND (@DiaChi IS NULL OR DL.DiaChi LIKE '%' + @DiaChi + '%')
+    ORDER BY DL.MaDaiLy DESC;
+END;
+GO
+
+-- ============================================================================
+-- STORED PROCEDURES FOR SANPHAM TABLE
+-- ============================================================================
+
+USE BTL_HDV1;
+
+-- SP GET ALL
+CREATE OR ALTER PROCEDURE sp_SanPham_GetAll
+AS
+BEGIN
+    SELECT 
+        MaSanPham,
+        TenSanPham,
+        DonViTinh,
+        MoTa,
+        NgayTao
+    FROM SanPham
+    ORDER BY MaSanPham DESC;
+END;
+GO
+
+-- SP GET BY ID
+CREATE OR ALTER PROCEDURE sp_SanPham_GetById
+    @MaSanPham INT
+AS
+BEGIN
+    SELECT 
+        MaSanPham,
+        TenSanPham,
+        DonViTinh,
+        MoTa,
+        NgayTao
+    FROM SanPham
+    WHERE MaSanPham = @MaSanPham;
+END;
+GO
+
+-- SP CREATE
+CREATE OR ALTER PROCEDURE sp_SanPham_Create
+    @TenSanPham NVARCHAR(100),
+    @DonViTinh NVARCHAR(20),
+    @MoTa NVARCHAR(255) = NULL,
+    @MaSanPham INT OUTPUT
+AS
+BEGIN
+    BEGIN TRY
+        INSERT INTO SanPham (TenSanPham, DonViTinh, MoTa)
+        VALUES (@TenSanPham, @DonViTinh, @MoTa);
+        
+        SET @MaSanPham = SCOPE_IDENTITY();
+        SELECT 'SUCCESS' AS Status, @MaSanPham AS MaSanPham;
+    END TRY
+    BEGIN CATCH
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+
+-- SP UPDATE
+CREATE OR ALTER PROCEDURE sp_SanPham_Update
+    @MaSanPham INT,
+    @TenSanPham NVARCHAR(100) = NULL,
+    @DonViTinh NVARCHAR(20) = NULL,
+    @MoTa NVARCHAR(255) = NULL
+AS
+BEGIN
+    BEGIN TRY
+        UPDATE SanPham
+        SET 
+            TenSanPham = ISNULL(@TenSanPham, TenSanPham),
+            DonViTinh = ISNULL(@DonViTinh, DonViTinh),
+            MoTa = ISNULL(@MoTa, MoTa)
+        WHERE MaSanPham = @MaSanPham;
+        
+        SELECT 'SUCCESS' AS Status, 'Cập nhật thành công' AS Message;
+    END TRY
+    BEGIN CATCH
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+
+-- SP DELETE
+CREATE OR ALTER PROCEDURE sp_SanPham_Delete
+    @MaSanPham INT
+AS
+BEGIN
+    BEGIN TRY
+        DELETE FROM SanPham WHERE MaSanPham = @MaSanPham;
+        SELECT 'SUCCESS' AS Status, 'Xóa thành công' AS Message;
+    END TRY
+    BEGIN CATCH
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+
+-- SP SEARCH
+CREATE OR ALTER PROCEDURE sp_SanPham_Search
+    @TenSanPham NVARCHAR(100) = NULL,
+    @DonViTinh NVARCHAR(20) = NULL
+AS
+BEGIN
+    SELECT 
+        MaSanPham,
+        TenSanPham,
+        DonViTinh,
+        MoTa,
+        NgayTao
+    FROM SanPham
+    WHERE 
+        (@TenSanPham IS NULL OR TenSanPham LIKE '%' + @TenSanPham + '%')
+        AND (@DonViTinh IS NULL OR DonViTinh = @DonViTinh)
+    ORDER BY MaSanPham DESC;
+END;
+GO
+
+-- ============================================================================
+-- STORED PROCEDURES FOR LONONGSAN TABLE
+-- ============================================================================
+
+USE BTL_HDV1;
+
+-- SP GET ALL
+CREATE OR ALTER PROCEDURE sp_LoNongSan_GetAll
+AS
+BEGIN
+    SELECT 
+        LNS.MaLo,
+        LNS.MaTrangTrai,
+        LNS.MaSanPham,
+        LNS.SoLuongBanDau,
+        LNS.SoLuongHienTai,
+        LNS.NgayThuHoach,
+        LNS.HanSuDung,
+        LNS.SoChungNhanLo,
+        LNS.MaQR,
+        LNS.TrangThai,
+        LNS.NgayTao,
+        TT.TenTrangTrai,
+        SP.TenSanPham,
+        SP.DonViTinh
+    FROM LoNongSan LNS
+    JOIN TrangTrai TT ON LNS.MaTrangTrai = TT.MaTrangTrai
+    JOIN SanPham SP ON LNS.MaSanPham = SP.MaSanPham
+    ORDER BY LNS.MaLo DESC;
+END;
+GO
+
+-- SP GET BY ID
+CREATE OR ALTER PROCEDURE sp_LoNongSan_GetById
+    @MaLo INT
+AS
+BEGIN
+    SELECT 
+        LNS.MaLo,
+        LNS.MaTrangTrai,
+        LNS.MaSanPham,
+        LNS.SoLuongBanDau,
+        LNS.SoLuongHienTai,
+        LNS.NgayThuHoach,
+        LNS.HanSuDung,
+        LNS.SoChungNhanLo,
+        LNS.MaQR,
+        LNS.TrangThai,
+        LNS.NgayTao,
+        TT.TenTrangTrai,
+        SP.TenSanPham,
+        SP.DonViTinh
+    FROM LoNongSan LNS
+    JOIN TrangTrai TT ON LNS.MaTrangTrai = TT.MaTrangTrai
+    JOIN SanPham SP ON LNS.MaSanPham = SP.MaSanPham
+    WHERE LNS.MaLo = @MaLo;
+END;
+GO
+
+-- SP CREATE
+CREATE OR ALTER PROCEDURE sp_LoNongSan_Create
+    @MaTrangTrai INT,
+    @MaSanPham INT,
+    @SoLuongBanDau DECIMAL(18,2),
+    @NgayThuHoach DATE,
+    @HanSuDung DATE,
+    @SoChungNhanLo NVARCHAR(50) = NULL,
+    @MaQR NVARCHAR(255) = NULL,
+    @MaLo INT OUTPUT
+AS
+BEGIN
+    BEGIN TRY
+        INSERT INTO LoNongSan (MaTrangTrai, MaSanPham, SoLuongBanDau, SoLuongHienTai, NgayThuHoach, HanSuDung, SoChungNhanLo, MaQR, TrangThai)
+        VALUES (@MaTrangTrai, @MaSanPham, @SoLuongBanDau, @SoLuongBanDau, @NgayThuHoach, @HanSuDung, @SoChungNhanLo, @MaQR, N'tai_trang_trai');
+        
+        SET @MaLo = SCOPE_IDENTITY();
+        SELECT 'SUCCESS' AS Status, @MaLo AS MaLo;
+    END TRY
+    BEGIN CATCH
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+
+-- SP UPDATE
+CREATE OR ALTER PROCEDURE sp_LoNongSan_Update
+    @MaLo INT,
+    @SoLuongHienTai DECIMAL(18,2) = NULL,
+    @TrangThai NVARCHAR(30) = NULL,
+    @HanSuDung DATE = NULL
+AS
+BEGIN
+    BEGIN TRY
+        UPDATE LoNongSan
+        SET 
+            SoLuongHienTai = ISNULL(@SoLuongHienTai, SoLuongHienTai),
+            TrangThai = ISNULL(@TrangThai, TrangThai),
+            HanSuDung = ISNULL(@HanSuDung, HanSuDung)
+        WHERE MaLo = @MaLo;
+        
+        SELECT 'SUCCESS' AS Status, 'Cập nhật thành công' AS Message;
+    END TRY
+    BEGIN CATCH
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+
+-- SP DELETE
+CREATE OR ALTER PROCEDURE sp_LoNongSan_Delete
+    @MaLo INT
+AS
+BEGIN
+    BEGIN TRY
+        DELETE FROM LoNongSan WHERE MaLo = @MaLo;
+        SELECT 'SUCCESS' AS Status, 'Xóa thành công' AS Message;
+    END TRY
+    BEGIN CATCH
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+
+-- SP SEARCH
+CREATE OR ALTER PROCEDURE sp_LoNongSan_Search
+    @MaTrangTrai INT = NULL,
+    @MaSanPham INT = NULL,
+    @TrangThai NVARCHAR(30) = NULL,
+    @MaQR NVARCHAR(255) = NULL
+AS
+BEGIN
+    SELECT 
+        LNS.MaLo,
+        LNS.MaTrangTrai,
+        LNS.MaSanPham,
+        LNS.SoLuongBanDau,
+        LNS.SoLuongHienTai,
+        LNS.NgayThuHoach,
+        LNS.HanSuDung,
+        LNS.SoChungNhanLo,
+        LNS.MaQR,
+        LNS.TrangThai,
+        LNS.NgayTao,
+        TT.TenTrangTrai,
+        SP.TenSanPham,
+        SP.DonViTinh
+    FROM LoNongSan LNS
+    JOIN TrangTrai TT ON LNS.MaTrangTrai = TT.MaTrangTrai
+    JOIN SanPham SP ON LNS.MaSanPham = SP.MaSanPham
+    WHERE 
+        (@MaTrangTrai IS NULL OR LNS.MaTrangTrai = @MaTrangTrai)
+        AND (@MaSanPham IS NULL OR LNS.MaSanPham = @MaSanPham)
+        AND (@TrangThai IS NULL OR LNS.TrangThai = @TrangThai)
+        AND (@MaQR IS NULL OR LNS.MaQR LIKE '%' + @MaQR + '%')
+    ORDER BY LNS.MaLo DESC;
+END;
+GO
+
+-- ============================================================================
+-- STORED PROCEDURES FOR DONHANG TABLE
+-- ============================================================================
+
+USE BTL_HDV1;
+
+-- SP GET ALL
+CREATE OR ALTER PROCEDURE sp_DonHang_GetAll
+AS
+BEGIN
+    SELECT 
+        MaDonHang,
+        LoaiDon,
+        NgayDat,
+        NgayGiao,
+        TrangThai,
+        TongSoLuong,
+        TongGiaTri,
+        GhiChu
+    FROM DonHang
+    ORDER BY MaDonHang DESC;
+END;
+GO
+
+-- SP GET BY ID
+CREATE OR ALTER PROCEDURE sp_DonHang_GetById
+    @MaDonHang INT
+AS
+BEGIN
+    SELECT 
+        MaDonHang,
+        LoaiDon,
+        NgayDat,
+        NgayGiao,
+        TrangThai,
+        TongSoLuong,
+        TongGiaTri,
+        GhiChu
+    FROM DonHang
+    WHERE MaDonHang = @MaDonHang;
+END;
+GO
+
+-- SP CREATE
+CREATE OR ALTER PROCEDURE sp_DonHang_Create
+    @LoaiDon NVARCHAR(30),
+    @GhiChu NVARCHAR(255) = NULL,
+    @MaDonHang INT OUTPUT
+AS
+BEGIN
+    BEGIN TRY
+        INSERT INTO DonHang (LoaiDon, TrangThai, GhiChu)
+        VALUES (@LoaiDon, N'chua_nhan', @GhiChu);
+        
+        SET @MaDonHang = SCOPE_IDENTITY();
+        SELECT 'SUCCESS' AS Status, @MaDonHang AS MaDonHang;
+    END TRY
+    BEGIN CATCH
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+
+-- SP UPDATE
+CREATE OR ALTER PROCEDURE sp_DonHang_Update
+    @MaDonHang INT,
+    @TrangThai NVARCHAR(30) = NULL,
+    @NgayGiao DATETIME2 = NULL,
+    @TongSoLuong DECIMAL(18,2) = NULL,
+    @TongGiaTri DECIMAL(18,2) = NULL,
+    @GhiChu NVARCHAR(255) = NULL
+AS
+BEGIN
+    BEGIN TRY
+        UPDATE DonHang
+        SET 
+            TrangThai = ISNULL(@TrangThai, TrangThai),
+            NgayGiao = ISNULL(@NgayGiao, NgayGiao),
+            TongSoLuong = ISNULL(@TongSoLuong, TongSoLuong),
+            TongGiaTri = ISNULL(@TongGiaTri, TongGiaTri),
+            GhiChu = ISNULL(@GhiChu, GhiChu)
+        WHERE MaDonHang = @MaDonHang;
+        
+        SELECT 'SUCCESS' AS Status, 'Cập nhật thành công' AS Message;
+    END TRY
+    BEGIN CATCH
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+
+-- SP DELETE
+CREATE OR ALTER PROCEDURE sp_DonHang_Delete
+    @MaDonHang INT
+AS
+BEGIN
+    BEGIN TRY
+        DELETE FROM DonHang WHERE MaDonHang = @MaDonHang;
+        SELECT 'SUCCESS' AS Status, 'Xóa thành công' AS Message;
+    END TRY
+    BEGIN CATCH
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+
+-- SP SEARCH
+CREATE OR ALTER PROCEDURE sp_DonHang_Search
+    @LoaiDon NVARCHAR(30) = NULL,
+    @TrangThai NVARCHAR(30) = NULL,
+    @TuNgay DATETIME2 = NULL,
+    @DenNgay DATETIME2 = NULL
+AS
+BEGIN
+    SELECT 
+        MaDonHang,
+        LoaiDon,
+        NgayDat,
+        NgayGiao,
+        TrangThai,
+        TongSoLuong,
+        TongGiaTri,
+        GhiChu
+    FROM DonHang
+    WHERE 
+        (@LoaiDon IS NULL OR LoaiDon = @LoaiDon)
+        AND (@TrangThai IS NULL OR TrangThai = @TrangThai)
+        AND (@TuNgay IS NULL OR NgayDat >= @TuNgay)
+        AND (@DenNgay IS NULL OR NgayDat <= @DenNgay)
+    ORDER BY MaDonHang DESC;
+END;
+GO
+
+-- ============================================================================
+-- STORED PROCEDURES FOR KIEMDINH TABLE
+-- ============================================================================
+
+USE BTL_HDV1;
+
+-- SP GET ALL
+CREATE OR ALTER PROCEDURE sp_KiemDinh_GetAll
+AS
+BEGIN
+    SELECT 
+        KD.MaKiemDinh,
+        KD.MaLo,
+        KD.NguoiKiemDinh,
+        KD.MaDaiLy,
+        KD.MaSieuThi,
+        KD.NgayKiemDinh,
+        KD.KetQua,
+        KD.TrangThai,
+        KD.BienBan,
+        KD.GhiChu,
+        LNS.SoChungNhanLo,
+        SP.TenSanPham
+    FROM KiemDinh KD
+    JOIN LoNongSan LNS ON KD.MaLo = LNS.MaLo
+    JOIN SanPham SP ON LNS.MaSanPham = SP.MaSanPham
+    ORDER BY KD.MaKiemDinh DESC;
+END;
+GO
+
+-- SP GET BY ID
+CREATE OR ALTER PROCEDURE sp_KiemDinh_GetById
+    @MaKiemDinh INT
+AS
+BEGIN
+    SELECT 
+        KD.MaKiemDinh,
+        KD.MaLo,
+        KD.NguoiKiemDinh,
+        KD.MaDaiLy,
+        KD.MaSieuThi,
+        KD.NgayKiemDinh,
+        KD.KetQua,
+        KD.TrangThai,
+        KD.BienBan,
+        KD.GhiChu,
+        LNS.SoChungNhanLo,
+        SP.TenSanPham
+    FROM KiemDinh KD
+    JOIN LoNongSan LNS ON KD.MaLo = LNS.MaLo
+    JOIN SanPham SP ON LNS.MaSanPham = SP.MaSanPham
+    WHERE KD.MaKiemDinh = @MaKiemDinh;
+END;
+GO
+
+-- SP CREATE
+CREATE OR ALTER PROCEDURE sp_KiemDinh_Create
+    @MaLo INT,
+    @NguoiKiemDinh NVARCHAR(100),
+    @MaDaiLy INT = NULL,
+    @MaSieuThi INT = NULL,
+    @KetQua NVARCHAR(20),
+    @BienBan NVARCHAR(MAX) = NULL,
+    @GhiChu NVARCHAR(255) = NULL,
+    @MaKiemDinh INT OUTPUT
+AS
+BEGIN
+    BEGIN TRY
+        INSERT INTO KiemDinh (MaLo, NguoiKiemDinh, MaDaiLy, MaSieuThi, KetQua, BienBan, GhiChu)
+        VALUES (@MaLo, @NguoiKiemDinh, @MaDaiLy, @MaSieuThi, @KetQua, @BienBan, @GhiChu);
+        
+        SET @MaKiemDinh = SCOPE_IDENTITY();
+        SELECT 'SUCCESS' AS Status, @MaKiemDinh AS MaKiemDinh;
+    END TRY
+    BEGIN CATCH
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+
+-- SP UPDATE
+CREATE OR ALTER PROCEDURE sp_KiemDinh_Update
+    @MaKiemDinh INT,
+    @KetQua NVARCHAR(20) = NULL,
+    @TrangThai NVARCHAR(20) = NULL,
+    @BienBan NVARCHAR(MAX) = NULL,
+    @ChuKySo NVARCHAR(255) = NULL,
+    @GhiChu NVARCHAR(255) = NULL
+AS
+BEGIN
+    BEGIN TRY
+        UPDATE KiemDinh
+        SET 
+            KetQua = ISNULL(@KetQua, KetQua),
+            TrangThai = ISNULL(@TrangThai, TrangThai),
+            BienBan = ISNULL(@BienBan, BienBan),
+            ChuKySo = ISNULL(@ChuKySo, ChuKySo),
+            GhiChu = ISNULL(@GhiChu, GhiChu)
+        WHERE MaKiemDinh = @MaKiemDinh;
+        
+        SELECT 'SUCCESS' AS Status, 'Cập nhật thành công' AS Message;
+    END TRY
+    BEGIN CATCH
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+
+-- SP DELETE
+CREATE OR ALTER PROCEDURE sp_KiemDinh_Delete
+    @MaKiemDinh INT
+AS
+BEGIN
+    BEGIN TRY
+        DELETE FROM KiemDinh WHERE MaKiemDinh = @MaKiemDinh;
+        SELECT 'SUCCESS' AS Status, 'Xóa thành công' AS Message;
+    END TRY
+    BEGIN CATCH
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+
+-- SP SEARCH
+CREATE OR ALTER PROCEDURE sp_KiemDinh_Search
+    @MaLo INT = NULL,
+    @KetQua NVARCHAR(20) = NULL,
+    @TrangThai NVARCHAR(20) = NULL,
+    @NguoiKiemDinh NVARCHAR(100) = NULL
+AS
+BEGIN
+    SELECT 
+        KD.MaKiemDinh,
+        KD.MaLo,
+        KD.NguoiKiemDinh,
+        KD.MaDaiLy,
+        KD.MaSieuThi,
+        KD.NgayKiemDinh,
+        KD.KetQua,
+        KD.TrangThai,
+        KD.BienBan,
+        KD.GhiChu,
+        LNS.SoChungNhanLo,
+        SP.TenSanPham
+    FROM KiemDinh KD
+    JOIN LoNongSan LNS ON KD.MaLo = LNS.MaLo
+    JOIN SanPham SP ON LNS.MaSanPham = SP.MaSanPham
+    WHERE 
+        (@MaLo IS NULL OR KD.MaLo = @MaLo)
+        AND (@KetQua IS NULL OR KD.KetQua = @KetQua)
+        AND (@TrangThai IS NULL OR KD.TrangThai = @TrangThai)
+        AND (@NguoiKiemDinh IS NULL OR KD.NguoiKiemDinh LIKE '%' + @NguoiKiemDinh + '%')
+    ORDER BY KD.MaKiemDinh DESC;
+END;
+GO
+
+
+
+
+
+-- =====================================================
+-- STORED PROCEDURES FOR ADMIN TABLE
+-- =====================================================
+
+-- GetAll: Lấy tất cả admin
+CREATE PROCEDURE sp_Admin_GetAll
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaAdmin,
+            MaTaiKhoan,
+            HoTen,
+            SoDienThoai,
+            Email
+        FROM Admin
+        ORDER BY MaAdmin
+        
+        SELECT 'Success' AS Status, 'Get all admin successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- GetById: Lấy admin theo MaAdmin
+CREATE PROCEDURE sp_Admin_GetById
+    @MaAdmin INT
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaAdmin,
+            MaTaiKhoan,
+            HoTen,
+            SoDienThoai,
+            Email
+        FROM Admin
+        WHERE MaAdmin = @MaAdmin
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Admin not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Get admin successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Create: Thêm mới admin
+CREATE PROCEDURE sp_Admin_Create
+    @MaTaiKhoan INT,
+    @HoTen NVARCHAR(100),
+    @SoDienThoai NVARCHAR(20),
+    @Email NVARCHAR(100)
+AS
+BEGIN
+    BEGIN TRY
+        INSERT INTO Admin (MaTaiKhoan, HoTen, SoDienThoai, Email)
+        VALUES (@MaTaiKhoan, @HoTen, @SoDienThoai, @Email)
+        
+        SELECT 'Success' AS Status, 'Admin created successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Update: Cập nhật admin
+CREATE PROCEDURE sp_Admin_Update
+    @MaAdmin INT,
+    @HoTen NVARCHAR(100),
+    @SoDienThoai NVARCHAR(20),
+    @Email NVARCHAR(100)
+AS
+BEGIN
+    BEGIN TRY
+        UPDATE Admin
+        SET 
+            HoTen = @HoTen,
+            SoDienThoai = @SoDienThoai,
+            Email = @Email
+        WHERE MaAdmin = @MaAdmin
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Admin not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Admin updated successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Delete: Xóa admin
+CREATE PROCEDURE sp_Admin_Delete
+    @MaAdmin INT
+AS
+BEGIN
+    BEGIN TRY
+        DELETE FROM Admin
+        WHERE MaAdmin = @MaAdmin
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Admin not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Admin deleted successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Search: Tìm kiếm admin theo tên hoặc email
+CREATE PROCEDURE sp_Admin_Search
+    @SearchText NVARCHAR(100)
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaAdmin,
+            MaTaiKhoan,
+            HoTen,
+            SoDienThoai,
+            Email
+        FROM Admin
+        WHERE HoTen LIKE N'%' + @SearchText + '%'
+            OR Email LIKE N'%' + @SearchText + '%'
+            OR SoDienThoai LIKE N'%' + @SearchText + '%'
+        ORDER BY HoTen
+        
+        SELECT 'Success' AS Status, 'Search completed' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+
+
+-- =====================================================
+-- STORED PROCEDURES FOR SIEUTHI TABLE
+-- =====================================================
+
+-- GetAll: Lấy tất cả siêu thị
+CREATE PROCEDURE sp_SieuThi_GetAll
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaSieuThi,
+            MaTaiKhoan,
+            TenSieuThi,
+            SoDienThoai,
+            Email,
+            DiaChi
+        FROM SieuThi
+        ORDER BY TenSieuThi
+        
+        SELECT 'Success' AS Status, 'Get all supermarkets successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- GetById: Lấy siêu thị theo MaSieuThi
+CREATE PROCEDURE sp_SieuThi_GetById
+    @MaSieuThi INT
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaSieuThi,
+            MaTaiKhoan,
+            TenSieuThi,
+            SoDienThoai,
+            Email,
+            DiaChi
+        FROM SieuThi
+        WHERE MaSieuThi = @MaSieuThi
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Supermarket not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Get supermarket successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Create: Thêm mới siêu thị
+CREATE PROCEDURE sp_SieuThi_Create
+    @MaTaiKhoan INT,
+    @TenSieuThi NVARCHAR(100),
+    @SoDienThoai NVARCHAR(20),
+    @Email NVARCHAR(100),
+    @DiaChi NVARCHAR(255)
+AS
+BEGIN
+    BEGIN TRY
+        INSERT INTO SieuThi (MaTaiKhoan, TenSieuThi, SoDienThoai, Email, DiaChi)
+        VALUES (@MaTaiKhoan, @TenSieuThi, @SoDienThoai, @Email, @DiaChi)
+        
+        SELECT 'Success' AS Status, 'Supermarket created successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Update: Cập nhật siêu thị
+CREATE PROCEDURE sp_SieuThi_Update
+    @MaSieuThi INT,
+    @TenSieuThi NVARCHAR(100),
+    @SoDienThoai NVARCHAR(20),
+    @Email NVARCHAR(100),
+    @DiaChi NVARCHAR(255)
+AS
+BEGIN
+    BEGIN TRY
+        UPDATE SieuThi
+        SET 
+            TenSieuThi = @TenSieuThi,
+            SoDienThoai = @SoDienThoai,
+            Email = @Email,
+            DiaChi = @DiaChi
+        WHERE MaSieuThi = @MaSieuThi
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Supermarket not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Supermarket updated successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Delete: Xóa siêu thị
+CREATE PROCEDURE sp_SieuThi_Delete
+    @MaSieuThi INT
+AS
+BEGIN
+    BEGIN TRY
+        DELETE FROM SieuThi
+        WHERE MaSieuThi = @MaSieuThi
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Supermarket not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Supermarket deleted successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Search: Tìm kiếm siêu thị theo tên, email, hoặc địa chỉ
+CREATE PROCEDURE sp_SieuThi_Search
+    @SearchText NVARCHAR(100)
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaSieuThi,
+            MaTaiKhoan,
+            TenSieuThi,
+            SoDienThoai,
+            Email,
+            DiaChi
+        FROM SieuThi
+        WHERE TenSieuThi LIKE N'%' + @SearchText + '%'
+            OR Email LIKE N'%' + @SearchText + '%'
+            OR DiaChi LIKE N'%' + @SearchText + '%'
+        ORDER BY TenSieuThi
+        
+        SELECT 'Success' AS Status, 'Search completed' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+
+
+-- =====================================================
+-- STORED PROCEDURES FOR TRANGTRAI TABLE
+-- =====================================================
+
+-- GetAll: Lấy tất cả trang trại
+CREATE PROCEDURE sp_TrangTrai_GetAll
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaTrangTrai,
+            MaNongDan,
+            TenTrangTrai,
+            DiaChi,
+            SoChungNhan,
+            NgayTao
+        FROM TrangTrai
+        ORDER BY TenTrangTrai
+        
+        SELECT 'Success' AS Status, 'Get all farms successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- GetById: Lấy trang trại theo MaTrangTrai
+CREATE PROCEDURE sp_TrangTrai_GetById
+    @MaTrangTrai INT
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaTrangTrai,
+            MaNongDan,
+            TenTrangTrai,
+            DiaChi,
+            SoChungNhan,
+            NgayTao
+        FROM TrangTrai
+        WHERE MaTrangTrai = @MaTrangTrai
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Farm not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Get farm successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Create: Thêm mới trang trại
+CREATE PROCEDURE sp_TrangTrai_Create
+    @MaNongDan INT,
+    @TenTrangTrai NVARCHAR(100),
+    @DiaChi NVARCHAR(255),
+    @SoChungNhan NVARCHAR(50)
+AS
+BEGIN
+    BEGIN TRY
+        INSERT INTO TrangTrai (MaNongDan, TenTrangTrai, DiaChi, SoChungNhan)
+        VALUES (@MaNongDan, @TenTrangTrai, @DiaChi, @SoChungNhan)
+        
+        SELECT 'Success' AS Status, 'Farm created successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Update: Cập nhật trang trại
+CREATE PROCEDURE sp_TrangTrai_Update
+    @MaTrangTrai INT,
+    @TenTrangTrai NVARCHAR(100),
+    @DiaChi NVARCHAR(255),
+    @SoChungNhan NVARCHAR(50)
+AS
+BEGIN
+    BEGIN TRY
+        UPDATE TrangTrai
+        SET 
+            TenTrangTrai = @TenTrangTrai,
+            DiaChi = @DiaChi,
+            SoChungNhan = @SoChungNhan
+        WHERE MaTrangTrai = @MaTrangTrai
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Farm not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Farm updated successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Delete: Xóa trang trại
+CREATE PROCEDURE sp_TrangTrai_Delete
+    @MaTrangTrai INT
+AS
+BEGIN
+    BEGIN TRY
+        DELETE FROM TrangTrai
+        WHERE MaTrangTrai = @MaTrangTrai
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Farm not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Farm deleted successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Search: Tìm kiếm trang trại theo tên hoặc địa chỉ
+CREATE PROCEDURE sp_TrangTrai_Search
+    @SearchText NVARCHAR(100)
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaTrangTrai,
+            MaNongDan,
+            TenTrangTrai,
+            DiaChi,
+            SoChungNhan,
+            NgayTao
+        FROM TrangTrai
+        WHERE TenTrangTrai LIKE N'%' + @SearchText + '%'
+            OR DiaChi LIKE N'%' + @SearchText + '%'
+        ORDER BY TenTrangTrai
+        
+        SELECT 'Success' AS Status, 'Search completed' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+
+
+-- =====================================================
+-- STORED PROCEDURES FOR KHO TABLE
+-- =====================================================
+
+-- GetAll: Lấy tất cả kho
+CREATE PROCEDURE sp_Kho_GetAll
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaKho,
+            LoaiKho,
+            MaDaiLy,
+            MaSieuThi,
+            TenKho,
+            DiaChi,
+            TrangThai,
+            NgayTao
+        FROM Kho
+        ORDER BY TenKho
+        
+        SELECT 'Success' AS Status, 'Get all warehouses successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- GetById: Lấy kho theo MaKho
+CREATE PROCEDURE sp_Kho_GetById
+    @MaKho INT
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaKho,
+            LoaiKho,
+            MaDaiLy,
+            MaSieuThi,
+            TenKho,
+            DiaChi,
+            TrangThai,
+            NgayTao
+        FROM Kho
+        WHERE MaKho = @MaKho
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Warehouse not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Get warehouse successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Create: Thêm mới kho
+CREATE PROCEDURE sp_Kho_Create
+    @LoaiKho NVARCHAR(20),
+    @MaDaiLy INT = NULL,
+    @MaSieuThi INT = NULL,
+    @TenKho NVARCHAR(100),
+    @DiaChi NVARCHAR(255)
+AS
+BEGIN
+    BEGIN TRY
+        INSERT INTO Kho (LoaiKho, MaDaiLy, MaSieuThi, TenKho, DiaChi)
+        VALUES (@LoaiKho, @MaDaiLy, @MaSieuThi, @TenKho, @DiaChi)
+        
+        SELECT 'Success' AS Status, 'Warehouse created successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Update: Cập nhật kho
+CREATE PROCEDURE sp_Kho_Update
+    @MaKho INT,
+    @TenKho NVARCHAR(100),
+    @DiaChi NVARCHAR(255),
+    @TrangThai NVARCHAR(20)
+AS
+BEGIN
+    BEGIN TRY
+        UPDATE Kho
+        SET 
+            TenKho = @TenKho,
+            DiaChi = @DiaChi,
+            TrangThai = @TrangThai
+        WHERE MaKho = @MaKho
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Warehouse not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Warehouse updated successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Delete: Xóa kho
+CREATE PROCEDURE sp_Kho_Delete
+    @MaKho INT
+AS
+BEGIN
+    BEGIN TRY
+        DELETE FROM Kho
+        WHERE MaKho = @MaKho
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Warehouse not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Warehouse deleted successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Search: Tìm kiếm kho theo loại hoặc tên
+CREATE PROCEDURE sp_Kho_Search
+    @SearchText NVARCHAR(100)
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaKho,
+            LoaiKho,
+            MaDaiLy,
+            MaSieuThi,
+            TenKho,
+            DiaChi,
+            TrangThai,
+            NgayTao
+        FROM Kho
+        WHERE TenKho LIKE N'%' + @SearchText + '%'
+            OR DiaChi LIKE N'%' + @SearchText + '%'
+            OR LoaiKho LIKE N'%' + @SearchText + '%'
+        ORDER BY TenKho
+        
+        SELECT 'Success' AS Status, 'Search completed' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+
+-- =====================================================
+-- STORED PROCEDURES FOR TONKHO TABLE
+-- =====================================================
+
+-- GetAll: Lấy tất cả tồn kho
+CREATE PROCEDURE sp_TonKho_GetAll
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaKho,
+            MaLo,
+            SoLuong,
+            CapNhatCuoi
+        FROM TonKho
+        ORDER BY MaKho, MaLo
+        
+        SELECT 'Success' AS Status, 'Get all inventory successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- GetById: Lấy tồn kho theo MaKho và MaLo
+CREATE PROCEDURE sp_TonKho_GetById
+    @MaKho INT,
+    @MaLo INT
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaKho,
+            MaLo,
+            SoLuong,
+            CapNhatCuoi
+        FROM TonKho
+        WHERE MaKho = @MaKho AND MaLo = @MaLo
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Inventory record not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Get inventory successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Create: Thêm mới tồn kho
+CREATE PROCEDURE sp_TonKho_Create
+    @MaKho INT,
+    @MaLo INT,
+    @SoLuong DECIMAL(18,2)
+AS
+BEGIN
+    BEGIN TRY
+        INSERT INTO TonKho (MaKho, MaLo, SoLuong)
+        VALUES (@MaKho, @MaLo, @SoLuong)
+        
+        SELECT 'Success' AS Status, 'Inventory created successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Update: Cập nhật tồn kho
+CREATE PROCEDURE sp_TonKho_Update
+    @MaKho INT,
+    @MaLo INT,
+    @SoLuong DECIMAL(18,2)
+AS
+BEGIN
+    BEGIN TRY
+        UPDATE TonKho
+        SET 
+            SoLuong = @SoLuong,
+            CapNhatCuoi = SYSDATETIME()
+        WHERE MaKho = @MaKho AND MaLo = @MaLo
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Inventory record not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Inventory updated successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Delete: Xóa tồn kho
+CREATE PROCEDURE sp_TonKho_Delete
+    @MaKho INT,
+    @MaLo INT
+AS
+BEGIN
+    BEGIN TRY
+        DELETE FROM TonKho
+        WHERE MaKho = @MaKho AND MaLo = @MaLo
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Inventory record not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Inventory deleted successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Search: Tìm kiếm tồn kho theo MaKho
+CREATE PROCEDURE sp_TonKho_SearchByKho
+    @MaKho INT
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaKho,
+            MaLo,
+            SoLuong,
+            CapNhatCuoi
+        FROM TonKho
+        WHERE MaKho = @MaKho
+        ORDER BY MaLo
+        
+        SELECT 'Success' AS Status, 'Search completed' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+
+-- =====================================================
+-- STORED PROCEDURES FOR DONHANGDAILY TABLE
+-- =====================================================
+
+-- GetAll: Lấy tất cả đơn hàng đại lý
+CREATE PROCEDURE sp_DonHangDaiLy_GetAll
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaDonHang,
+            MaDaiLy,
+            MaNongDan
+        FROM DonHangDaiLy
+        ORDER BY MaDonHang DESC
+        
+        SELECT 'Success' AS Status, 'Get all dealer orders successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- GetById: Lấy đơn hàng đại lý theo MaDonHang
+CREATE PROCEDURE sp_DonHangDaiLy_GetById
+    @MaDonHang INT
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaDonHang,
+            MaDaiLy,
+            MaNongDan
+        FROM DonHangDaiLy
+        WHERE MaDonHang = @MaDonHang
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Dealer order not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Get dealer order successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Create: Thêm mới đơn hàng đại lý
+CREATE PROCEDURE sp_DonHangDaiLy_Create
+    @MaDonHang INT,
+    @MaDaiLy INT,
+    @MaNongDan INT
+AS
+BEGIN
+    BEGIN TRY
+        INSERT INTO DonHangDaiLy (MaDonHang, MaDaiLy, MaNongDan)
+        VALUES (@MaDonHang, @MaDaiLy, @MaNongDan)
+        
+        SELECT 'Success' AS Status, 'Dealer order created successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Update: Cập nhật đơn hàng đại lý
+CREATE PROCEDURE sp_DonHangDaiLy_Update
+    @MaDonHang INT,
+    @MaDaiLy INT,
+    @MaNongDan INT
+AS
+BEGIN
+    BEGIN TRY
+        UPDATE DonHangDaiLy
+        SET 
+            MaDaiLy = @MaDaiLy,
+            MaNongDan = @MaNongDan
+        WHERE MaDonHang = @MaDonHang
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Dealer order not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Dealer order updated successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Delete: Xóa đơn hàng đại lý
+CREATE PROCEDURE sp_DonHangDaiLy_Delete
+    @MaDonHang INT
+AS
+BEGIN
+    BEGIN TRY
+        DELETE FROM DonHangDaiLy
+        WHERE MaDonHang = @MaDonHang
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Dealer order not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Dealer order deleted successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Search: Tìm kiếm đơn hàng đại lý theo MaDaiLy hoặc MaNongDan
+CREATE PROCEDURE sp_DonHangDaiLy_Search
+    @SearchType NVARCHAR(10),
+    @SearchId INT
+AS
+BEGIN
+    BEGIN TRY
+        IF @SearchType = 'daily'
+            SELECT 
+                MaDonHang,
+                MaDaiLy,
+                MaNongDan
+            FROM DonHangDaiLy
+            WHERE MaDaiLy = @SearchId
+            ORDER BY MaDonHang DESC
+        ELSE IF @SearchType = 'nongdan'
+            SELECT 
+                MaDonHang,
+                MaDaiLy,
+                MaNongDan
+            FROM DonHangDaiLy
+            WHERE MaNongDan = @SearchId
+            ORDER BY MaDonHang DESC
+        
+        SELECT 'Success' AS Status, 'Search completed' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+
+-- =====================================================
+-- STORED PROCEDURES FOR DONHANGSIEUTHI TABLE
+-- =====================================================
+
+-- GetAll: Lấy tất cả đơn hàng siêu thị
+CREATE PROCEDURE sp_DonHangSieuThi_GetAll
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaDonHang,
+            MaSieuThi,
+            MaDaiLy
+        FROM DonHangSieuThi
+        ORDER BY MaDonHang DESC
+        
+        SELECT 'Success' AS Status, 'Get all supermarket orders successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- GetById: Lấy đơn hàng siêu thị theo MaDonHang
+CREATE PROCEDURE sp_DonHangSieuThi_GetById
+    @MaDonHang INT
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaDonHang,
+            MaSieuThi,
+            MaDaiLy
+        FROM DonHangSieuThi
+        WHERE MaDonHang = @MaDonHang
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Supermarket order not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Get supermarket order successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Create: Thêm mới đơn hàng siêu thị
+CREATE PROCEDURE sp_DonHangSieuThi_Create
+    @MaDonHang INT,
+    @MaSieuThi INT,
+    @MaDaiLy INT
+AS
+BEGIN
+    BEGIN TRY
+        INSERT INTO DonHangSieuThi (MaDonHang, MaSieuThi, MaDaiLy)
+        VALUES (@MaDonHang, @MaSieuThi, @MaDaiLy)
+        
+        SELECT 'Success' AS Status, 'Supermarket order created successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Update: Cập nhật đơn hàng siêu thị
+CREATE PROCEDURE sp_DonHangSieuThi_Update
+    @MaDonHang INT,
+    @MaSieuThi INT,
+    @MaDaiLy INT
+AS
+BEGIN
+    BEGIN TRY
+        UPDATE DonHangSieuThi
+        SET 
+            MaSieuThi = @MaSieuThi,
+            MaDaiLy = @MaDaiLy
+        WHERE MaDonHang = @MaDonHang
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Supermarket order not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Supermarket order updated successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Delete: Xóa đơn hàng siêu thị
+CREATE PROCEDURE sp_DonHangSieuThi_Delete
+    @MaDonHang INT
+AS
+BEGIN
+    BEGIN TRY
+        DELETE FROM DonHangSieuThi
+        WHERE MaDonHang = @MaDonHang
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Supermarket order not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Supermarket order deleted successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Search: Tìm kiếm đơn hàng siêu thị theo MaSieuThi hoặc MaDaiLy
+CREATE PROCEDURE sp_DonHangSieuThi_Search
+    @SearchType NVARCHAR(10),
+    @SearchId INT
+AS
+BEGIN
+    BEGIN TRY
+        IF @SearchType = 'sieuthi'
+            SELECT 
+                MaDonHang,
+                MaSieuThi,
+                MaDaiLy
+            FROM DonHangSieuThi
+            WHERE MaSieuThi = @SearchId
+            ORDER BY MaDonHang DESC
+        ELSE IF @SearchType = 'daily'
+            SELECT 
+                MaDonHang,
+                MaSieuThi,
+                MaDaiLy
+            FROM DonHangSieuThi
+            WHERE MaDaiLy = @SearchId
+            ORDER BY MaDonHang DESC
+        
+        SELECT 'Success' AS Status, 'Search completed' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- =====================================================
+-- STORED PROCEDURES FOR CHITIETDONHANG TABLE
+-- =====================================================
+
+-- GetAll: Lấy tất cả chi tiết đơn hàng
+CREATE PROCEDURE sp_ChiTietDonHang_GetAll
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaDonHang,
+            MaLo,
+            SoLuong,
+            DonGia,
+            ThanhTien
+        FROM ChiTietDonHang
+        ORDER BY MaDonHang, MaLo
+        
+        SELECT 'Success' AS Status, 'Get all order details successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- GetById: Lấy chi tiết đơn hàng theo MaDonHang và MaLo
+CREATE PROCEDURE sp_ChiTietDonHang_GetById
+    @MaDonHang INT,
+    @MaLo INT
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaDonHang,
+            MaLo,
+            SoLuong,
+            DonGia,
+            ThanhTien
+        FROM ChiTietDonHang
+        WHERE MaDonHang = @MaDonHang AND MaLo = @MaLo
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Order detail not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Get order detail successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Create: Thêm mới chi tiết đơn hàng
+CREATE PROCEDURE sp_ChiTietDonHang_Create
+    @MaDonHang INT,
+    @MaLo INT,
+    @SoLuong DECIMAL(18,2),
+    @DonGia DECIMAL(18,2) = NULL,
+    @ThanhTien DECIMAL(18,2) = NULL
+AS
+BEGIN
+    BEGIN TRY
+        INSERT INTO ChiTietDonHang (MaDonHang, MaLo, SoLuong, DonGia, ThanhTien)
+        VALUES (@MaDonHang, @MaLo, @SoLuong, @DonGia, @ThanhTien)
+        
+        SELECT 'Success' AS Status, 'Order detail created successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Update: Cập nhật chi tiết đơn hàng
+CREATE PROCEDURE sp_ChiTietDonHang_Update
+    @MaDonHang INT,
+    @MaLo INT,
+    @SoLuong DECIMAL(18,2),
+    @DonGia DECIMAL(18,2) = NULL,
+    @ThanhTien DECIMAL(18,2) = NULL
+AS
+BEGIN
+    BEGIN TRY
+        UPDATE ChiTietDonHang
+        SET 
+            SoLuong = @SoLuong,
+            DonGia = @DonGia,
+            ThanhTien = @ThanhTien
+        WHERE MaDonHang = @MaDonHang AND MaLo = @MaLo
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Order detail not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Order detail updated successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Delete: Xóa chi tiết đơn hàng
+CREATE PROCEDURE sp_ChiTietDonHang_Delete
+    @MaDonHang INT,
+    @MaLo INT
+AS
+BEGIN
+    BEGIN TRY
+        DELETE FROM ChiTietDonHang
+        WHERE MaDonHang = @MaDonHang AND MaLo = @MaLo
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Order detail not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Order detail deleted successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Search: Tìm kiếm chi tiết đơn hàng theo MaDonHang
+CREATE PROCEDURE sp_ChiTietDonHang_GetByDonHang
+    @MaDonHang INT
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaDonHang,
+            MaLo,
+            SoLuong,
+            DonGia,
+            ThanhTien
+        FROM ChiTietDonHang
+        WHERE MaDonHang = @MaDonHang
+        ORDER BY MaLo
+        
+        SELECT 'Success' AS Status, 'Search completed' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- =====================================================
+-- STORED PROCEDURES FOR DONHANG TABLE
+-- =====================================================
+
+-- GetAll: Lấy tất cả đơn hàng
+CREATE PROCEDURE sp_DonHang_GetAll
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaDonHang,
+            LoaiDon,
+            NgayDat,
+            NgayGiao,
+            TrangThai,
+            TongSoLuong,
+            TongGiaTri,
+            GhiChu
+        FROM DonHang
+        ORDER BY NgayDat DESC
+        
+        SELECT 'Success' AS Status, 'Get all orders successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- GetById: Lấy đơn hàng theo MaDonHang
+CREATE PROCEDURE sp_DonHang_GetById
+    @MaDonHang INT
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaDonHang,
+            LoaiDon,
+            NgayDat,
+            NgayGiao,
+            TrangThai,
+            TongSoLuong,
+            TongGiaTri,
+            GhiChu
+        FROM DonHang
+        WHERE MaDonHang = @MaDonHang
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Order not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Get order successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Create: Thêm mới đơn hàng
+CREATE PROCEDURE sp_DonHang_Create
+    @LoaiDon NVARCHAR(30),
+    @TongSoLuong DECIMAL(18,2) = NULL,
+    @TongGiaTri DECIMAL(18,2) = NULL,
+    @GhiChu NVARCHAR(255) = NULL
+AS
+BEGIN
+    BEGIN TRY
+        INSERT INTO DonHang (LoaiDon, TongSoLuong, TongGiaTri, GhiChu)
+        VALUES (@LoaiDon, @TongSoLuong, @TongGiaTri, @GhiChu)
+        
+        SELECT 'Success' AS Status, 'Order created successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Update: Cập nhật đơn hàng
+CREATE PROCEDURE sp_DonHang_Update
+    @MaDonHang INT,
+    @TrangThai NVARCHAR(30),
+    @NgayGiao DATETIME2 = NULL,
+    @TongSoLuong DECIMAL(18,2) = NULL,
+    @TongGiaTri DECIMAL(18,2) = NULL,
+    @GhiChu NVARCHAR(255) = NULL
+AS
+BEGIN
+    BEGIN TRY
+        UPDATE DonHang
+        SET 
+            TrangThai = @TrangThai,
+            NgayGiao = @NgayGiao,
+            TongSoLuong = @TongSoLuong,
+            TongGiaTri = @TongGiaTri,
+            GhiChu = @GhiChu
+        WHERE MaDonHang = @MaDonHang
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Order not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Order updated successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Delete: Xóa đơn hàng
+CREATE PROCEDURE sp_DonHang_Delete
+    @MaDonHang INT
+AS
+BEGIN
+    BEGIN TRY
+        DELETE FROM DonHang
+        WHERE MaDonHang = @MaDonHang
+        
+        IF @@ROWCOUNT = 0
+            SELECT 'NotFound' AS Status, 'Order not found' AS Message
+        ELSE
+            SELECT 'Success' AS Status, 'Order deleted successfully' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- Search: Tìm kiếm đơn hàng theo trạng thái hoặc loại đơn
+CREATE PROCEDURE sp_DonHang_Search
+    @SearchText NVARCHAR(30)
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaDonHang,
+            LoaiDon,
+            NgayDat,
+            NgayGiao,
+            TrangThai,
+            TongSoLuong,
+            TongGiaTri,
+            GhiChu
+        FROM DonHang
+        WHERE TrangThai LIKE N'%' + @SearchText + '%'
+            OR LoaiDon LIKE N'%' + @SearchText + '%'
+        ORDER BY NgayDat DESC
+        
+        SELECT 'Success' AS Status, 'Search completed' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
