@@ -7,6 +7,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services
 // =====================
 
+// Log connection string for debugging
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+Console.WriteLine($"[NongDanService] Connection String: {connectionString}");
+
 // Repository
 builder.Services.AddScoped<ISanPhamRepository, SanPhamRepository>();
 builder.Services.AddScoped<INongDanRepository, NongDanRepository>();

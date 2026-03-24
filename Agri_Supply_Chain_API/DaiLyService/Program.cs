@@ -7,6 +7,10 @@ var builder = WebApplication.CreateBuilder(args);
 // DEPENDENCY INJECTION
 // ====================
 
+// Log connection string for debugging
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+Console.WriteLine($"[DaiLyService] Connection String: {connectionString}");
+
 // Đăng ký Repository
 builder.Services.AddScoped<IDaiLyRepository, DaiLyRepository>();
 builder.Services.AddScoped<IKiemDinhRepository, KiemDinhRepository>();
