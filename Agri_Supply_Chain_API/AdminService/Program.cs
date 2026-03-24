@@ -8,6 +8,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services
 // =====================
 
+// Log connection string for debugging
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+Console.WriteLine($"[AdminService] Connection String: {connectionString}");
+
 // Repository
 builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 
@@ -21,6 +25,17 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// CORS for React frontend
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 
 // =====================
@@ -33,6 +48,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowAll");
 
 app.UseAuthorization();
 
