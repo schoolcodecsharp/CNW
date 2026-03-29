@@ -1,0 +1,30 @@
+{
+  "name": "agri-supply-chain-system",
+  "version": "1.0.0",
+  "description": "Agricultural Supply Chain Management System - Node.js + TypeScript + React",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "ts-node src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "client": "cd client && npm start",
+    "server": "ts-node src/server.ts",
+    "dev:all": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "keywords": ["nodejs", "typescript", "express", "react", "agriculture"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.10.5",
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "ts-node": "^10.9.2",
+    "concurrently": "^8.2.2"
+  }
+}

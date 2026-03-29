@@ -1,0 +1,12 @@
+.App {
+  min-height: 100vh;
+}
+
+.loading-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #667eea;
+}
