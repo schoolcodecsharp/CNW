@@ -109,7 +109,7 @@ function OrderManagement() {
           <tbody>
             {filteredOrders.length === 0 ? (
               <tr>
-                <td colSpan="9" className="text-center">Không có đơn hàng nào</td>
+                <td colSpan={9} className="text-center">Không có đơn hàng nào</td>
               </tr>
             ) : (
               filteredOrders.map((order) => (

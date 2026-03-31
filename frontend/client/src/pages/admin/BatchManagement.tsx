@@ -135,7 +135,7 @@ function BatchManagement() {
   const getStatusBadge = (batch) => {
     const today = new Date();
     const expDate = new Date(batch.ngayHetHan);
-    const daysUntilExp = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+    const daysUntilExp = Math.ceil((expDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
     if (batch.soLuongConLai === 0) {
       return <span className="badge badge-secondary">Hết hàng</span>;
@@ -153,7 +153,7 @@ function BatchManagement() {
     
     const today = new Date();
     const expDate = new Date(b.ngayHetHan);
-    const daysUntilExp = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+    const daysUntilExp = Math.ceil((expDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
     if (filterStatus === 'available' && b.soLuongConLai > 0 && daysUntilExp > 7) return true;
     if (filterStatus === 'expiring' && daysUntilExp <= 7 && daysUntilExp >= 0) return true;
@@ -194,7 +194,7 @@ function BatchManagement() {
           <span className="stat-label">Sắp hết hạn</span>
           <span className="stat-value">
             {batches.filter(b => {
-              const days = Math.ceil((new Date(b.ngayHetHan) - new Date()) / (1000 * 60 * 60 * 24));
+              const days = Math.ceil((new Date(b.ngayHetHan).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
               return days <= 7 && days >= 0;
             }).length}
           </span>
@@ -239,7 +239,7 @@ function BatchManagement() {
           <tbody>
             {filteredBatches.length === 0 ? (
               <tr>
-                <td colSpan="10" className="text-center">Không có dữ liệu</td>
+                <td colSpan={10} className="text-center">Không có dữ liệu</td>
               </tr>
             ) : (
               filteredBatches.map((batch) => (

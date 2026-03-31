@@ -18,11 +18,34 @@ function OrderManagement() {
     try {
       setLoading(true);
       
+      console.log('Loading orders from APIs...');
+      console.log('DaiLy endpoint:', API_ENDPOINTS.donHangDaiLy.getAll);
+      console.log('SieuThi endpoint:', API_ENDPOINTS.donHangSieuThi.getAll);
+      
       // Load orders from different services
       const [dailyOrdersRes, sieuThiOrdersRes] = await Promise.all([
-        axios.get(API_ENDPOINTS.donHangDaiLy.getAll).catch(() => ({ data: { data: [] } })),
-        axios.get(API_ENDPOINTS.donHangSieuThi.getAll).catch(() => ({ data: { data: [] } }))
+        axios.get(API_ENDPOINTS.donHangDaiLy.getAll)
+          .then(res => {
+            console.log('DaiLy orders response:', res.data);
+            return res;
+          })
+          .catch(err => {
+            console.error('Error loading DaiLy orders:', err);
+            return { data: { data: [] } };
+          }),
+        axios.get(API_ENDPOINTS.donHangSieuThi.getAll)
+          .then(res => {
+            console.log('SieuThi orders response:', res.data);
+            return res;
+          })
+          .catch(err => {
+            console.error('Error loading SieuThi orders:', err);
+            return { data: { data: [] } };
+          })
       ]);
+
+      console.log('DaiLy orders data:', dailyOrdersRes.data.data);
+      console.log('SieuThi orders data:', sieuThiOrdersRes.data.data);
 
       // Combine and format orders
       const allOrders = [
@@ -48,12 +71,16 @@ function OrderManagement() {
         }))
       ];
 
+      console.log('Total orders:', allOrders.length);
+      console.log('All orders:', allOrders);
+
       // Sort by date descending
-      allOrders.sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate));
+      allOrders.sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
       
       setOrders(allOrders);
     } catch (error) {
       console.error('Error loading orders:', error);
+      alert('Lỗi khi tải đơn hàng: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -83,11 +110,11 @@ function OrderManagement() {
   const handleUpdateStatus = async (order, newStatus) => {
     try {
       if (order.orderTypeCode === 'daily') {
-        await axios.put(API_ENDPOINTS.donHangDaiLy.updateStatus(order.orderId), {
+        await axios.put(API_ENDPOINTS.donHangDaiLy.updateTrangThai(order.orderId), {
           trangThai: newStatus
         });
       } else {
-        await axios.put(API_ENDPOINTS.donHangSieuThi.updateStatus(order.orderId), {
+        await axios.put(API_ENDPOINTS.donHangSieuThi.updateTrangThai(order.orderId), {
           trangThai: newStatus
         });
       }
@@ -184,7 +211,7 @@ function OrderManagement() {
           <tbody>
             {filteredOrders.length === 0 ? (
               <tr>
-                <td colSpan="8" className="text-center">Không có dữ liệu</td>
+                <td colSpan={8} className="text-center">Không có dữ liệu</td>
               </tr>
             ) : (
               filteredOrders.map((order) => (

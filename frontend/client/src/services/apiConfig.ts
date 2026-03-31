@@ -20,6 +20,7 @@ export const API_ENDPOINTS = {
   
   // Nong Dan Service
   nongDan: {
+    base: API_BASE_URLS.nongdan,
     getAll: `${API_BASE_URLS.nongdan}/nong-dan/get-all`,
     getById: (id: number) => `${API_BASE_URLS.nongdan}/nong-dan/get-by-id/${id}`,
     create: `${API_BASE_URLS.nongdan}/nong-dan/create`,
@@ -58,6 +59,7 @@ export const API_ENDPOINTS = {
   
   // Dai Ly Service
   daiLy: {
+    base: API_BASE_URLS.daily,
     getAll: `${API_BASE_URLS.daily}/dai-ly/get-all`,
     getById: (id: number) => `${API_BASE_URLS.daily}/dai-ly/get-by-id/${id}`,
     create: `${API_BASE_URLS.daily}/dai-ly/create`,
@@ -67,6 +69,7 @@ export const API_ENDPOINTS = {
   
   // Kho
   kho: {
+    base: API_BASE_URLS.daily,
     getAll: `${API_BASE_URLS.daily}/kho/get-all`,
     getById: (id: number) => `${API_BASE_URLS.daily}/kho/get-by-id/${id}`,
     getByDaiLy: (id: number) => `${API_BASE_URLS.daily}/kho/dai-ly/${id}`,
@@ -88,7 +91,7 @@ export const API_ENDPOINTS = {
   // Don Hang Dai Ly
   donHangDaiLy: {
     getAll: `${API_BASE_URLS.daily}/don-hang-dai-ly/get-all`,
-    getById: (id: number) => `${API_BASE_URLS.daily}/don-hang-dai-ly/get-by-id/${id}`,
+    getById: (id: number) => `${API_BASE_URLS.daily}/don-hang-dai-ly/${id}`,
     getByDaiLy: (id: number) => `${API_BASE_URLS.daily}/don-hang-dai-ly/dai-ly/${id}`,
     create: `${API_BASE_URLS.daily}/don-hang-dai-ly/create`,
     updateTrangThai: (id: number) => `${API_BASE_URLS.daily}/don-hang-dai-ly/update-trang-thai/${id}`,

@@ -174,7 +174,7 @@ function BatchManagement() {
           <tbody>
             {batches.length === 0 ? (
               <tr>
-                <td colSpan="9" className="text-center">Chưa có lô nông sản nào</td>
+                <td colSpan={9} className="text-center">Chưa có lô nông sản nào</td>
               </tr>
             ) : (
               batches.map((batch) => (

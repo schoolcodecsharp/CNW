@@ -974,7 +974,7 @@ GO
 -- =====================================================
 
 -- GetAll: Lấy tất cả admin
-CREATE PROCEDURE sp_Admin_GetAll
+CREATE OR ALTER PROCEDURE sp_Admin_GetAll
 AS
 BEGIN
     BEGIN TRY
@@ -996,7 +996,7 @@ END
 GO
 
 -- GetById: Lấy admin theo MaAdmin
-CREATE PROCEDURE sp_Admin_GetById
+CREATE OR ALTER PROCEDURE sp_Admin_GetById
     @MaAdmin INT
 AS
 BEGIN
@@ -1022,7 +1022,7 @@ END
 GO
 
 -- Create: Thêm mới admin
-CREATE PROCEDURE sp_Admin_Create
+CREATE OR ALTER PROCEDURE sp_Admin_Create
     @MaTaiKhoan INT,
     @HoTen NVARCHAR(100),
     @SoDienThoai NVARCHAR(20),
@@ -1042,7 +1042,7 @@ END
 GO
 
 -- Update: Cập nhật admin
-CREATE PROCEDURE sp_Admin_Update
+CREATE OR ALTER PROCEDURE sp_Admin_Update
     @MaAdmin INT,
     @HoTen NVARCHAR(100),
     @SoDienThoai NVARCHAR(20),
@@ -1069,7 +1069,7 @@ END
 GO
 
 -- Delete: Xóa admin
-CREATE PROCEDURE sp_Admin_Delete
+CREATE OR ALTER PROCEDURE sp_Admin_Delete
     @MaAdmin INT
 AS
 BEGIN
@@ -1089,7 +1089,7 @@ END
 GO
 
 -- Search: Tìm kiếm admin theo tên hoặc email
-CREATE PROCEDURE sp_Admin_Search
+CREATE OR ALTER PROCEDURE sp_Admin_Search
     @SearchText NVARCHAR(100)
 AS
 BEGIN
@@ -1121,7 +1121,7 @@ GO
 -- =====================================================
 
 -- GetAll: Lấy tất cả siêu thị
-CREATE PROCEDURE sp_SieuThi_GetAll
+CREATE OR ALTER PROCEDURE sp_SieuThi_GetAll
 AS
 BEGIN
     BEGIN TRY
@@ -1144,7 +1144,7 @@ END
 GO
 
 -- GetById: Lấy siêu thị theo MaSieuThi
-CREATE PROCEDURE sp_SieuThi_GetById
+CREATE OR ALTER PROCEDURE sp_SieuThi_GetById
     @MaSieuThi INT
 AS
 BEGIN
@@ -1171,7 +1171,7 @@ END
 GO
 
 -- Create: Thêm mới siêu thị
-CREATE PROCEDURE sp_SieuThi_Create
+CREATE OR ALTER PROCEDURE sp_SieuThi_Create
     @MaTaiKhoan INT,
     @TenSieuThi NVARCHAR(100),
     @SoDienThoai NVARCHAR(20),
@@ -1192,7 +1192,7 @@ END
 GO
 
 -- Update: Cập nhật siêu thị
-CREATE PROCEDURE sp_SieuThi_Update
+CREATE OR ALTER PROCEDURE sp_SieuThi_Update
     @MaSieuThi INT,
     @TenSieuThi NVARCHAR(100),
     @SoDienThoai NVARCHAR(20),
@@ -1221,7 +1221,7 @@ END
 GO
 
 -- Delete: Xóa siêu thị
-CREATE PROCEDURE sp_SieuThi_Delete
+CREATE OR ALTER PROCEDURE sp_SieuThi_Delete
     @MaSieuThi INT
 AS
 BEGIN
@@ -1241,7 +1241,7 @@ END
 GO
 
 -- Search: Tìm kiếm siêu thị theo tên, email, hoặc địa chỉ
-CREATE PROCEDURE sp_SieuThi_Search
+CREATE OR ALTER PROCEDURE sp_SieuThi_Search
     @SearchText NVARCHAR(100)
 AS
 BEGIN
@@ -1274,7 +1274,7 @@ GO
 -- =====================================================
 
 -- GetAll: Lấy tất cả trang trại
-CREATE PROCEDURE sp_TrangTrai_GetAll
+CREATE OR ALTER PROCEDURE sp_TrangTrai_GetAll
 AS
 BEGIN
     BEGIN TRY
@@ -1297,7 +1297,7 @@ END
 GO
 
 -- GetById: Lấy trang trại theo MaTrangTrai
-CREATE PROCEDURE sp_TrangTrai_GetById
+CREATE OR ALTER PROCEDURE sp_TrangTrai_GetById
     @MaTrangTrai INT
 AS
 BEGIN
@@ -1324,7 +1324,7 @@ END
 GO
 
 -- Create: Thêm mới trang trại
-CREATE PROCEDURE sp_TrangTrai_Create
+CREATE OR ALTER PROCEDURE sp_TrangTrai_Create
     @MaNongDan INT,
     @TenTrangTrai NVARCHAR(100),
     @DiaChi NVARCHAR(255),
@@ -1344,7 +1344,7 @@ END
 GO
 
 -- Update: Cập nhật trang trại
-CREATE PROCEDURE sp_TrangTrai_Update
+CREATE OR ALTER PROCEDURE sp_TrangTrai_Update
     @MaTrangTrai INT,
     @TenTrangTrai NVARCHAR(100),
     @DiaChi NVARCHAR(255),
@@ -1371,7 +1371,7 @@ END
 GO
 
 -- Delete: Xóa trang trại
-CREATE PROCEDURE sp_TrangTrai_Delete
+CREATE OR ALTER PROCEDURE sp_TrangTrai_Delete
     @MaTrangTrai INT
 AS
 BEGIN
@@ -1391,7 +1391,7 @@ END
 GO
 
 -- Search: Tìm kiếm trang trại theo tên hoặc địa chỉ
-CREATE PROCEDURE sp_TrangTrai_Search
+CREATE OR ALTER PROCEDURE sp_TrangTrai_Search
     @SearchText NVARCHAR(100)
 AS
 BEGIN
@@ -1423,7 +1423,7 @@ GO
 -- =====================================================
 
 -- GetAll: Lấy tất cả kho
-CREATE PROCEDURE sp_Kho_GetAll
+CREATE OR ALTER PROCEDURE sp_Kho_GetAll
 AS
 BEGIN
     BEGIN TRY
@@ -1448,7 +1448,7 @@ END
 GO
 
 -- GetById: Lấy kho theo MaKho
-CREATE PROCEDURE sp_Kho_GetById
+CREATE OR ALTER PROCEDURE sp_Kho_GetById
     @MaKho INT
 AS
 BEGIN
@@ -1477,7 +1477,7 @@ END
 GO
 
 -- Create: Thêm mới kho
-CREATE PROCEDURE sp_Kho_Create
+CREATE OR ALTER PROCEDURE sp_Kho_Create
     @LoaiKho NVARCHAR(20),
     @MaDaiLy INT = NULL,
     @MaSieuThi INT = NULL,
@@ -1498,7 +1498,7 @@ END
 GO
 
 -- Update: Cập nhật kho
-CREATE PROCEDURE sp_Kho_Update
+CREATE OR ALTER PROCEDURE sp_Kho_Update
     @MaKho INT,
     @TenKho NVARCHAR(100),
     @DiaChi NVARCHAR(255),
@@ -1525,7 +1525,7 @@ END
 GO
 
 -- Delete: Xóa kho
-CREATE PROCEDURE sp_Kho_Delete
+CREATE OR ALTER PROCEDURE sp_Kho_Delete
     @MaKho INT
 AS
 BEGIN
@@ -1545,7 +1545,7 @@ END
 GO
 
 -- Search: Tìm kiếm kho theo loại hoặc tên
-CREATE PROCEDURE sp_Kho_Search
+CREATE OR ALTER PROCEDURE sp_Kho_Search
     @SearchText NVARCHAR(100)
 AS
 BEGIN
@@ -1579,7 +1579,7 @@ GO
 -- =====================================================
 
 -- GetAll: Lấy tất cả tồn kho
-CREATE PROCEDURE sp_TonKho_GetAll
+CREATE OR ALTER PROCEDURE sp_TonKho_GetAll
 AS
 BEGIN
     BEGIN TRY
@@ -1600,7 +1600,7 @@ END
 GO
 
 -- GetById: Lấy tồn kho theo MaKho và MaLo
-CREATE PROCEDURE sp_TonKho_GetById
+CREATE OR ALTER PROCEDURE sp_TonKho_GetById
     @MaKho INT,
     @MaLo INT
 AS
@@ -1626,7 +1626,7 @@ END
 GO
 
 -- Create: Thêm mới tồn kho
-CREATE PROCEDURE sp_TonKho_Create
+CREATE OR ALTER PROCEDURE sp_TonKho_Create
     @MaKho INT,
     @MaLo INT,
     @SoLuong DECIMAL(18,2)
@@ -1645,7 +1645,7 @@ END
 GO
 
 -- Update: Cập nhật tồn kho
-CREATE PROCEDURE sp_TonKho_Update
+CREATE OR ALTER PROCEDURE sp_TonKho_Update
     @MaKho INT,
     @MaLo INT,
     @SoLuong DECIMAL(18,2)
@@ -1670,7 +1670,7 @@ END
 GO
 
 -- Delete: Xóa tồn kho
-CREATE PROCEDURE sp_TonKho_Delete
+CREATE OR ALTER PROCEDURE sp_TonKho_Delete
     @MaKho INT,
     @MaLo INT
 AS
@@ -1691,7 +1691,7 @@ END
 GO
 
 -- Search: Tìm kiếm tồn kho theo MaKho
-CREATE PROCEDURE sp_TonKho_SearchByKho
+CREATE OR ALTER PROCEDURE sp_TonKho_SearchByKho
     @MaKho INT
 AS
 BEGIN
@@ -1719,7 +1719,7 @@ GO
 -- =====================================================
 
 -- GetAll: Lấy tất cả đơn hàng đại lý
-CREATE PROCEDURE sp_DonHangDaiLy_GetAll
+CREATE OR ALTER PROCEDURE sp_DonHangDaiLy_GetAll
 AS
 BEGIN
     BEGIN TRY
@@ -1739,7 +1739,7 @@ END
 GO
 
 -- GetById: Lấy đơn hàng đại lý theo MaDonHang
-CREATE PROCEDURE sp_DonHangDaiLy_GetById
+CREATE OR ALTER PROCEDURE sp_DonHangDaiLy_GetById
     @MaDonHang INT
 AS
 BEGIN
@@ -1763,7 +1763,7 @@ END
 GO
 
 -- Create: Thêm mới đơn hàng đại lý
-CREATE PROCEDURE sp_DonHangDaiLy_Create
+CREATE OR ALTER PROCEDURE sp_DonHangDaiLy_Create
     @MaDonHang INT,
     @MaDaiLy INT,
     @MaNongDan INT
@@ -1782,7 +1782,7 @@ END
 GO
 
 -- Update: Cập nhật đơn hàng đại lý
-CREATE PROCEDURE sp_DonHangDaiLy_Update
+CREATE OR ALTER PROCEDURE sp_DonHangDaiLy_Update
     @MaDonHang INT,
     @MaDaiLy INT,
     @MaNongDan INT
@@ -1807,7 +1807,7 @@ END
 GO
 
 -- Delete: Xóa đơn hàng đại lý
-CREATE PROCEDURE sp_DonHangDaiLy_Delete
+CREATE OR ALTER PROCEDURE sp_DonHangDaiLy_Delete
     @MaDonHang INT
 AS
 BEGIN
@@ -1827,7 +1827,7 @@ END
 GO
 
 -- Search: Tìm kiếm đơn hàng đại lý theo MaDaiLy hoặc MaNongDan
-CREATE PROCEDURE sp_DonHangDaiLy_Search
+CREATE OR ALTER PROCEDURE sp_DonHangDaiLy_Search
     @SearchType NVARCHAR(10),
     @SearchId INT
 AS
@@ -1864,7 +1864,7 @@ GO
 -- =====================================================
 
 -- GetAll: Lấy tất cả đơn hàng siêu thị
-CREATE PROCEDURE sp_DonHangSieuThi_GetAll
+CREATE OR ALTER PROCEDURE sp_DonHangSieuThi_GetAll
 AS
 BEGIN
     BEGIN TRY
@@ -1884,7 +1884,7 @@ END
 GO
 
 -- GetById: Lấy đơn hàng siêu thị theo MaDonHang
-CREATE PROCEDURE sp_DonHangSieuThi_GetById
+CREATE OR ALTER PROCEDURE sp_DonHangSieuThi_GetById
     @MaDonHang INT
 AS
 BEGIN
@@ -1908,7 +1908,7 @@ END
 GO
 
 -- Create: Thêm mới đơn hàng siêu thị
-CREATE PROCEDURE sp_DonHangSieuThi_Create
+CREATE OR ALTER PROCEDURE sp_DonHangSieuThi_Create
     @MaDonHang INT,
     @MaSieuThi INT,
     @MaDaiLy INT
@@ -1927,7 +1927,7 @@ END
 GO
 
 -- Update: Cập nhật đơn hàng siêu thị
-CREATE PROCEDURE sp_DonHangSieuThi_Update
+CREATE OR ALTER PROCEDURE sp_DonHangSieuThi_Update
     @MaDonHang INT,
     @MaSieuThi INT,
     @MaDaiLy INT
@@ -1952,7 +1952,7 @@ END
 GO
 
 -- Delete: Xóa đơn hàng siêu thị
-CREATE PROCEDURE sp_DonHangSieuThi_Delete
+CREATE OR ALTER PROCEDURE sp_DonHangSieuThi_Delete
     @MaDonHang INT
 AS
 BEGIN
@@ -1972,7 +1972,7 @@ END
 GO
 
 -- Search: Tìm kiếm đơn hàng siêu thị theo MaSieuThi hoặc MaDaiLy
-CREATE PROCEDURE sp_DonHangSieuThi_Search
+CREATE OR ALTER PROCEDURE sp_DonHangSieuThi_Search
     @SearchType NVARCHAR(10),
     @SearchId INT
 AS
@@ -2008,7 +2008,7 @@ GO
 -- =====================================================
 
 -- GetAll: Lấy tất cả chi tiết đơn hàng
-CREATE PROCEDURE sp_ChiTietDonHang_GetAll
+CREATE OR ALTER PROCEDURE sp_ChiTietDonHang_GetAll
 AS
 BEGIN
     BEGIN TRY
@@ -2030,7 +2030,7 @@ END
 GO
 
 -- GetById: Lấy chi tiết đơn hàng theo MaDonHang và MaLo
-CREATE PROCEDURE sp_ChiTietDonHang_GetById
+CREATE OR ALTER PROCEDURE sp_ChiTietDonHang_GetById
     @MaDonHang INT,
     @MaLo INT
 AS
@@ -2057,7 +2057,7 @@ END
 GO
 
 -- Create: Thêm mới chi tiết đơn hàng
-CREATE PROCEDURE sp_ChiTietDonHang_Create
+CREATE OR ALTER PROCEDURE sp_ChiTietDonHang_Create
     @MaDonHang INT,
     @MaLo INT,
     @SoLuong DECIMAL(18,2),
@@ -2078,7 +2078,7 @@ END
 GO
 
 -- Update: Cập nhật chi tiết đơn hàng
-CREATE PROCEDURE sp_ChiTietDonHang_Update
+CREATE OR ALTER PROCEDURE sp_ChiTietDonHang_Update
     @MaDonHang INT,
     @MaLo INT,
     @SoLuong DECIMAL(18,2),
@@ -2106,7 +2106,7 @@ END
 GO
 
 -- Delete: Xóa chi tiết đơn hàng
-CREATE PROCEDURE sp_ChiTietDonHang_Delete
+CREATE OR ALTER PROCEDURE sp_ChiTietDonHang_Delete
     @MaDonHang INT,
     @MaLo INT
 AS
@@ -2127,7 +2127,7 @@ END
 GO
 
 -- Search: Tìm kiếm chi tiết đơn hàng theo MaDonHang
-CREATE PROCEDURE sp_ChiTietDonHang_GetByDonHang
+CREATE OR ALTER PROCEDURE sp_ChiTietDonHang_GetByDonHang
     @MaDonHang INT
 AS
 BEGIN
@@ -2155,7 +2155,7 @@ GO
 -- =====================================================
 
 -- GetAll: Lấy tất cả đơn hàng
-CREATE PROCEDURE sp_DonHang_GetAll
+CREATE OR ALTER PROCEDURE sp_DonHang_GetAll
 AS
 BEGIN
     BEGIN TRY
@@ -2180,7 +2180,7 @@ END
 GO
 
 -- GetById: Lấy đơn hàng theo MaDonHang
-CREATE PROCEDURE sp_DonHang_GetById
+CREATE OR ALTER PROCEDURE sp_DonHang_GetById
     @MaDonHang INT
 AS
 BEGIN
@@ -2209,7 +2209,7 @@ END
 GO
 
 -- Create: Thêm mới đơn hàng
-CREATE PROCEDURE sp_DonHang_Create
+CREATE OR ALTER PROCEDURE sp_DonHang_Create
     @LoaiDon NVARCHAR(30),
     @TongSoLuong DECIMAL(18,2) = NULL,
     @TongGiaTri DECIMAL(18,2) = NULL,
@@ -2229,7 +2229,7 @@ END
 GO
 
 -- Update: Cập nhật đơn hàng
-CREATE PROCEDURE sp_DonHang_Update
+CREATE OR ALTER PROCEDURE sp_DonHang_Update
     @MaDonHang INT,
     @TrangThai NVARCHAR(30),
     @NgayGiao DATETIME2 = NULL,
@@ -2260,7 +2260,7 @@ END
 GO
 
 -- Delete: Xóa đơn hàng
-CREATE PROCEDURE sp_DonHang_Delete
+CREATE OR ALTER PROCEDURE sp_DonHang_Delete
     @MaDonHang INT
 AS
 BEGIN
@@ -2280,7 +2280,7 @@ END
 GO
 
 -- Search: Tìm kiếm đơn hàng theo trạng thái hoặc loại đơn
-CREATE PROCEDURE sp_DonHang_Search
+CREATE OR ALTER PROCEDURE sp_DonHang_Search
     @SearchText NVARCHAR(30)
 AS
 BEGIN

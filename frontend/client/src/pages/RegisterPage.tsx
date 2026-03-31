@@ -188,7 +188,7 @@ function RegisterPage() {
               value={formData.diaChi}
               onChange={handleChange}
               placeholder="Nhập địa chỉ"
-              rows="2"
+              rows={2}
               disabled={loading}
             />
           </div>

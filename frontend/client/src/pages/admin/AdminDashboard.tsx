@@ -6,8 +6,6 @@ import UserManagement from './UserManagement';
 import FarmManagement from './FarmManagement';
 import BatchManagement from './BatchManagement';
 import OrderManagement from './OrderManagement';
-import DaiLyManagement from './DaiLyManagement';
-import SieuThiManagement from './SieuThiManagement';
 import './AdminDashboard.css';
 
 function AdminDashboard() {
@@ -25,9 +23,7 @@ function AdminDashboard() {
     { id: 'users', icon: '👥', label: 'Quản lý người dùng', path: '/admin/users' },
     { id: 'farms', icon: '🌾', label: 'Quản lý trang trại', path: '/admin/farms' },
     { id: 'batches', icon: '📦', label: 'Quản lý lô hàng', path: '/admin/batches' },
-    { id: 'orders', icon: '🛒', label: 'Quản lý đơn hàng', path: '/admin/orders' },
-    { id: 'daily', icon: '🏪', label: 'Quản lý đại lý', path: '/admin/daily' },
-    { id: 'sieuthi', icon: '🏬', label: 'Quản lý siêu thị', path: '/admin/sieuthi' }
+    { id: 'orders', icon: '🛒', label: 'Quản lý đơn hàng', path: '/admin/orders' }
   ];
 
   return (
@@ -78,8 +74,6 @@ function AdminDashboard() {
           <Route path="/farms" element={<FarmManagement />} />
           <Route path="/batches" element={<BatchManagement />} />
           <Route path="/orders" element={<OrderManagement />} />
-          <Route path="/daily" element={<DaiLyManagement />} />
-          <Route path="/sieuthi" element={<SieuThiManagement />} />
         </Routes>
       </main>
     </div>

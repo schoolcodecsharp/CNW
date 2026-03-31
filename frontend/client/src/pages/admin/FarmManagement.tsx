@@ -150,7 +150,7 @@ function FarmManagement() {
           <tbody>
             {farms.length === 0 ? (
               <tr>
-                <td colSpan="7" className="text-center">Không có dữ liệu</td>
+                <td colSpan={7} className="text-center">Không có dữ liệu</td>
               </tr>
             ) : (
               farms.map((farm) => (

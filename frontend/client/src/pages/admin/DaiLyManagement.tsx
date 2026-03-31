@@ -140,7 +140,7 @@ function DaiLyManagement() {
           <tbody>
             {dailyList.length === 0 ? (
               <tr>
-                <td colSpan="8" className="text-center">Không có dữ liệu</td>
+                <td colSpan={8} className="text-center">Không có dữ liệu</td>
               </tr>
             ) : (
               dailyList.map((daily) => (

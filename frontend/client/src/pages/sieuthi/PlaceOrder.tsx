@@ -152,7 +152,7 @@ function PlaceOrder() {
               value={formData.ghiChu}
               onChange={(e) => setFormData({...formData, ghiChu: e.target.value})}
               placeholder="Nhập ghi chú cho đơn hàng (nếu có)"
-              rows="4"
+              rows={4}
             />
           </div>
 
