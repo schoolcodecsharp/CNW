@@ -203,15 +203,57 @@ namespace SieuThiService.Controllers
                 var sieuThiExists = _sieuThiRepository.GetSieuThiById(maSieuThi);
                 if (!sieuThiExists)
                 {
-                    return NotFound($"Không tìm thấy siêu thị với mã {maSieuThi}");
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = $"Không tìm thấy siêu thị với mã {maSieuThi}",
+                        data = (object?)null
+                    });
                 }
 
                 var donHangs = _sieuThiRepository.GetDonHangsBySieuThi(maSieuThi);
-                return Ok(donHangs);
+                return Ok(new
+                {
+                    success = true,
+                    message = "Lấy danh sách đơn hàng thành công",
+                    data = donHangs,
+                    count = donHangs.Count
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Lỗi server: {ex.Message}");
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = $"Lỗi server: {ex.Message}",
+                    data = (object?)null
+                });
+            }
+        }
+
+        // GET: api/DonHangSieuThi/get-all
+        [HttpGet("get-all")]
+        public ActionResult<List<DonHangSieuThiResponse>> GetAll()
+        {
+            try
+            {
+                var allDonHangs = _sieuThiRepository.GetAllDonHangSieuThi();
+                return Ok(new
+                {
+                    success = true,
+                    message = "Lấy danh sách tất cả đơn hàng siêu thị thành công",
+                    data = allDonHangs,
+                    count = allDonHangs.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = $"Lỗi server: {ex.Message}",
+                    data = (object?)null
+                });
             }
         }
     }

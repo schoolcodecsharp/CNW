@@ -20,7 +20,13 @@ namespace DaiLyService.Controllers
         public IActionResult GetAll()
         {
             var data = _donHangService.GetAll();
-            return Ok(data);
+            return Ok(new
+            {
+                success = true,
+                message = "Lấy danh sách đơn hàng thành công",
+                data = data,
+                count = data?.Count ?? 0
+            });
         }
 
         // GET: api/don-hang-dai-ly/5
@@ -30,9 +36,19 @@ namespace DaiLyService.Controllers
             var result = _donHangService.GetById(id);
 
             if (result == null)
-                return NotFound();
+                return NotFound(new
+                {
+                    success = false,
+                    message = $"Không tìm thấy đơn hàng với mã {id}",
+                    data = (object?)null
+                });
 
-            return Ok(result);
+            return Ok(new
+            {
+                success = true,
+                message = "Lấy thông tin đơn hàng thành công",
+                data = result
+            });
         }
 
         // GET: api/don-hang-dai-ly/dai-ly/5
@@ -40,7 +56,13 @@ namespace DaiLyService.Controllers
         public IActionResult GetByMaDaiLy(int maDaiLy)
         {
             var data = _donHangService.GetByMaDaiLy(maDaiLy);
-            return Ok(data);
+            return Ok(new
+            {
+                success = true,
+                message = "Lấy danh sách đơn hàng thành công",
+                data = data,
+                count = data?.Count ?? 0
+            });
         }
 
         // POST: api/don-hang-dai-ly/create
@@ -48,7 +70,12 @@ namespace DaiLyService.Controllers
         public IActionResult Create(DonHangDaiLyCreateDTO dto)
         {
             var newId = _donHangService.Create(dto);
-            return Ok(newId);
+            return Ok(new
+            {
+                success = true,
+                message = "Tạo đơn hàng thành công",
+                data = new { maDonHang = newId }
+            });
         }
 
         // PUT: api/don-hang-dai-ly/update-trang-thai/5
@@ -58,9 +85,19 @@ namespace DaiLyService.Controllers
             bool result = _donHangService.UpdateTrangThai(id, dto);
 
             if (result == false)
-                return NotFound();
+                return NotFound(new
+                {
+                    success = false,
+                    message = $"Không tìm thấy đơn hàng với mã {id}",
+                    data = (object?)null
+                });
 
-            return Ok();
+            return Ok(new
+            {
+                success = true,
+                message = "Cập nhật trạng thái đơn hàng thành công",
+                data = (object?)null
+            });
         }
 
         // DELETE: api/don-hang-dai-ly/delete/5
@@ -70,9 +107,19 @@ namespace DaiLyService.Controllers
             bool result = _donHangService.Delete(id);
 
             if (result == false)
-                return NotFound();
+                return NotFound(new
+                {
+                    success = false,
+                    message = $"Không tìm thấy đơn hàng với mã {id}",
+                    data = (object?)null
+                });
 
-            return Ok();
+            return Ok(new
+            {
+                success = true,
+                message = "Xóa đơn hàng thành công",
+                data = (object?)null
+            });
         }
     }
 }

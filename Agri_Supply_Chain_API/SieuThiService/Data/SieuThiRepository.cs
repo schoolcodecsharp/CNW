@@ -566,6 +566,70 @@ namespace SieuThiService.Data
             }
         }
 
+        public List<DonHangSieuThiResponse> GetAllDonHangSieuThi()
+        {
+            try
+            {
+                // Lấy tất cả đơn hàng siêu thị
+                var donHangList = _context.DonHangSieuThis
+                    .Include(dh => dh.MaDonHangNavigation)
+                    .Include(dh => dh.MaSieuThiNavigation)
+                    .Select(dh => new DonHangInfo
+                    {
+                        MaDonHang = dh.MaDonHang,
+                        MaSieuThi = dh.MaSieuThi,
+                        MaDaiLy = dh.MaDaiLy,
+                        LoaiDon = dh.MaDonHangNavigation.LoaiDon ?? "",
+                        NgayDat = dh.MaDonHangNavigation.NgayDat ?? DateTime.Now,
+                        NgayGiao = dh.MaDonHangNavigation.NgayGiao,
+                        TrangThai = dh.MaDonHangNavigation.TrangThai ?? "",
+                        TongSoLuong = dh.MaDonHangNavigation.TongSoLuong ?? 0,
+                        TongGiaTri = dh.MaDonHangNavigation.TongGiaTri ?? 0,
+                        GhiChu = dh.MaDonHangNavigation.GhiChu,
+                        TenSieuThi = dh.MaSieuThiNavigation.TenSieuThi
+                    })
+                    .ToList();
+
+                var result = new List<DonHangSieuThiResponse>();
+
+                foreach (var donHangInfo in donHangList)
+                {
+                    // Lấy chi tiết đơn hàng cho từng đơn hàng
+                    var chiTietParam = new SqlParameter("@MaDonHang", donHangInfo.MaDonHang);
+                    var chiTietList = _context.Database.SqlQueryRaw<ChiTietDonHangInfo>(
+                        "EXEC sp_GetChiTietDonHangByMaDonHang @MaDonHang", chiTietParam).ToList();
+
+                    result.Add(new DonHangSieuThiResponse
+                    {
+                        MaDonHang = donHangInfo.MaDonHang,
+                        MaSieuThi = donHangInfo.MaSieuThi,
+                        MaDaiLy = donHangInfo.MaDaiLy,
+                        LoaiDon = donHangInfo.LoaiDon,
+                        NgayDat = donHangInfo.NgayDat,
+                        NgayGiao = donHangInfo.NgayGiao,
+                        TrangThai = donHangInfo.TrangThai,
+                        TongSoLuong = donHangInfo.TongSoLuong,
+                        TongGiaTri = donHangInfo.TongGiaTri,
+                        GhiChu = donHangInfo.GhiChu,
+                        TenSieuThi = donHangInfo.TenSieuThi,
+                        ChiTietDonHangs = chiTietList.Select(ct => new ChiTietDonHangResponse
+                        {
+                            MaLo = ct.MaLo,
+                            SoLuong = ct.SoLuong,
+                            DonGia = ct.DonGia,
+                            ThanhTien = ct.ThanhTien
+                        }).ToList()
+                    });
+                }
+
+                return result;
+            }
+            catch
+            {
+                return new List<DonHangSieuThiResponse>();
+            }
+        }
+
         public List<KhoSimpleInfo> GetDanhSachKhoBySieuThi(int maSieuThi)
         {
             try
@@ -814,6 +878,109 @@ namespace SieuThiService.Data
             {
                 return false;
             }
+        }
+
+        // ==================== CRUD SIÊU THỊ ====================
+        
+        public List<SieuThiDTO> GetAll()
+        {
+            return _context.SieuThis
+                .Select(s => new SieuThiDTO
+                {
+                    MaSieuThi = s.MaSieuThi,
+                    MaTaiKhoan = s.MaTaiKhoan,
+                    TenSieuThi = s.TenSieuThi,
+                    DiaChi = s.DiaChi,
+                    SoDienThoai = s.SoDienThoai,
+                    Email = s.Email
+                })
+                .ToList();
+        }
+
+        public SieuThiDTO? GetById(int id)
+        {
+            return _context.SieuThis
+                .Where(s => s.MaSieuThi == id)
+                .Select(s => new SieuThiDTO
+                {
+                    MaSieuThi = s.MaSieuThi,
+                    MaTaiKhoan = s.MaTaiKhoan,
+                    TenSieuThi = s.TenSieuThi,
+                    DiaChi = s.DiaChi,
+                    SoDienThoai = s.SoDienThoai,
+                    Email = s.Email
+                })
+                .FirstOrDefault();
+        }
+
+        public int Create(SieuThiTaoMoi dto)
+        {
+            var sieuThi = new SieuThi
+            {
+                MaTaiKhoan = dto.MaTaiKhoan,
+                TenSieuThi = dto.TenSieuThi,
+                DiaChi = dto.DiaChi,
+                SoDienThoai = dto.SoDienThoai,
+                Email = dto.Email
+            };
+
+            _context.SieuThis.Add(sieuThi);
+            _context.SaveChanges();
+
+            return sieuThi.MaSieuThi;
+        }
+
+        public bool Update(int id, SieuThiUpdateDTO dto)
+        {
+            var sieuThi = _context.SieuThis.Find(id);
+            if (sieuThi == null)
+                return false;
+
+            sieuThi.TenSieuThi = dto.TenSieuThi;
+            sieuThi.DiaChi = dto.DiaChi;
+            sieuThi.SoDienThoai = dto.SoDienThoai;
+            sieuThi.Email = dto.Email;
+
+            _context.SaveChanges();
+            return true;
+        }
+
+        public bool Delete(int id)
+        {
+            var sieuThi = _context.SieuThis.Find(id);
+            if (sieuThi == null)
+                return false;
+
+            _context.SieuThis.Remove(sieuThi);
+            _context.SaveChanges();
+            return true;
+        }
+
+        public List<SieuThiDTO> Search(string? ten, string? sdt)
+        {
+            var query = _context.SieuThis.AsQueryable();
+
+            if (!string.IsNullOrEmpty(ten))
+            {
+                query = query.Where(s => s.TenSieuThi != null && s.TenSieuThi.Contains(ten));
+            }
+
+            if (!string.IsNullOrEmpty(sdt))
+            {
+                query = query.Where(s => s.SoDienThoai != null && s.SoDienThoai.Contains(sdt));
+            }
+
+            return query
+                .Select(s => new SieuThiDTO
+                {
+                    MaSieuThi = s.MaSieuThi,
+                    MaTaiKhoan = s.MaTaiKhoan,
+                    TenSieuThi = s.TenSieuThi,
+                    DiaChi = s.DiaChi,
+                    SoDienThoai = s.SoDienThoai,
+                    Email = s.Email
+                })
+                .ToList();
         }
     }
 }

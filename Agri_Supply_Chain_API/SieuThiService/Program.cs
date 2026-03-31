@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SieuThiService.Data;
 using SieuThiService.Models.Entities;
+using SieuThiService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,7 @@ builder.Services.AddDbContext<BtlHdv1Context>(options =>
 });
 
 builder.Services.AddScoped<ISieuThiRepository, SieuThiRepository>();
+builder.Services.AddScoped<ISieuThiService, SieuThiService.Services.SieuThiService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

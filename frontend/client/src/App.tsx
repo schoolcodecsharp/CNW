@@ -12,7 +12,12 @@ import SieuThiDashboard from './pages/sieuthi/SieuThiDashboard';
 import './App.css';
 
 // Protected Route Component
-function ProtectedRoute({ children, allowedRoles }) {
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  allowedRoles?: string[];
+}
+
+function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -27,11 +32,15 @@ function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate to="/" />;
   }
 
-  return children;
+  return <>{children}</>;
 }
 
 // Public Route Component (redirect if logged in)
-function PublicRoute({ children }) {
+interface PublicRouteProps {
+  children: React.ReactNode;
+}
+
+function PublicRoute({ children }: PublicRouteProps) {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -40,7 +49,7 @@ function PublicRoute({ children }) {
 
   if (user) {
     // Redirect based on user role
-    const redirectMap = {
+    const redirectMap: Record<string, string> = {
       'admin': '/admin',
       'nongdan': '/nongdan',
       'daily': '/daily',
@@ -49,7 +58,7 @@ function PublicRoute({ children }) {
     return <Navigate to={redirectMap[user.loaiTaiKhoan] || '/'} />;
   }
 
-  return children;
+  return <>{children}</>;
 }
 
 function AppRoutes() {

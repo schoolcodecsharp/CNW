@@ -5,10 +5,19 @@ namespace SieuThiService.Data
 {
     public interface ISieuThiRepository
     {
+        // CRUD Siêu thị
+        List<SieuThiDTO> GetAll();
+        SieuThiDTO? GetById(int id);
+        int Create(SieuThiTaoMoi dto);
+        bool Update(int id, SieuThiUpdateDTO dto);
+        bool Delete(int id);
+        List<SieuThiDTO> Search(string? ten, string? sdt);
+        
         // API gộp (hiện tại)
         bool CreateDonHang(CreateDonHangSieuThiRequest request);
         DonHangSieuThiResponse? GetDonHangById(int maDonHang);
         List<DonHangSieuThiResponse> GetDonHangsBySieuThi(int maSieuThi);
+        List<DonHangSieuThiResponse> GetAllDonHangSieuThi();
         
         // API riêng biệt cho quản lý
         bool CreateDonHangOnly(CreateDonHangRequest request);

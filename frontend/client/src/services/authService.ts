@@ -1,8 +1,29 @@
 import axios from 'axios';
 import { API_ENDPOINTS } from './apiConfig';
 
+interface LoginResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    maTaiKhoan: number;
+    tenDangNhap: string;
+    loaiTaiKhoan: string;
+    token: string;
+  };
+}
+
+interface RegisterResponse {
+  success: boolean;
+  message: string;
+}
+
+interface ForgotPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
 const authService = {
-  login: async (tenDangNhap, matKhau, loaiTaiKhoan) => {
+  login: async (tenDangNhap: string, matKhau: string, loaiTaiKhoan: string): Promise<LoginResponse> => {
     try {
       console.log('Login attempt:', { tenDangNhap, loaiTaiKhoan });
       
@@ -40,7 +61,7 @@ const authService = {
       }
 
       return { success: false, message: 'Đăng nhập thất bại' };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
       return {
         success: false,
@@ -49,7 +70,7 @@ const authService = {
     }
   },
 
-  register: async (userData) => {
+  register: async (userData: any): Promise<RegisterResponse> => {
     // TODO: Implement register API when backend is ready
     try {
       // Mock implementation
@@ -57,7 +78,7 @@ const authService = {
         success: true,
         message: 'Đăng ký thành công! Vui lòng đăng nhập.'
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         success: false,
         message: error.message || 'Đăng ký thất bại'
@@ -65,7 +86,7 @@ const authService = {
     }
   },
 
-  forgotPassword: async (email) => {
+  forgotPassword: async (email: string): Promise<ForgotPasswordResponse> => {
     // TODO: Implement forgot password API when backend is ready
     try {
       // Mock implementation
@@ -73,7 +94,7 @@ const authService = {
         success: true,
         message: 'Link đặt lại mật khẩu đã được gửi đến email của bạn'
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         success: false,
         message: error.message || 'Không thể gửi email'
