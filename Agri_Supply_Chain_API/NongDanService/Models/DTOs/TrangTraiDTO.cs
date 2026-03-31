@@ -4,6 +4,7 @@ namespace NongDanService.Models.DTOs
     {
         public int MaTrangTrai { get; set; }
         public int MaNongDan { get; set; }
+        public string? TenNongDan { get; set; }  // Thêm tên nông dân
         public string? TenTrangTrai { get; set; }
         public string? DiaChi { get; set; }
         public string? SoChungNhan { get; set; }

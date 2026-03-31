@@ -1,4 +1,4 @@
-﻿using AdminService.Models.DTOs;
+using AdminService.Models.DTOs;
 using Microsoft.Data.SqlClient;
 using System.Data;
 
@@ -104,7 +104,7 @@ namespace AdminService.Data
                 return (success, message);
             }
 
-            return (false, "Lỗi không xác định");
+            return (false, "L?i kh�ng x�c �?nh");
         }
 
         private TaiKhoanDto MapToTaiKhoanDto(SqlDataReader reader)
@@ -172,5 +172,294 @@ namespace AdminService.Data
 
             return taiKhoan;
         }
+
+        // ==================== ĐẠI LÝ MANAGEMENT ====================
+        
+        public List<DaiLyDto> GetAllDaiLy()
+        {
+            var dailyList = new List<DaiLyDto>();
+
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_Admin_GetAllDaiLy", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            connection.Open();
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                dailyList.Add(new DaiLyDto
+                {
+                    MaDaiLy = reader.GetInt32("MaDaiLy"),
+                    MaTaiKhoan = reader.GetInt32("MaTaiKhoan"),
+                    TenDaiLy = reader.IsDBNull("TenDaiLy") ? null : reader.GetString("TenDaiLy"),
+                    DiaChi = reader.IsDBNull("DiaChi") ? null : reader.GetString("DiaChi"),
+                    SoDienThoai = reader.IsDBNull("SoDienThoai") ? null : reader.GetString("SoDienThoai"),
+                    Email = reader.IsDBNull("Email") ? null : reader.GetString("Email"),
+                    TenDangNhap = reader.IsDBNull("TenDangNhap") ? null : reader.GetString("TenDangNhap"),
+                    TrangThai = reader.IsDBNull("TrangThai") ? null : reader.GetString("TrangThai"),
+                    NgayTao = reader.IsDBNull("NgayTao") ? null : reader.GetDateTime("NgayTao")
+                });
+            }
+
+            return dailyList;
+        }
+
+        public DaiLyDto? GetDaiLyById(int maDaiLy)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_Admin_GetDaiLyById", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            command.Parameters.AddWithValue("@MaDaiLy", maDaiLy);
+
+            connection.Open();
+            using var reader = command.ExecuteReader();
+
+            if (reader.Read())
+            {
+                return new DaiLyDto
+                {
+                    MaDaiLy = reader.GetInt32("MaDaiLy"),
+                    MaTaiKhoan = reader.GetInt32("MaTaiKhoan"),
+                    TenDaiLy = reader.IsDBNull("TenDaiLy") ? null : reader.GetString("TenDaiLy"),
+                    DiaChi = reader.IsDBNull("DiaChi") ? null : reader.GetString("DiaChi"),
+                    SoDienThoai = reader.IsDBNull("SoDienThoai") ? null : reader.GetString("SoDienThoai"),
+                    Email = reader.IsDBNull("Email") ? null : reader.GetString("Email"),
+                    TenDangNhap = reader.IsDBNull("TenDangNhap") ? null : reader.GetString("TenDangNhap"),
+                    TrangThai = reader.IsDBNull("TrangThai") ? null : reader.GetString("TrangThai"),
+                    NgayTao = reader.IsDBNull("NgayTao") ? null : reader.GetDateTime("NgayTao")
+                };
+            }
+
+            return null;
+        }
+
+        public (bool success, int maDaiLy, string message) CreateDaiLy(CreateDaiLyRequest request)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_Admin_CreateDaiLy", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            command.Parameters.AddWithValue("@TenDangNhap", request.TenDangNhap);
+            command.Parameters.AddWithValue("@MatKhau", request.MatKhau);
+            command.Parameters.AddWithValue("@TenDaiLy", request.TenDaiLy);
+            command.Parameters.AddWithValue("@DiaChi", (object?)request.DiaChi ?? DBNull.Value);
+            command.Parameters.AddWithValue("@SoDienThoai", (object?)request.SoDienThoai ?? DBNull.Value);
+            command.Parameters.AddWithValue("@Email", (object?)request.Email ?? DBNull.Value);
+            
+            var outputParam = command.Parameters.Add("@MaDaiLy", SqlDbType.Int);
+            outputParam.Direction = ParameterDirection.Output;
+
+            connection.Open();
+            using var reader = command.ExecuteReader();
+
+            if (reader.Read())
+            {
+                var success = reader.GetInt32("Success") == 1;
+                var maDaiLy = reader.IsDBNull("MaDaiLy") ? 0 : reader.GetInt32("MaDaiLy");
+                var message = reader.GetString("Message");
+                return (success, maDaiLy, message);
+            }
+
+            return (false, 0, "Lỗi không xác định");
+        }
+
+        public bool UpdateDaiLy(int maDaiLy, UpdateDaiLyRequest request)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_Admin_UpdateDaiLy", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            command.Parameters.AddWithValue("@MaDaiLy", maDaiLy);
+            command.Parameters.AddWithValue("@TenDaiLy", request.TenDaiLy);
+            command.Parameters.AddWithValue("@DiaChi", (object?)request.DiaChi ?? DBNull.Value);
+            command.Parameters.AddWithValue("@SoDienThoai", (object?)request.SoDienThoai ?? DBNull.Value);
+            command.Parameters.AddWithValue("@Email", (object?)request.Email ?? DBNull.Value);
+
+            connection.Open();
+            using var reader = command.ExecuteReader();
+
+            if (reader.Read())
+            {
+                return reader.GetInt32("RowsAffected") > 0;
+            }
+
+            return false;
+        }
+
+        public bool DeleteDaiLy(int maDaiLy)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_Admin_DeleteDaiLy", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            command.Parameters.AddWithValue("@MaDaiLy", maDaiLy);
+
+            connection.Open();
+            using var reader = command.ExecuteReader();
+
+            if (reader.Read())
+            {
+                return reader.GetInt32("RowsAffected") > 0;
+            }
+
+            return false;
+        }
+
+        // ==================== SIÊU THỊ MANAGEMENT ====================
+        
+        public List<SieuThiDto> GetAllSieuThi()
+        {
+            var sieuThiList = new List<SieuThiDto>();
+
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_Admin_GetAllSieuThi", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            connection.Open();
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                sieuThiList.Add(new SieuThiDto
+                {
+                    MaSieuThi = reader.GetInt32("MaSieuThi"),
+                    MaTaiKhoan = reader.GetInt32("MaTaiKhoan"),
+                    TenSieuThi = reader.IsDBNull("TenSieuThi") ? null : reader.GetString("TenSieuThi"),
+                    DiaChi = reader.IsDBNull("DiaChi") ? null : reader.GetString("DiaChi"),
+                    SoDienThoai = reader.IsDBNull("SoDienThoai") ? null : reader.GetString("SoDienThoai"),
+                    Email = reader.IsDBNull("Email") ? null : reader.GetString("Email"),
+                    TenDangNhap = reader.IsDBNull("TenDangNhap") ? null : reader.GetString("TenDangNhap"),
+                    TrangThai = reader.IsDBNull("TrangThai") ? null : reader.GetString("TrangThai"),
+                    NgayTao = reader.IsDBNull("NgayTao") ? null : reader.GetDateTime("NgayTao")
+                });
+            }
+
+            return sieuThiList;
+        }
+
+        public SieuThiDto? GetSieuThiById(int maSieuThi)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_Admin_GetSieuThiById", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            command.Parameters.AddWithValue("@MaSieuThi", maSieuThi);
+
+            connection.Open();
+            using var reader = command.ExecuteReader();
+
+            if (reader.Read())
+            {
+                return new SieuThiDto
+                {
+                    MaSieuThi = reader.GetInt32("MaSieuThi"),
+                    MaTaiKhoan = reader.GetInt32("MaTaiKhoan"),
+                    TenSieuThi = reader.IsDBNull("TenSieuThi") ? null : reader.GetString("TenSieuThi"),
+                    DiaChi = reader.IsDBNull("DiaChi") ? null : reader.GetString("DiaChi"),
+                    SoDienThoai = reader.IsDBNull("SoDienThoai") ? null : reader.GetString("SoDienThoai"),
+                    Email = reader.IsDBNull("Email") ? null : reader.GetString("Email"),
+                    TenDangNhap = reader.IsDBNull("TenDangNhap") ? null : reader.GetString("TenDangNhap"),
+                    TrangThai = reader.IsDBNull("TrangThai") ? null : reader.GetString("TrangThai"),
+                    NgayTao = reader.IsDBNull("NgayTao") ? null : reader.GetDateTime("NgayTao")
+                };
+            }
+
+            return null;
+        }
+
+        public (bool success, int maSieuThi, string message) CreateSieuThi(CreateSieuThiRequest request)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_Admin_CreateSieuThi", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            command.Parameters.AddWithValue("@TenDangNhap", request.TenDangNhap);
+            command.Parameters.AddWithValue("@MatKhau", request.MatKhau);
+            command.Parameters.AddWithValue("@TenSieuThi", request.TenSieuThi);
+            command.Parameters.AddWithValue("@DiaChi", (object?)request.DiaChi ?? DBNull.Value);
+            command.Parameters.AddWithValue("@SoDienThoai", (object?)request.SoDienThoai ?? DBNull.Value);
+            command.Parameters.AddWithValue("@Email", (object?)request.Email ?? DBNull.Value);
+            
+            var outputParam = command.Parameters.Add("@MaSieuThi", SqlDbType.Int);
+            outputParam.Direction = ParameterDirection.Output;
+
+            connection.Open();
+            using var reader = command.ExecuteReader();
+
+            if (reader.Read())
+            {
+                var success = reader.GetInt32("Success") == 1;
+                var maSieuThi = reader.IsDBNull("MaSieuThi") ? 0 : reader.GetInt32("MaSieuThi");
+                var message = reader.GetString("Message");
+                return (success, maSieuThi, message);
+            }
+
+            return (false, 0, "Lỗi không xác định");
+        }
+
+        public bool UpdateSieuThi(int maSieuThi, UpdateSieuThiRequest request)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_Admin_UpdateSieuThi", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            command.Parameters.AddWithValue("@MaSieuThi", maSieuThi);
+            command.Parameters.AddWithValue("@TenSieuThi", request.TenSieuThi);
+            command.Parameters.AddWithValue("@DiaChi", (object?)request.DiaChi ?? DBNull.Value);
+            command.Parameters.AddWithValue("@SoDienThoai", (object?)request.SoDienThoai ?? DBNull.Value);
+            command.Parameters.AddWithValue("@Email", (object?)request.Email ?? DBNull.Value);
+
+            connection.Open();
+            using var reader = command.ExecuteReader();
+
+            if (reader.Read())
+            {
+                return reader.GetInt32("RowsAffected") > 0;
+            }
+
+            return false;
+        }
+
+        public bool DeleteSieuThi(int maSieuThi)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_Admin_DeleteSieuThi", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            command.Parameters.AddWithValue("@MaSieuThi", maSieuThi);
+
+            connection.Open();
+            using var reader = command.ExecuteReader();
+
+            if (reader.Read())
+            {
+                return reader.GetInt32("RowsAffected") > 0;
+            }
+
+            return false;
+        }
     }
 }
+
