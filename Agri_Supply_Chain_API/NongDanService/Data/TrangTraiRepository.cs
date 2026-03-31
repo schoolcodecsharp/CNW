@@ -195,6 +195,7 @@ namespace NongDanService.Data
             {
                 MaTrangTrai = reader.GetInt32("MaTrangTrai"),
                 MaNongDan = reader.GetInt32("MaNongDan"),
+                TenNongDan = reader.IsDBNull("TenNongDan") ? null : reader.GetString("TenNongDan"),
                 TenTrangTrai = reader.IsDBNull("TenTrangTrai") ? null : reader.GetString("TenTrangTrai"),
                 DiaChi = reader.IsDBNull("DiaChi") ? null : reader.GetString("DiaChi"),
                 SoChungNhan = reader.IsDBNull("SoChungNhan") ? null : reader.GetString("SoChungNhan"),
