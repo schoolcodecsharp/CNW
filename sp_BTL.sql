@@ -2,7 +2,7 @@
 -- STORED PROCEDURES FOR TAIKHOAN TABLE
 -- ============================================================================
 
-USE BTL_HDV1;
+
 
 -- SP GET ALL
 CREATE OR ALTER PROCEDURE sp_TaiKhoan_GetAll
@@ -130,7 +130,6 @@ GO
 -- STORED PROCEDURES FOR NONGDAN TABLE
 -- ============================================================================
 
-USE BTL_HDV1;
 
 -- SP GET ALL
 CREATE OR ALTER PROCEDURE sp_NongDan_GetAll
@@ -268,7 +267,7 @@ GO
 -- STORED PROCEDURES FOR DAILY TABLE
 -- ============================================================================
 
-USE BTL_HDV1;
+
 
 -- SP GET ALL
 CREATE OR ALTER PROCEDURE sp_DaiLy_GetAll
@@ -405,7 +404,6 @@ GO
 -- STORED PROCEDURES FOR SANPHAM TABLE
 -- ============================================================================
 
-USE BTL_HDV1;
 
 -- SP GET ALL
 CREATE OR ALTER PROCEDURE sp_SanPham_GetAll
@@ -522,7 +520,7 @@ GO
 -- STORED PROCEDURES FOR LONONGSAN TABLE
 -- ============================================================================
 
-USE BTL_HDV1;
+
 
 -- SP GET ALL
 CREATE OR ALTER PROCEDURE sp_LoNongSan_GetAll
@@ -680,7 +678,7 @@ GO
 -- STORED PROCEDURES FOR DONHANG TABLE
 -- ============================================================================
 
-USE BTL_HDV1;
+
 
 -- SP GET ALL
 CREATE OR ALTER PROCEDURE sp_DonHang_GetAll
@@ -813,7 +811,7 @@ GO
 -- STORED PROCEDURES FOR KIEMDINH TABLE
 -- ============================================================================
 
-USE BTL_HDV1;
+
 
 -- SP GET ALL
 CREATE OR ALTER PROCEDURE sp_KiemDinh_GetAll
@@ -987,7 +985,7 @@ BEGIN
         FROM Admin
         ORDER BY MaAdmin
         
-        SELECT 'Success' AS Status, 'Get all admin successfully' AS Message
+        SELECT 'Success' AS Status, 'Lấy danh sách admin thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1011,9 +1009,9 @@ BEGIN
         WHERE MaAdmin = @MaAdmin
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Admin not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy admin' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Get admin successfully' AS Message
+            SELECT 'Success' AS Status, 'Lấy thông tin admin thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1033,7 +1031,7 @@ BEGIN
         INSERT INTO Admin (MaTaiKhoan, HoTen, SoDienThoai, Email)
         VALUES (@MaTaiKhoan, @HoTen, @SoDienThoai, @Email)
         
-        SELECT 'Success' AS Status, 'Admin created successfully' AS Message
+        SELECT 'Success' AS Status, 'Tạo admin thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1058,9 +1056,9 @@ BEGIN
         WHERE MaAdmin = @MaAdmin
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Admin not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy admin' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Admin updated successfully' AS Message
+            SELECT 'Success' AS Status, 'Cập nhật admin thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1078,9 +1076,9 @@ BEGIN
         WHERE MaAdmin = @MaAdmin
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Admin not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy admin' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Admin deleted successfully' AS Message
+            SELECT 'Success' AS Status, 'Xóa admin thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1106,7 +1104,7 @@ BEGIN
             OR SoDienThoai LIKE N'%' + @SearchText + '%'
         ORDER BY HoTen
         
-        SELECT 'Success' AS Status, 'Search completed' AS Message
+        SELECT 'Success' AS Status, 'Tìm kiếm hoàn tất' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1135,7 +1133,7 @@ BEGIN
         FROM SieuThi
         ORDER BY TenSieuThi
         
-        SELECT 'Success' AS Status, 'Get all supermarkets successfully' AS Message
+        SELECT 'Success' AS Status, 'Lấy danh sách siêu thị thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1160,9 +1158,9 @@ BEGIN
         WHERE MaSieuThi = @MaSieuThi
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Supermarket not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy siêu thị' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Get supermarket successfully' AS Message
+            SELECT 'Success' AS Status, 'Lấy thông tin siêu thị thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1183,7 +1181,7 @@ BEGIN
         INSERT INTO SieuThi (MaTaiKhoan, TenSieuThi, SoDienThoai, Email, DiaChi)
         VALUES (@MaTaiKhoan, @TenSieuThi, @SoDienThoai, @Email, @DiaChi)
         
-        SELECT 'Success' AS Status, 'Supermarket created successfully' AS Message
+        SELECT 'Success' AS Status, 'Tạo siêu thị thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1210,9 +1208,9 @@ BEGIN
         WHERE MaSieuThi = @MaSieuThi
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Supermarket not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy siêu thị' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Supermarket updated successfully' AS Message
+            SELECT 'Success' AS Status, 'Cập nhật siêu thị thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1230,9 +1228,9 @@ BEGIN
         WHERE MaSieuThi = @MaSieuThi
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Supermarket not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy siêu thị' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Supermarket deleted successfully' AS Message
+            SELECT 'Success' AS Status, 'Xóa siêu thị thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1259,7 +1257,7 @@ BEGIN
             OR DiaChi LIKE N'%' + @SearchText + '%'
         ORDER BY TenSieuThi
         
-        SELECT 'Success' AS Status, 'Search completed' AS Message
+        SELECT 'Success' AS Status, 'Tìm kiếm hoàn tất' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1288,7 +1286,7 @@ BEGIN
         FROM TrangTrai
         ORDER BY TenTrangTrai
         
-        SELECT 'Success' AS Status, 'Get all farms successfully' AS Message
+        SELECT 'Success' AS Status, 'Lấy danh sách trang trại thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1313,9 +1311,9 @@ BEGIN
         WHERE MaTrangTrai = @MaTrangTrai
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Farm not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy trang trại' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Get farm successfully' AS Message
+            SELECT 'Success' AS Status, 'Lấy thông tin trang trại thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1335,7 +1333,7 @@ BEGIN
         INSERT INTO TrangTrai (MaNongDan, TenTrangTrai, DiaChi, SoChungNhan)
         VALUES (@MaNongDan, @TenTrangTrai, @DiaChi, @SoChungNhan)
         
-        SELECT 'Success' AS Status, 'Farm created successfully' AS Message
+        SELECT 'Success' AS Status, 'Tạo trang trại thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1360,9 +1358,9 @@ BEGIN
         WHERE MaTrangTrai = @MaTrangTrai
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Farm not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy trang trại' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Farm updated successfully' AS Message
+            SELECT 'Success' AS Status, 'Cập nhật trang trại thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1380,9 +1378,9 @@ BEGIN
         WHERE MaTrangTrai = @MaTrangTrai
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Farm not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy trang trại' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Farm deleted successfully' AS Message
+            SELECT 'Success' AS Status, 'Xóa trang trại thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1408,7 +1406,7 @@ BEGIN
             OR DiaChi LIKE N'%' + @SearchText + '%'
         ORDER BY TenTrangTrai
         
-        SELECT 'Success' AS Status, 'Search completed' AS Message
+        SELECT 'Success' AS Status, 'Tìm kiếm hoàn tất' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1439,7 +1437,7 @@ BEGIN
         FROM Kho
         ORDER BY TenKho
         
-        SELECT 'Success' AS Status, 'Get all warehouses successfully' AS Message
+        SELECT 'Success' AS Status, 'Lấy danh sách kho thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1466,9 +1464,9 @@ BEGIN
         WHERE MaKho = @MaKho
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Warehouse not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy kho' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Get warehouse successfully' AS Message
+            SELECT 'Success' AS Status, 'Lấy thông tin kho thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1489,7 +1487,7 @@ BEGIN
         INSERT INTO Kho (LoaiKho, MaDaiLy, MaSieuThi, TenKho, DiaChi)
         VALUES (@LoaiKho, @MaDaiLy, @MaSieuThi, @TenKho, @DiaChi)
         
-        SELECT 'Success' AS Status, 'Warehouse created successfully' AS Message
+        SELECT 'Success' AS Status, 'Tạo kho thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1514,9 +1512,9 @@ BEGIN
         WHERE MaKho = @MaKho
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Warehouse not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy kho' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Warehouse updated successfully' AS Message
+            SELECT 'Success' AS Status, 'Cập nhật kho thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1534,9 +1532,9 @@ BEGIN
         WHERE MaKho = @MaKho
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Warehouse not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy kho' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Warehouse deleted successfully' AS Message
+            SELECT 'Success' AS Status, 'Xóa kho thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1565,7 +1563,7 @@ BEGIN
             OR LoaiKho LIKE N'%' + @SearchText + '%'
         ORDER BY TenKho
         
-        SELECT 'Success' AS Status, 'Search completed' AS Message
+        SELECT 'Success' AS Status, 'Tìm kiếm hoàn tất' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1591,7 +1589,7 @@ BEGIN
         FROM TonKho
         ORDER BY MaKho, MaLo
         
-        SELECT 'Success' AS Status, 'Get all inventory successfully' AS Message
+        SELECT 'Success' AS Status, 'Lấy danh sách tồn kho thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1615,9 +1613,9 @@ BEGIN
         WHERE MaKho = @MaKho AND MaLo = @MaLo
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Inventory record not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy bản ghi tồn kho' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Get inventory successfully' AS Message
+            SELECT 'Success' AS Status, 'Lấy thông tin tồn kho thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1636,7 +1634,7 @@ BEGIN
         INSERT INTO TonKho (MaKho, MaLo, SoLuong)
         VALUES (@MaKho, @MaLo, @SoLuong)
         
-        SELECT 'Success' AS Status, 'Inventory created successfully' AS Message
+        SELECT 'Success' AS Status, 'Tạo tồn kho thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1659,9 +1657,9 @@ BEGIN
         WHERE MaKho = @MaKho AND MaLo = @MaLo
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Inventory record not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy bản ghi tồn kho' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Inventory updated successfully' AS Message
+            SELECT 'Success' AS Status, 'Cập nhật tồn kho thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1680,9 +1678,9 @@ BEGIN
         WHERE MaKho = @MaKho AND MaLo = @MaLo
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Inventory record not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy bản ghi tồn kho' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Inventory deleted successfully' AS Message
+            SELECT 'Success' AS Status, 'Xóa tồn kho thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1705,7 +1703,7 @@ BEGIN
         WHERE MaKho = @MaKho
         ORDER BY MaLo
         
-        SELECT 'Success' AS Status, 'Search completed' AS Message
+        SELECT 'Success' AS Status, 'Tìm kiếm hoàn tất' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1730,7 +1728,7 @@ BEGIN
         FROM DonHangDaiLy
         ORDER BY MaDonHang DESC
         
-        SELECT 'Success' AS Status, 'Get all dealer orders successfully' AS Message
+        SELECT 'Success' AS Status, 'Lấy danh sách đơn hàng đại lý thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1752,9 +1750,9 @@ BEGIN
         WHERE MaDonHang = @MaDonHang
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Dealer order not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy đơn hàng đại lý' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Get dealer order successfully' AS Message
+            SELECT 'Success' AS Status, 'Lấy thông tin đơn hàng đại lý thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1773,7 +1771,7 @@ BEGIN
         INSERT INTO DonHangDaiLy (MaDonHang, MaDaiLy, MaNongDan)
         VALUES (@MaDonHang, @MaDaiLy, @MaNongDan)
         
-        SELECT 'Success' AS Status, 'Dealer order created successfully' AS Message
+        SELECT 'Success' AS Status, 'Tạo đơn hàng đại lý thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1796,9 +1794,9 @@ BEGIN
         WHERE MaDonHang = @MaDonHang
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Dealer order not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy đơn hàng đại lý' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Dealer order updated successfully' AS Message
+            SELECT 'Success' AS Status, 'Cập nhật đơn hàng đại lý thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1816,9 +1814,9 @@ BEGIN
         WHERE MaDonHang = @MaDonHang
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Dealer order not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy đơn hàng đại lý' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Dealer order deleted successfully' AS Message
+            SELECT 'Success' AS Status, 'Xóa đơn hàng đại lý thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1850,7 +1848,7 @@ BEGIN
             WHERE MaNongDan = @SearchId
             ORDER BY MaDonHang DESC
         
-        SELECT 'Success' AS Status, 'Search completed' AS Message
+        SELECT 'Success' AS Status, 'Tìm kiếm hoàn tất' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1875,7 +1873,7 @@ BEGIN
         FROM DonHangSieuThi
         ORDER BY MaDonHang DESC
         
-        SELECT 'Success' AS Status, 'Get all supermarket orders successfully' AS Message
+        SELECT 'Success' AS Status, 'Lấy danh sách đơn hàng siêu thị thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1897,9 +1895,9 @@ BEGIN
         WHERE MaDonHang = @MaDonHang
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Supermarket order not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy đơn hàng siêu thị' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Get supermarket order successfully' AS Message
+            SELECT 'Success' AS Status, 'Lấy thông tin đơn hàng siêu thị thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1918,7 +1916,7 @@ BEGIN
         INSERT INTO DonHangSieuThi (MaDonHang, MaSieuThi, MaDaiLy)
         VALUES (@MaDonHang, @MaSieuThi, @MaDaiLy)
         
-        SELECT 'Success' AS Status, 'Supermarket order created successfully' AS Message
+        SELECT 'Success' AS Status, 'Tạo đơn hàng siêu thị thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1941,9 +1939,9 @@ BEGIN
         WHERE MaDonHang = @MaDonHang
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Supermarket order not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy đơn hàng siêu thị' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Supermarket order updated successfully' AS Message
+            SELECT 'Success' AS Status, 'Cập nhật đơn hàng siêu thị thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1961,9 +1959,9 @@ BEGIN
         WHERE MaDonHang = @MaDonHang
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Supermarket order not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy đơn hàng siêu thị' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Supermarket order deleted successfully' AS Message
+            SELECT 'Success' AS Status, 'Xóa đơn hàng siêu thị thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1995,7 +1993,7 @@ BEGIN
             WHERE MaDaiLy = @SearchId
             ORDER BY MaDonHang DESC
         
-        SELECT 'Success' AS Status, 'Search completed' AS Message
+        SELECT 'Success' AS Status, 'Tìm kiếm hoàn tất' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -2021,7 +2019,7 @@ BEGIN
         FROM ChiTietDonHang
         ORDER BY MaDonHang, MaLo
         
-        SELECT 'Success' AS Status, 'Get all order details successfully' AS Message
+        SELECT 'Success' AS Status, 'Lấy danh sách chi tiết đơn hàng thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -2046,9 +2044,9 @@ BEGIN
         WHERE MaDonHang = @MaDonHang AND MaLo = @MaLo
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Order detail not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy chi tiết đơn hàng' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Get order detail successfully' AS Message
+            SELECT 'Success' AS Status, 'Lấy thông tin chi tiết đơn hàng thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -2069,7 +2067,7 @@ BEGIN
         INSERT INTO ChiTietDonHang (MaDonHang, MaLo, SoLuong, DonGia, ThanhTien)
         VALUES (@MaDonHang, @MaLo, @SoLuong, @DonGia, @ThanhTien)
         
-        SELECT 'Success' AS Status, 'Order detail created successfully' AS Message
+        SELECT 'Success' AS Status, 'Tạo chi tiết đơn hàng thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -2095,9 +2093,9 @@ BEGIN
         WHERE MaDonHang = @MaDonHang AND MaLo = @MaLo
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Order detail not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy chi tiết đơn hàng' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Order detail updated successfully' AS Message
+            SELECT 'Success' AS Status, 'Cập nhật chi tiết đơn hàng thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -2116,9 +2114,9 @@ BEGIN
         WHERE MaDonHang = @MaDonHang AND MaLo = @MaLo
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Order detail not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy chi tiết đơn hàng' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Order detail deleted successfully' AS Message
+            SELECT 'Success' AS Status, 'Xóa chi tiết đơn hàng thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -2142,7 +2140,7 @@ BEGIN
         WHERE MaDonHang = @MaDonHang
         ORDER BY MaLo
         
-        SELECT 'Success' AS Status, 'Search completed' AS Message
+        SELECT 'Success' AS Status, 'Tìm kiếm hoàn tất' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -2171,7 +2169,7 @@ BEGIN
         FROM DonHang
         ORDER BY NgayDat DESC
         
-        SELECT 'Success' AS Status, 'Get all orders successfully' AS Message
+        SELECT 'Success' AS Status, 'Lấy danh sách đơn hàng thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -2198,9 +2196,9 @@ BEGIN
         WHERE MaDonHang = @MaDonHang
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Order not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy đơn hàng' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Get order successfully' AS Message
+            SELECT 'Success' AS Status, 'Lấy thông tin đơn hàng thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -2220,7 +2218,7 @@ BEGIN
         INSERT INTO DonHang (LoaiDon, TongSoLuong, TongGiaTri, GhiChu)
         VALUES (@LoaiDon, @TongSoLuong, @TongGiaTri, @GhiChu)
         
-        SELECT 'Success' AS Status, 'Order created successfully' AS Message
+        SELECT 'Success' AS Status, 'Tạo đơn hàng thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -2249,9 +2247,9 @@ BEGIN
         WHERE MaDonHang = @MaDonHang
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Order not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy đơn hàng' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Order updated successfully' AS Message
+            SELECT 'Success' AS Status, 'Cập nhật đơn hàng thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -2269,9 +2267,9 @@ BEGIN
         WHERE MaDonHang = @MaDonHang
         
         IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Order not found' AS Message
+            SELECT 'NotFound' AS Status, 'Không tìm thấy đơn hàng' AS Message
         ELSE
-            SELECT 'Success' AS Status, 'Order deleted successfully' AS Message
+            SELECT 'Success' AS Status, 'Xóa đơn hàng thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -2299,7 +2297,7 @@ BEGIN
             OR LoaiDon LIKE N'%' + @SearchText + '%'
         ORDER BY NgayDat DESC
         
-        SELECT 'Success' AS Status, 'Search completed' AS Message
+        SELECT 'Success' AS Status, 'Tìm kiếm hoàn tất' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
