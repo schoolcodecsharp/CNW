@@ -1720,19 +1720,25 @@ GO
 CREATE OR ALTER PROCEDURE sp_DonHangDaiLy_GetAll
 AS
 BEGIN
-    BEGIN TRY
-        SELECT 
-            MaDonHang,
-            MaDaiLy,
-            MaNongDan
-        FROM DonHangDaiLy
-        ORDER BY MaDonHang DESC
-        
-        SELECT 'Success' AS Status, 'Lấy danh sách đơn hàng đại lý thành công' AS Message
-    END TRY
-    BEGIN CATCH
-        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
-    END CATCH
+    SET NOCOUNT ON;
+    
+    SELECT
+        dh.MaDonHang,
+        dhdl.MaDaiLy,
+        dhdl.MaNongDan,
+        nd.HoTen AS TenNongDan,
+        dl.TenDaiLy,
+        dh.NgayDat,
+        dh.NgayGiao,
+        dh.TrangThai,
+        dh.TongSoLuong,
+        dh.TongGiaTri,
+        dh.GhiChu
+    FROM DonHang dh
+    INNER JOIN DonHangDaiLy dhdl ON dh.MaDonHang = dhdl.MaDonHang
+    LEFT JOIN NongDan nd ON dhdl.MaNongDan = nd.MaNongDan
+    LEFT JOIN DaiLy dl ON dhdl.MaDaiLy = dl.MaDaiLy
+    ORDER BY dh.MaDonHang DESC;
 END
 GO
 
@@ -1741,22 +1747,25 @@ CREATE OR ALTER PROCEDURE sp_DonHangDaiLy_GetById
     @MaDonHang INT
 AS
 BEGIN
-    BEGIN TRY
-        SELECT 
-            MaDonHang,
-            MaDaiLy,
-            MaNongDan
-        FROM DonHangDaiLy
-        WHERE MaDonHang = @MaDonHang
-        
-        IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Không tìm thấy đơn hàng đại lý' AS Message
-        ELSE
-            SELECT 'Success' AS Status, 'Lấy thông tin đơn hàng đại lý thành công' AS Message
-    END TRY
-    BEGIN CATCH
-        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
-    END CATCH
+    SET NOCOUNT ON;
+    
+    SELECT
+        dh.MaDonHang,
+        dhdl.MaDaiLy,
+        dhdl.MaNongDan,
+        nd.HoTen AS TenNongDan,
+        dl.TenDaiLy,
+        dh.NgayDat,
+        dh.NgayGiao,
+        dh.TrangThai,
+        dh.TongSoLuong,
+        dh.TongGiaTri,
+        dh.GhiChu
+    FROM DonHang dh
+    INNER JOIN DonHangDaiLy dhdl ON dh.MaDonHang = dhdl.MaDonHang
+    LEFT JOIN NongDan nd ON dhdl.MaNongDan = nd.MaNongDan
+    LEFT JOIN DaiLy dl ON dhdl.MaDaiLy = dl.MaDaiLy
+    WHERE dh.MaDonHang = @MaDonHang;
 END
 GO
 
