@@ -172,7 +172,8 @@ GO
 
 -- SP CREATE
 CREATE OR ALTER PROCEDURE sp_NongDan_Create
-    @MaTaiKhoan INT,
+    @TenDangNhap NVARCHAR(50),
+    @MatKhau NVARCHAR(255),
     @HoTen NVARCHAR(100),
     @SoDienThoai NVARCHAR(20),
     @Email NVARCHAR(100),
@@ -180,14 +181,37 @@ CREATE OR ALTER PROCEDURE sp_NongDan_Create
     @MaNongDan INT OUTPUT
 AS
 BEGIN
+    SET NOCOUNT ON;
     BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        -- Kiểm tra tên đăng nhập đã tồn tại chưa
+        IF EXISTS (SELECT 1 FROM TaiKhoan WHERE TenDangNhap = @TenDangNhap)
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 'ERROR' AS Status, N'Tên đăng nhập đã tồn tại' AS Message;
+            RETURN;
+        END
+        
+        -- Tạo tài khoản mới
+        DECLARE @MaTaiKhoan INT;
+        INSERT INTO TaiKhoan (TenDangNhap, MatKhau, LoaiTaiKhoan, TrangThai)
+        VALUES (@TenDangNhap, @MatKhau, 'nongdan', N'hoat_dong');
+        
+        SET @MaTaiKhoan = SCOPE_IDENTITY();
+        
+        -- Tạo nông dân
         INSERT INTO NongDan (MaTaiKhoan, HoTen, SoDienThoai, Email, DiaChi)
         VALUES (@MaTaiKhoan, @HoTen, @SoDienThoai, @Email, @DiaChi);
         
         SET @MaNongDan = SCOPE_IDENTITY();
+        
+        COMMIT TRANSACTION;
         SELECT 'SUCCESS' AS Status, @MaNongDan AS MaNongDan;
     END TRY
     BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
         SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
     END CATCH
 END;
@@ -310,7 +334,8 @@ GO
 
 -- SP CREATE
 CREATE OR ALTER PROCEDURE sp_DaiLy_Create
-    @MaTaiKhoan INT,
+    @TenDangNhap NVARCHAR(50),
+    @MatKhau NVARCHAR(255),
     @TenDaiLy NVARCHAR(100),
     @SoDienThoai NVARCHAR(20),
     @Email NVARCHAR(100),
@@ -318,14 +343,37 @@ CREATE OR ALTER PROCEDURE sp_DaiLy_Create
     @MaDaiLy INT OUTPUT
 AS
 BEGIN
+    SET NOCOUNT ON;
     BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        -- Kiểm tra tên đăng nhập đã tồn tại chưa
+        IF EXISTS (SELECT 1 FROM TaiKhoan WHERE TenDangNhap = @TenDangNhap)
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 'ERROR' AS Status, N'Tên đăng nhập đã tồn tại' AS Message;
+            RETURN;
+        END
+        
+        -- Tạo tài khoản mới
+        DECLARE @MaTaiKhoan INT;
+        INSERT INTO TaiKhoan (TenDangNhap, MatKhau, LoaiTaiKhoan, TrangThai)
+        VALUES (@TenDangNhap, @MatKhau, 'daily', N'hoat_dong');
+        
+        SET @MaTaiKhoan = SCOPE_IDENTITY();
+        
+        -- Tạo đại lý
         INSERT INTO DaiLy (MaTaiKhoan, TenDaiLy, SoDienThoai, Email, DiaChi)
         VALUES (@MaTaiKhoan, @TenDaiLy, @SoDienThoai, @Email, @DiaChi);
         
         SET @MaDaiLy = SCOPE_IDENTITY();
+        
+        COMMIT TRANSACTION;
         SELECT 'SUCCESS' AS Status, @MaDaiLy AS MaDaiLy;
     END TRY
     BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
         SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
     END CATCH
 END;
@@ -1122,6 +1170,7 @@ GO
 CREATE OR ALTER PROCEDURE sp_SieuThi_GetAll
 AS
 BEGIN
+    SET NOCOUNT ON;
     BEGIN TRY
         SELECT 
             MaSieuThi,
@@ -1132,8 +1181,6 @@ BEGIN
             DiaChi
         FROM SieuThi
         ORDER BY TenSieuThi
-        
-        SELECT 'Success' AS Status, 'Lấy danh sách siêu thị thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1146,6 +1193,7 @@ CREATE OR ALTER PROCEDURE sp_SieuThi_GetById
     @MaSieuThi INT
 AS
 BEGIN
+    SET NOCOUNT ON;
     BEGIN TRY
         SELECT 
             MaSieuThi,
@@ -1159,8 +1207,6 @@ BEGIN
         
         IF @@ROWCOUNT = 0
             SELECT 'NotFound' AS Status, 'Không tìm thấy siêu thị' AS Message
-        ELSE
-            SELECT 'Success' AS Status, 'Lấy thông tin siêu thị thành công' AS Message
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1170,21 +1216,47 @@ GO
 
 -- Create: Thêm mới siêu thị
 CREATE OR ALTER PROCEDURE sp_SieuThi_Create
-    @MaTaiKhoan INT,
+    @TenDangNhap NVARCHAR(50),
+    @MatKhau NVARCHAR(255),
     @TenSieuThi NVARCHAR(100),
     @SoDienThoai NVARCHAR(20),
     @Email NVARCHAR(100),
-    @DiaChi NVARCHAR(255)
+    @DiaChi NVARCHAR(255),
+    @MaSieuThi INT OUTPUT
 AS
 BEGIN
+    SET NOCOUNT ON;
     BEGIN TRY
-        INSERT INTO SieuThi (MaTaiKhoan, TenSieuThi, SoDienThoai, Email, DiaChi)
-        VALUES (@MaTaiKhoan, @TenSieuThi, @SoDienThoai, @Email, @DiaChi)
+        BEGIN TRANSACTION;
         
-        SELECT 'Success' AS Status, 'Tạo siêu thị thành công' AS Message
+        -- Kiểm tra tên đăng nhập đã tồn tại chưa
+        IF EXISTS (SELECT 1 FROM TaiKhoan WHERE TenDangNhap = @TenDangNhap)
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 'ERROR' AS Status, N'Tên đăng nhập đã tồn tại' AS Message;
+            RETURN;
+        END
+        
+        -- Tạo tài khoản mới
+        DECLARE @MaTaiKhoan INT;
+        INSERT INTO TaiKhoan (TenDangNhap, MatKhau, LoaiTaiKhoan, TrangThai)
+        VALUES (@TenDangNhap, @MatKhau, 'sieuthi', N'hoat_dong');
+        
+        SET @MaTaiKhoan = SCOPE_IDENTITY();
+        
+        -- Tạo siêu thị
+        INSERT INTO SieuThi (MaTaiKhoan, TenSieuThi, SoDienThoai, Email, DiaChi)
+        VALUES (@MaTaiKhoan, @TenSieuThi, @SoDienThoai, @Email, @DiaChi);
+        
+        SET @MaSieuThi = SCOPE_IDENTITY();
+        
+        COMMIT TRANSACTION;
+        SELECT 'SUCCESS' AS Status, @MaSieuThi AS MaSieuThi;
     END TRY
     BEGIN CATCH
-        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
     END CATCH
 END
 GO
@@ -1275,18 +1347,19 @@ GO
 CREATE OR ALTER PROCEDURE sp_TrangTrai_GetAll
 AS
 BEGIN
+    SET NOCOUNT ON;
     BEGIN TRY
         SELECT 
-            MaTrangTrai,
-            MaNongDan,
-            TenTrangTrai,
-            DiaChi,
-            SoChungNhan,
-            NgayTao
-        FROM TrangTrai
-        ORDER BY TenTrangTrai
-        
-        SELECT 'Success' AS Status, 'Lấy danh sách trang trại thành công' AS Message
+            t.MaTrangTrai,
+            t.MaNongDan,
+            t.TenTrangTrai,
+            t.DiaChi,
+            t.SoChungNhan,
+            t.NgayTao,
+            n.HoTen AS TenNongDan
+        FROM TrangTrai t
+        LEFT JOIN NongDan n ON t.MaNongDan = n.MaNongDan
+        ORDER BY t.TenTrangTrai
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1299,21 +1372,48 @@ CREATE OR ALTER PROCEDURE sp_TrangTrai_GetById
     @MaTrangTrai INT
 AS
 BEGIN
+    SET NOCOUNT ON;
     BEGIN TRY
         SELECT 
-            MaTrangTrai,
-            MaNongDan,
-            TenTrangTrai,
-            DiaChi,
-            SoChungNhan,
-            NgayTao
-        FROM TrangTrai
-        WHERE MaTrangTrai = @MaTrangTrai
+            t.MaTrangTrai,
+            t.MaNongDan,
+            t.TenTrangTrai,
+            t.DiaChi,
+            t.SoChungNhan,
+            t.NgayTao,
+            n.HoTen AS TenNongDan
+        FROM TrangTrai t
+        LEFT JOIN NongDan n ON t.MaNongDan = n.MaNongDan
+        WHERE t.MaTrangTrai = @MaTrangTrai
         
         IF @@ROWCOUNT = 0
             SELECT 'NotFound' AS Status, 'Không tìm thấy trang trại' AS Message
-        ELSE
-            SELECT 'Success' AS Status, 'Lấy thông tin trang trại thành công' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- GetByNongDan: Lấy trang trại theo MaNongDan
+CREATE OR ALTER PROCEDURE sp_TrangTrai_GetByNongDan
+    @MaNongDan INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        SELECT 
+            t.MaTrangTrai,
+            t.MaNongDan,
+            t.TenTrangTrai,
+            t.DiaChi,
+            t.SoChungNhan,
+            t.NgayTao,
+            n.HoTen AS TenNongDan
+        FROM TrangTrai t
+        LEFT JOIN NongDan n ON t.MaNongDan = n.MaNongDan
+        WHERE t.MaNongDan = @MaNongDan
+        ORDER BY t.TenTrangTrai
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1326,14 +1426,16 @@ CREATE OR ALTER PROCEDURE sp_TrangTrai_Create
     @MaNongDan INT,
     @TenTrangTrai NVARCHAR(100),
     @DiaChi NVARCHAR(255),
-    @SoChungNhan NVARCHAR(50)
+    @SoChungNhan NVARCHAR(50),
+    @MaTrangTrai INT OUTPUT
 AS
 BEGIN
+    SET NOCOUNT ON;
     BEGIN TRY
         INSERT INTO TrangTrai (MaNongDan, TenTrangTrai, DiaChi, SoChungNhan)
         VALUES (@MaNongDan, @TenTrangTrai, @DiaChi, @SoChungNhan)
         
-        SELECT 'Success' AS Status, 'Tạo trang trại thành công' AS Message
+        SET @MaTrangTrai = SCOPE_IDENTITY()
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1349,6 +1451,7 @@ CREATE OR ALTER PROCEDURE sp_TrangTrai_Update
     @SoChungNhan NVARCHAR(50)
 AS
 BEGIN
+    SET NOCOUNT ON;
     BEGIN TRY
         UPDATE TrangTrai
         SET 
@@ -1357,10 +1460,7 @@ BEGIN
             SoChungNhan = @SoChungNhan
         WHERE MaTrangTrai = @MaTrangTrai
         
-        IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Không tìm thấy trang trại' AS Message
-        ELSE
-            SELECT 'Success' AS Status, 'Cập nhật trang trại thành công' AS Message
+        SELECT @@ROWCOUNT AS RowsAffected
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1373,14 +1473,12 @@ CREATE OR ALTER PROCEDURE sp_TrangTrai_Delete
     @MaTrangTrai INT
 AS
 BEGIN
+    SET NOCOUNT ON;
     BEGIN TRY
         DELETE FROM TrangTrai
         WHERE MaTrangTrai = @MaTrangTrai
         
-        IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Không tìm thấy trang trại' AS Message
-        ELSE
-            SELECT 'Success' AS Status, 'Xóa trang trại thành công' AS Message
+        SELECT @@ROWCOUNT AS RowsAffected
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1393,20 +1491,21 @@ CREATE OR ALTER PROCEDURE sp_TrangTrai_Search
     @SearchText NVARCHAR(100)
 AS
 BEGIN
+    SET NOCOUNT ON;
     BEGIN TRY
         SELECT 
-            MaTrangTrai,
-            MaNongDan,
-            TenTrangTrai,
-            DiaChi,
-            SoChungNhan,
-            NgayTao
-        FROM TrangTrai
-        WHERE TenTrangTrai LIKE N'%' + @SearchText + '%'
-            OR DiaChi LIKE N'%' + @SearchText + '%'
-        ORDER BY TenTrangTrai
-        
-        SELECT 'Success' AS Status, 'Tìm kiếm hoàn tất' AS Message
+            t.MaTrangTrai,
+            t.MaNongDan,
+            t.TenTrangTrai,
+            t.DiaChi,
+            t.SoChungNhan,
+            t.NgayTao,
+            n.HoTen AS TenNongDan
+        FROM TrangTrai t
+        LEFT JOIN NongDan n ON t.MaNongDan = n.MaNongDan
+        WHERE t.TenTrangTrai LIKE N'%' + @SearchText + '%'
+            OR t.DiaChi LIKE N'%' + @SearchText + '%'
+        ORDER BY t.TenTrangTrai
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
