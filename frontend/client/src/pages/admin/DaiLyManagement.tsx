@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../../services/apiConfig';
 
 function DaiLyManagement() {
   const [dailyList, setDailyList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState('add');
+  const [modalMode, setModalMode] = useState('view');
   const [selectedDaily, setSelectedDaily] = useState(null);
   const [formData, setFormData] = useState({
-    tenDangNhap: '',
-    matKhau: '',
     tenDaiLy: '',
-    diaChi: '',
     soDienThoai: '',
-    email: ''
+    email: '',
+    diaChi: '',
+    // Thông tin tài khoản (chỉ dùng khi thêm mới)
+    tenDangNhap: '',
+    matKhau: ''
   });
 
   useEffect(() => {
@@ -23,11 +25,10 @@ function DaiLyManagement() {
   const loadDaiLy = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5041/api/admin/daily');
+      const response = await axios.get(API_ENDPOINTS.daiLy.getAll);
       setDailyList(response.data.data || []);
     } catch (error) {
       console.error('Error loading dai ly:', error);
-      alert('Lỗi khi tải danh sách đại lý');
     } finally {
       setLoading(false);
     }
@@ -37,12 +38,12 @@ function DaiLyManagement() {
     setModalMode('add');
     setSelectedDaily(null);
     setFormData({
-      tenDangNhap: '',
-      matKhau: '',
       tenDaiLy: '',
-      diaChi: '',
       soDienThoai: '',
-      email: ''
+      email: '',
+      diaChi: '',
+      tenDangNhap: '',
+      matKhau: ''
     });
     setShowModal(true);
   };
@@ -51,13 +52,19 @@ function DaiLyManagement() {
     setModalMode('edit');
     setSelectedDaily(daily);
     setFormData({
-      tenDangNhap: daily.tenDangNhap || '',
-      matKhau: '',
       tenDaiLy: daily.tenDaiLy || '',
-      diaChi: daily.diaChi || '',
       soDienThoai: daily.soDienThoai || '',
-      email: daily.email || ''
+      email: daily.email || '',
+      diaChi: daily.diaChi || '',
+      tenDangNhap: '', // Không cho sửa tài khoản
+      matKhau: ''
     });
+    setShowModal(true);
+  };
+
+  const handleView = (daily) => {
+    setModalMode('view');
+    setSelectedDaily(daily);
     setShowModal(true);
   };
 
@@ -67,12 +74,12 @@ function DaiLyManagement() {
     }
 
     try {
-      await axios.delete(`http://localhost:5041/api/admin/daily/${daily.maDaiLy}`);
+      await axios.delete(API_ENDPOINTS.daiLy.delete(daily.maDaiLy));
       alert('Xóa đại lý thành công');
       loadDaiLy();
     } catch (error) {
-      console.error('Error deleting daily:', error);
-      alert(error.response?.data?.message || 'Lỗi khi xóa đại lý');
+      console.error('Error deleting dai ly:', error);
+      alert(error.response?.data?.message || 'Không thể xóa đại lý');
     }
   };
 
@@ -81,21 +88,33 @@ function DaiLyManagement() {
 
     try {
       if (modalMode === 'add') {
-        await axios.post('http://localhost:5041/api/admin/daily', formData);
+        // Khi thêm mới, gửi cả thông tin tài khoản
+        const payload = {
+          tenDaiLy: formData.tenDaiLy,
+          soDienThoai: formData.soDienThoai,
+          email: formData.email,
+          diaChi: formData.diaChi,
+          tenDangNhap: formData.tenDangNhap,
+          matKhau: formData.matKhau
+        };
+        await axios.post(API_ENDPOINTS.daiLy.create, payload);
         alert('Thêm đại lý thành công');
       } else if (modalMode === 'edit') {
-        await axios.put(`http://localhost:5041/api/admin/daily/${selectedDaily.maDaiLy}`, {
+        // Khi sửa, chỉ gửi thông tin đại lý (không sửa tài khoản)
+        const payload = {
           tenDaiLy: formData.tenDaiLy,
-          diaChi: formData.diaChi,
           soDienThoai: formData.soDienThoai,
-          email: formData.email
-        });
+          email: formData.email,
+          diaChi: formData.diaChi
+        };
+        await axios.put(API_ENDPOINTS.daiLy.update(selectedDaily.maDaiLy), payload);
         alert('Cập nhật đại lý thành công');
       }
+
       setShowModal(false);
       loadDaiLy();
     } catch (error) {
-      console.error('Error saving daily:', error);
+      console.error('Error saving dai ly:', error);
       alert(error.response?.data?.message || 'Lỗi khi lưu đại lý');
     }
   };
@@ -129,10 +148,9 @@ function DaiLyManagement() {
             <tr>
               <th>Mã</th>
               <th>Tên đại lý</th>
-              <th>Địa chỉ</th>
               <th>Số điện thoại</th>
               <th>Email</th>
-              <th>Tên đăng nhập</th>
+              <th>Địa chỉ</th>
               <th>Trạng thái</th>
               <th>Hành động</th>
             </tr>
@@ -140,33 +158,37 @@ function DaiLyManagement() {
           <tbody>
             {dailyList.length === 0 ? (
               <tr>
-                <td colSpan={8} className="text-center">Không có dữ liệu</td>
+                <td colSpan={7} className="text-center">Không có dữ liệu</td>
               </tr>
             ) : (
               dailyList.map((daily) => (
                 <tr key={daily.maDaiLy}>
                   <td>{daily.maDaiLy}</td>
                   <td>{daily.tenDaiLy}</td>
-                  <td>{daily.diaChi || 'N/A'}</td>
                   <td>{daily.soDienThoai || 'N/A'}</td>
                   <td>{daily.email || 'N/A'}</td>
-                  <td>{daily.tenDangNhap}</td>
+                  <td>{daily.diaChi || 'N/A'}</td>
                   <td>
-                    <span className={`badge ${daily.trangThai === 'hoat_dong' ? 'badge-success' : 'badge-danger'}`}>
-                      {daily.trangThai === 'hoat_dong' ? 'Hoạt động' : 'Ngừng'}
-                    </span>
+                    <span className="badge badge-success">Hoạt động</span>
                   </td>
                   <td>
                     <div className="action-buttons">
                       <button 
-                        className="btn-action btn-edit" 
+                        className="btn-action btn-view" 
+                        onClick={() => handleView(daily)}
+                        title="Xem chi tiết"
+                      >
+                        👁️
+                      </button>
+                      <button 
+                        className="btn-action btn-edit"
                         onClick={() => handleEdit(daily)}
                         title="Chỉnh sửa"
                       >
                         ✏️
                       </button>
                       <button 
-                        className="btn-action btn-delete" 
+                        className="btn-action btn-delete"
                         onClick={() => handleDelete(daily)}
                         title="Xóa"
                       >
@@ -184,105 +206,222 @@ function DaiLyManagement() {
       {/* Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>
-                {modalMode === 'add' ? '➕ Thêm đại lý mới' : '✏️ Chỉnh sửa đại lý'}
-              </h2>
-              <button className="btn-close" onClick={() => setShowModal(false)}>✕</button>
-            </div>
+          <div className="modal-content modal-user-detail" onClick={(e) => e.stopPropagation()}>
+            {modalMode === 'view' && selectedDaily ? (
+              <>
+                <div className="modal-header">
+                  <div className="modal-title-section">
+                    <div className="user-avatar-large">🏪</div>
+                    <div>
+                      <h2>{selectedDaily.tenDaiLy}</h2>
+                      <span className="badge badge-dai_ly badge-large">Đại lý</span>
+                    </div>
+                  </div>
+                  <button className="btn-close" onClick={() => setShowModal(false)}>✕</button>
+                </div>
+                
+                <div className="modal-body">
+                  <div className="user-detail-card">
+                    <h3 className="section-title">
+                      <span className="section-icon">📋</span>
+                      Thông tin đại lý
+                    </h3>
+                    <div className="detail-grid-modern">
+                      <div className="detail-item-modern">
+                        <div className="detail-icon">🆔</div>
+                        <div className="detail-content">
+                          <span className="detail-label">Mã đại lý</span>
+                          <span className="detail-value">{selectedDaily.maDaiLy}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="detail-item-modern">
+                        <div className="detail-icon">🏪</div>
+                        <div className="detail-content">
+                          <span className="detail-label">Tên đại lý</span>
+                          <span className="detail-value">{selectedDaily.tenDaiLy}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="detail-item-modern">
+                        <div className="detail-icon">📞</div>
+                        <div className="detail-content">
+                          <span className="detail-label">Số điện thoại</span>
+                          <span className="detail-value">{selectedDaily.soDienThoai || 'Chưa cập nhật'}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="detail-item-modern">
+                        <div className="detail-icon">📧</div>
+                        <div className="detail-content">
+                          <span className="detail-label">Email</span>
+                          <span className="detail-value">{selectedDaily.email || 'Chưa cập nhật'}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="detail-item-modern full-width">
+                        <div className="detail-icon">📍</div>
+                        <div className="detail-content">
+                          <span className="detail-label">Địa chỉ</span>
+                          <span className="detail-value">{selectedDaily.diaChi || 'Chưa cập nhật'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                    <span>✕</span> Đóng
+                  </button>
+                  <button className="btn btn-primary" onClick={() => handleEdit(selectedDaily)}>
+                    <span>✏️</span> Chỉnh sửa
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="modal-header">
+                  <h2>{modalMode === 'add' ? '➕ Thêm đại lý mới' : '✏️ Chỉnh sửa đại lý'}</h2>
+                  <button className="btn-close" onClick={() => setShowModal(false)}>✕</button>
+                </div>
+                
+                <form onSubmit={handleSubmit}>
+                  <div className="modal-body">
+                    {modalMode === 'add' && (
+                      <>
+                        <div className="form-section-title">
+                          <span className="section-icon">🔐</span>
+                          Thông tin tài khoản
+                        </div>
+                        
+                        <div className="form-group">
+                          <label htmlFor="tenDangNhap">
+                            <span className="label-icon">👤</span>
+                            Tên đăng nhập <span className="required">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            id="tenDangNhap"
+                            name="tenDangNhap"
+                            value={formData.tenDangNhap}
+                            onChange={handleInputChange}
+                            required
+                            placeholder="Nhập tên đăng nhập"
+                            className="form-control"
+                            minLength={3}
+                            maxLength={50}
+                          />
+                          <small className="form-text">Tên đăng nhập để truy cập hệ thống (3-50 ký tự)</small>
+                        </div>
 
-            <form onSubmit={handleSubmit}>
-              <div className="modal-body">
-                {modalMode === 'add' && (
-                  <>
+                        <div className="form-group">
+                          <label htmlFor="matKhau">
+                            <span className="label-icon">🔒</span>
+                            Mật khẩu <span className="required">*</span>
+                          </label>
+                          <input
+                            type="password"
+                            id="matKhau"
+                            name="matKhau"
+                            value={formData.matKhau}
+                            onChange={handleInputChange}
+                            required
+                            placeholder="Nhập mật khẩu"
+                            className="form-control"
+                            minLength={6}
+                          />
+                          <small className="form-text">Mật khẩu tối thiểu 6 ký tự</small>
+                        </div>
+
+                        <div className="form-section-title">
+                          <span className="section-icon">🏪</span>
+                          Thông tin đại lý
+                        </div>
+                      </>
+                    )}
+
                     <div className="form-group">
-                      <label>Tên đăng nhập <span className="required">*</span></label>
+                      <label htmlFor="tenDaiLy">
+                        <span className="label-icon">🏪</span>
+                        Tên đại lý <span className="required">*</span>
+                      </label>
                       <input
                         type="text"
-                        name="tenDangNhap"
-                        value={formData.tenDangNhap}
+                        id="tenDaiLy"
+                        name="tenDaiLy"
+                        value={formData.tenDaiLy}
                         onChange={handleInputChange}
                         required
-                        maxLength={50}
-                        placeholder="Nhập tên đăng nhập"
+                        placeholder="Nhập tên đại lý"
+                        className="form-control"
                       />
                     </div>
 
                     <div className="form-group">
-                      <label>Mật khẩu <span className="required">*</span></label>
+                      <label htmlFor="soDienThoai">
+                        <span className="label-icon">📞</span>
+                        Số điện thoại <span className="required">*</span>
+                      </label>
                       <input
-                        type="password"
-                        name="matKhau"
-                        value={formData.matKhau}
+                        type="tel"
+                        id="soDienThoai"
+                        name="soDienThoai"
+                        value={formData.soDienThoai}
                         onChange={handleInputChange}
                         required
-                        maxLength={255}
-                        placeholder="Nhập mật khẩu"
+                        placeholder="Nhập số điện thoại"
+                        pattern="[0-9]{10,11}"
+                        className="form-control"
+                      />
+                      <small className="form-text">Nhập 10-11 chữ số</small>
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="email">
+                        <span className="label-icon">📧</span>
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        placeholder="Nhập email"
+                        className="form-control"
                       />
                     </div>
-                  </>
-                )}
 
-                <div className="form-group">
-                  <label>Tên đại lý <span className="required">*</span></label>
-                  <input
-                    type="text"
-                    name="tenDaiLy"
-                    value={formData.tenDaiLy}
-                    onChange={handleInputChange}
-                    required
-                    maxLength={100}
-                    placeholder="Nhập tên đại lý"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Địa chỉ</label>
-                  <textarea
-                    name="diaChi"
-                    value={formData.diaChi}
-                    onChange={handleInputChange}
-                    maxLength={255}
-                    rows={3}
-                    placeholder="Nhập địa chỉ"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Số điện thoại</label>
-                  <input
-                    type="tel"
-                    name="soDienThoai"
-                    value={formData.soDienThoai}
-                    onChange={handleInputChange}
-                    maxLength={15}
-                    placeholder="Nhập số điện thoại"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    maxLength={100}
-                    placeholder="Nhập email"
-                  />
-                </div>
-              </div>
-
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
-                  Hủy
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  {modalMode === 'add' ? 'Thêm' : 'Cập nhật'}
-                </button>
-              </div>
-            </form>
+                    <div className="form-group">
+                      <label htmlFor="diaChi">
+                        <span className="label-icon">📍</span>
+                        Địa chỉ
+                      </label>
+                      <textarea
+                        id="diaChi"
+                        name="diaChi"
+                        value={formData.diaChi}
+                        onChange={handleInputChange}
+                        placeholder="Nhập địa chỉ"
+                        rows={3}
+                        className="form-control"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                      <span>✕</span> Hủy
+                    </button>
+                    <button type="submit" className="btn btn-primary">
+                      <span>{modalMode === 'add' ? '➕' : '💾'}</span>
+                      {modalMode === 'add' ? 'Thêm mới' : 'Cập nhật'}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}

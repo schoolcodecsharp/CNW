@@ -14,9 +14,16 @@ namespace SieuThiService.Models.DTOs
 
     public class SieuThiTaoMoi
     {
-        [Required(ErrorMessage = "Mã tài khoản là bắt buộc")]
-        public int MaTaiKhoan { get; set; }
+        // Thông tin tài khoản
+        [Required(ErrorMessage = "Tên đăng nhập là bắt buộc")]
+        [StringLength(50, ErrorMessage = "Tên đăng nhập không được vượt quá 50 ký tự")]
+        public string TenDangNhap { get; set; } = "";
 
+        [Required(ErrorMessage = "Mật khẩu là bắt buộc")]
+        [StringLength(255, ErrorMessage = "Mật khẩu không được vượt quá 255 ký tự")]
+        public string MatKhau { get; set; } = "";
+
+        // Thông tin siêu thị
         [Required(ErrorMessage = "Tên siêu thị là bắt buộc")]
         [StringLength(100, ErrorMessage = "Tên siêu thị không được vượt quá 100 ký tự")]
         public string TenSieuThi { get; set; } = "";
@@ -24,7 +31,7 @@ namespace SieuThiService.Models.DTOs
         [StringLength(255, ErrorMessage = "Địa chỉ không được vượt quá 255 ký tự")]
         public string? DiaChi { get; set; }
 
-        [StringLength(15, ErrorMessage = "Số điện thoại không được vượt quá 15 ký tự")]
+        [StringLength(20, ErrorMessage = "Số điện thoại không được vượt quá 20 ký tự")]
         public string? SoDienThoai { get; set; }
 
         [EmailAddress(ErrorMessage = "Email không hợp lệ")]

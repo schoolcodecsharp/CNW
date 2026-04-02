@@ -3,6 +3,8 @@ import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AdminOverview from './AdminOverview';
 import UserManagement from './UserManagement';
+import DaiLyManagement from './DaiLyManagement';
+import SieuThiManagement from './SieuThiManagement';
 import FarmManagement from './FarmManagement';
 import BatchManagement from './BatchManagement';
 import OrderManagement from './OrderManagement';
@@ -21,6 +23,8 @@ function AdminDashboard() {
   const menuItems = [
     { id: 'dashboard', icon: '📊', label: 'Bảng điều khiển', path: '/admin' },
     { id: 'users', icon: '👥', label: 'Quản lý người dùng', path: '/admin/users' },
+    { id: 'daily', icon: '🏪', label: 'Quản lý đại lý', path: '/admin/daily' },
+    { id: 'sieuthi', icon: '🏬', label: 'Quản lý siêu thị', path: '/admin/sieuthi' },
     { id: 'farms', icon: '🌾', label: 'Quản lý trang trại', path: '/admin/farms' },
     { id: 'batches', icon: '📦', label: 'Quản lý lô hàng', path: '/admin/batches' },
     { id: 'orders', icon: '🛒', label: 'Quản lý đơn hàng', path: '/admin/orders' }
@@ -71,6 +75,8 @@ function AdminDashboard() {
         <Routes>
           <Route path="/" element={<AdminOverview />} />
           <Route path="/users" element={<UserManagement />} />
+          <Route path="/daily" element={<DaiLyManagement />} />
+          <Route path="/sieuthi" element={<SieuThiManagement />} />
           <Route path="/farms" element={<FarmManagement />} />
           <Route path="/batches" element={<BatchManagement />} />
           <Route path="/orders" element={<OrderManagement />} />

@@ -14,7 +14,10 @@ function UserManagement() {
     soDienThoai: '',
     email: '',
     diaChi: '',
-    roleType: 'nong_dan'
+    roleType: 'nong_dan',
+    // Thông tin tài khoản (chỉ dùng khi thêm mới)
+    tenDangNhap: '',
+    matKhau: ''
   });
 
   useEffect(() => {
@@ -85,7 +88,9 @@ function UserManagement() {
       soDienThoai: '',
       email: '',
       diaChi: '',
-      roleType: 'nong_dan'
+      roleType: 'nong_dan',
+      tenDangNhap: '',
+      matKhau: ''
     });
     setShowModal(true);
   };
@@ -98,7 +103,9 @@ function UserManagement() {
       soDienThoai: user.phone || '',
       email: user.email || '',
       diaChi: user.address || '',
-      roleType: user.roleType
+      roleType: user.roleType,
+      tenDangNhap: '', // Không cho sửa tài khoản
+      matKhau: ''
     });
     setShowModal(true);
   };
@@ -137,20 +144,25 @@ function UserManagement() {
     e.preventDefault();
 
     try {
-      const payload = {
-        hoTen: formData.hoTen,
+      let payload: any = {
         soDienThoai: formData.soDienThoai,
         email: formData.email,
         diaChi: formData.diaChi
       };
 
-      // Adjust payload based on role type
-      if (formData.roleType === 'dai_ly') {
+      // Adjust payload based on role type and mode
+      if (modalMode === 'add') {
+        // Khi thêm mới, cần có tài khoản
+        payload.tenDangNhap = formData.tenDangNhap;
+        payload.matKhau = formData.matKhau;
+      }
+
+      if (formData.roleType === 'nong_dan') {
+        payload.hoTen = formData.hoTen;
+      } else if (formData.roleType === 'dai_ly') {
         payload.tenDaiLy = formData.hoTen;
-        delete payload.hoTen;
       } else if (formData.roleType === 'sieu_thi') {
         payload.tenSieuThi = formData.hoTen;
-        delete payload.hoTen;
       }
 
       if (modalMode === 'add') {
@@ -166,6 +178,10 @@ function UserManagement() {
         await axios.post(endpoint, payload);
         alert('Thêm người dùng thành công');
       } else if (modalMode === 'edit') {
+        // Khi sửa, không gửi thông tin tài khoản
+        delete payload.tenDangNhap;
+        delete payload.matKhau;
+        
         let endpoint;
         if (selectedUser.roleType === 'nong_dan') {
           endpoint = API_ENDPOINTS.nongDan.update(selectedUser.id);
@@ -412,6 +428,59 @@ function UserManagement() {
                 
                 <form onSubmit={handleSubmit}>
                   <div className="modal-body">
+                    {modalMode === 'add' && (
+                      <>
+                        <div className="form-section-title">
+                          <span className="section-icon">🔐</span>
+                          Thông tin tài khoản
+                        </div>
+                        
+                        <div className="form-group">
+                          <label htmlFor="tenDangNhap">
+                            <span className="label-icon">👤</span>
+                            Tên đăng nhập <span className="required">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            id="tenDangNhap"
+                            name="tenDangNhap"
+                            value={formData.tenDangNhap}
+                            onChange={handleInputChange}
+                            required
+                            placeholder="Nhập tên đăng nhập"
+                            className="form-control"
+                            minLength={3}
+                            maxLength={50}
+                          />
+                          <small className="form-text">Tên đăng nhập để truy cập hệ thống (3-50 ký tự)</small>
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="matKhau">
+                            <span className="label-icon">🔒</span>
+                            Mật khẩu <span className="required">*</span>
+                          </label>
+                          <input
+                            type="password"
+                            id="matKhau"
+                            name="matKhau"
+                            value={formData.matKhau}
+                            onChange={handleInputChange}
+                            required
+                            placeholder="Nhập mật khẩu"
+                            className="form-control"
+                            minLength={6}
+                          />
+                          <small className="form-text">Mật khẩu tối thiểu 6 ký tự</small>
+                        </div>
+
+                        <div className="form-section-title">
+                          <span className="section-icon">📋</span>
+                          Thông tin cá nhân
+                        </div>
+                      </>
+                    )}
+
                     <div className="form-group">
                       <label htmlFor="roleType">
                         <span className="label-icon">👥</span>

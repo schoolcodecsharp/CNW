@@ -915,19 +915,39 @@ namespace SieuThiService.Data
 
         public int Create(SieuThiTaoMoi dto)
         {
-            var sieuThi = new SieuThi
+            using var conn = new SqlConnection(_context.Database.GetDbConnection().ConnectionString);
+            using var cmd = new SqlCommand("sp_SieuThi_Create", conn);
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            cmd.Parameters.AddWithValue("@TenDangNhap", dto.TenDangNhap);
+            cmd.Parameters.AddWithValue("@MatKhau", dto.MatKhau);
+            cmd.Parameters.AddWithValue("@TenSieuThi", dto.TenSieuThi);
+            cmd.Parameters.AddWithValue("@SoDienThoai", (object?)dto.SoDienThoai ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@Email", (object?)dto.Email ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@DiaChi", (object?)dto.DiaChi ?? DBNull.Value);
+
+            var outputParam = new SqlParameter("@MaSieuThi", SqlDbType.Int)
             {
-                MaTaiKhoan = dto.MaTaiKhoan,
-                TenSieuThi = dto.TenSieuThi,
-                DiaChi = dto.DiaChi,
-                SoDienThoai = dto.SoDienThoai,
-                Email = dto.Email
+                Direction = ParameterDirection.Output
             };
+            cmd.Parameters.Add(outputParam);
 
-            _context.SieuThis.Add(sieuThi);
-            _context.SaveChanges();
-
-            return sieuThi.MaSieuThi;
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+            
+            // Đọc result set để kiểm tra lỗi
+            if (reader.Read())
+            {
+                var status = reader["Status"].ToString();
+                if (status == "ERROR")
+                {
+                    var message = reader["Message"].ToString();
+                    throw new Exception(message);
+                }
+            }
+            
+            reader.Close();
+            return (int)outputParam.Value;
         }
 
         public bool Update(int id, SieuThiUpdateDTO dto)
