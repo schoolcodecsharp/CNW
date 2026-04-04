@@ -248,12 +248,33 @@ CREATE OR ALTER PROCEDURE sp_NongDan_Delete
     @MaNongDan INT
 AS
 BEGIN
+    SET NOCOUNT ON;
     BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        -- Lấy MaTaiKhoan
+        DECLARE @MaTaiKhoan INT;
+        SELECT @MaTaiKhoan = MaTaiKhoan FROM NongDan WHERE MaNongDan = @MaNongDan;
+        
+        IF @MaTaiKhoan IS NULL
+        BEGIN
+            ROLLBACK TRANSACTION;
+            RAISERROR(N'Không tìm thấy nông dân', 16, 1);
+            RETURN;
+        END
+        
+        -- Xóa nông dân
         DELETE FROM NongDan WHERE MaNongDan = @MaNongDan;
-        SELECT 'SUCCESS' AS Status, 'Xóa thành công' AS Message;
+        
+        -- Xóa tài khoản
+        DELETE FROM TaiKhoan WHERE MaTaiKhoan = @MaTaiKhoan;
+        
+        COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        THROW;
     END CATCH
 END;
 GO
@@ -410,12 +431,33 @@ CREATE OR ALTER PROCEDURE sp_DaiLy_Delete
     @MaDaiLy INT
 AS
 BEGIN
+    SET NOCOUNT ON;
     BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        -- Lấy MaTaiKhoan
+        DECLARE @MaTaiKhoan INT;
+        SELECT @MaTaiKhoan = MaTaiKhoan FROM DaiLy WHERE MaDaiLy = @MaDaiLy;
+        
+        IF @MaTaiKhoan IS NULL
+        BEGIN
+            ROLLBACK TRANSACTION;
+            RAISERROR(N'Không tìm thấy đại lý', 16, 1);
+            RETURN;
+        END
+        
+        -- Xóa đại lý
         DELETE FROM DaiLy WHERE MaDaiLy = @MaDaiLy;
-        SELECT 'SUCCESS' AS Status, 'Xóa thành công' AS Message;
+        
+        -- Xóa tài khoản
+        DELETE FROM TaiKhoan WHERE MaTaiKhoan = @MaTaiKhoan;
+        
+        COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        THROW;
     END CATCH
 END;
 GO
@@ -1295,17 +1337,33 @@ CREATE OR ALTER PROCEDURE sp_SieuThi_Delete
     @MaSieuThi INT
 AS
 BEGIN
+    SET NOCOUNT ON;
     BEGIN TRY
-        DELETE FROM SieuThi
-        WHERE MaSieuThi = @MaSieuThi
+        BEGIN TRANSACTION;
         
-        IF @@ROWCOUNT = 0
-            SELECT 'NotFound' AS Status, 'Không tìm thấy siêu thị' AS Message
-        ELSE
-            SELECT 'Success' AS Status, 'Xóa siêu thị thành công' AS Message
+        -- Lấy MaTaiKhoan
+        DECLARE @MaTaiKhoan INT;
+        SELECT @MaTaiKhoan = MaTaiKhoan FROM SieuThi WHERE MaSieuThi = @MaSieuThi;
+        
+        IF @MaTaiKhoan IS NULL
+        BEGIN
+            ROLLBACK TRANSACTION;
+            RAISERROR(N'Không tìm thấy siêu thị', 16, 1);
+            RETURN;
+        END
+        
+        -- Xóa siêu thị
+        DELETE FROM SieuThi WHERE MaSieuThi = @MaSieuThi;
+        
+        -- Xóa tài khoản
+        DELETE FROM TaiKhoan WHERE MaTaiKhoan = @MaTaiKhoan;
+        
+        COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
-        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        THROW;
     END CATCH
 END
 GO
