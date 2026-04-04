@@ -73,10 +73,6 @@ function Login({ onLogin }) {
             Đăng nhập
           </button>
         </form>
-
-        <div className="login-footer">
-          <p>Tài khoản mẫu: <strong>admin</strong> / <strong>admin123</strong></p>
-        </div>
       </div>
     </div>
   );

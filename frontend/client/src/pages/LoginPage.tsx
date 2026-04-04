@@ -140,24 +140,6 @@ function LoginPage() {
             Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
           </p>
         </div>
-
-        <div className="demo-accounts">
-          <p className="demo-title">Tài khoản demo:</p>
-          <div className="demo-list">
-            <div className="demo-item">
-              <strong>Admin:</strong> admin / admin123
-            </div>
-            <div className="demo-item">
-              <strong>Nông dân:</strong> nongdan1 / 123456
-            </div>
-            <div className="demo-item">
-              <strong>Đại lý:</strong> daily1 / 123456
-            </div>
-            <div className="demo-item">
-              <strong>Siêu thị:</strong> sieuthi1 / 123456
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
