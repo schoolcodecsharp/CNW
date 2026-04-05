@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import axios from 'axios';
+import { API_ENDPOINTS } from '../../services/apiConfig';
 import NongDanOverview from './NongDanOverview';
 import FarmManagement from './FarmManagement';
 import BatchManagement from './BatchManagement';
@@ -12,6 +14,29 @@ function NongDanDashboard() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [activeMenu, setActiveMenu] = useState('dashboard');
+  const [displayName, setDisplayName] = useState('Nông dân');
+
+  useEffect(() => {
+    loadUserInfo();
+  }, [user]);
+
+  const loadUserInfo = async () => {
+    try {
+      if (!user || !user.maTaiKhoan) return;
+
+      const response = await axios.get(API_ENDPOINTS.nongDan.getAll);
+      if (response.data.success && response.data.data) {
+        const currentUser = response.data.data.find(
+          (nd: any) => nd.maTaiKhoan === user.maTaiKhoan
+        );
+        if (currentUser && currentUser.hoTen) {
+          setDisplayName(currentUser.hoTen);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading user info:', error);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -38,7 +63,7 @@ function NongDanDashboard() {
           <div className="user-info">
             <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" alt="User" className="user-avatar" />
             <div className="user-details">
-              <div className="user-name">{user?.tenDangNhap || 'Nông dân'}</div>
+              <div className="user-name">{displayName}</div>
               <div className="user-role">Người trồng</div>
             </div>
           </div>

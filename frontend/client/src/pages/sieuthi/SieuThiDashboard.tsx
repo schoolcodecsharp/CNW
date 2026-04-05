@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import axios from 'axios';
+import { API_ENDPOINTS } from '../../services/apiConfig';
 import SieuThiOverview from './SieuThiOverview';
 import WarehouseManagement from './WarehouseManagement';
 import OrderManagement from './OrderManagement';
@@ -11,6 +13,29 @@ function SieuThiDashboard() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [activeMenu, setActiveMenu] = useState('dashboard');
+  const [displayName, setDisplayName] = useState('Siêu thị');
+
+  useEffect(() => {
+    loadUserInfo();
+  }, [user]);
+
+  const loadUserInfo = async () => {
+    try {
+      if (!user || !user.maTaiKhoan) return;
+
+      const response = await axios.get(API_ENDPOINTS.sieuThi.getAll);
+      if (response.data.success && response.data.data) {
+        const currentUser = response.data.data.find(
+          (st: any) => st.maTaiKhoan === user.maTaiKhoan
+        );
+        if (currentUser && currentUser.tenSieuThi) {
+          setDisplayName(currentUser.tenSieuThi);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading user info:', error);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -36,7 +61,7 @@ function SieuThiDashboard() {
           <div className="user-info">
             <div className="user-avatar">🏪</div>
             <div className="user-details">
-              <div className="user-name">{user?.tenDangNhap || 'Siêu thị'}</div>
+              <div className="user-name">{displayName}</div>
               <div className="user-role">Nhà bán lẻ</div>
             </div>
           </div>
