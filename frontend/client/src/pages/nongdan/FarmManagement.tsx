@@ -18,28 +18,46 @@ function FarmManagement() {
 
   useEffect(() => {
     loadFarmerAndFarms();
-  }, []);
+  }, [user]);
 
   const loadFarmerAndFarms = async () => {
     try {
       setLoading(true);
       
-      // Get farmer ID
-      const nongdanRes = await axios.get(API_ENDPOINTS.nongDan.getAll);
-      const currentFarmer = nongdanRes.data.data?.find(
-        nd => nd.maTaiKhoan === user?.maTaiKhoan
-      );
-      
-      if (!currentFarmer) {
+      if (!user || !user.maTaiKhoan) {
+        console.error('User not logged in or missing maTaiKhoan');
         setLoading(false);
         return;
       }
 
+      // Get farmer ID by MaTaiKhoan
+      const nongdanRes = await axios.get(API_ENDPOINTS.nongDan.getAll);
+      
+      if (!nongdanRes.data.success || !nongdanRes.data.data) {
+        console.error('Failed to load farmers');
+        setLoading(false);
+        return;
+      }
+
+      const currentFarmer = nongdanRes.data.data.find(
+        (nd: any) => nd.maTaiKhoan === user.maTaiKhoan
+      );
+      
+      if (!currentFarmer) {
+        console.error('Current farmer not found for maTaiKhoan:', user.maTaiKhoan);
+        setLoading(false);
+        return;
+      }
+
+      console.log('Found farmer:', currentFarmer);
       setMaNongDan(currentFarmer.maNongDan);
 
-      // Load farms
+      // Load farms for this farmer
       const farmsRes = await axios.get(API_ENDPOINTS.trangTrai.getByNongDan(currentFarmer.maNongDan));
-      setFarms(farmsRes.data.data || []);
+      
+      if (farmsRes.data.success) {
+        setFarms(farmsRes.data.data || []);
+      }
 
     } catch (error) {
       console.error('Error loading farms:', error);
@@ -80,30 +98,44 @@ function FarmManagement() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (!maNongDan) {
+      alert('Không tìm thấy thông tin nông dân. Vui lòng đăng nhập lại.');
+      return;
+    }
+    
     try {
       if (editingFarm) {
         // Update
         await axios.put(
           API_ENDPOINTS.trangTrai.update(editingFarm.maTrangTrai),
-          formData
+          {
+            TenTrangTrai: formData.tenTrangTrai,
+            DiaChi: formData.diaChi,
+            SoChungNhan: formData.soChungNhan
+          }
         );
         alert('Cập nhật trang trại thành công!');
       } else {
-        // Create
-        await axios.post(
+        // Create - Sử dụng PascalCase để khớp với backend DTO
+        console.log('Creating farm with MaNongDan:', maNongDan);
+        const response = await axios.post(
           API_ENDPOINTS.trangTrai.create,
           {
-            maNongDan: maNongDan,
-            ...formData
+            MaNongDan: maNongDan,
+            TenTrangTrai: formData.tenTrangTrai,
+            DiaChi: formData.diaChi || '',
+            SoChungNhan: formData.soChungNhan || ''
           }
         );
+        console.log('Create response:', response.data);
         alert('Tạo trang trại thành công!');
       }
       
       handleCloseModal();
       loadFarmerAndFarms();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving farm:', error);
+      console.error('Error response:', error.response?.data);
       alert('Có lỗi xảy ra: ' + (error.response?.data?.message || error.message));
     }
   };
@@ -125,6 +157,16 @@ function FarmManagement() {
 
   if (loading) {
     return <div className="loading">Đang tải danh sách trang trại...</div>;
+  }
+
+  if (!maNongDan) {
+    return (
+      <div className="page-container">
+        <div className="empty-state">
+          <p>Không tìm thấy thông tin nông dân. Vui lòng đăng nhập lại.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
