@@ -2473,3 +2473,174 @@ BEGIN
     END CATCH
 END
 GO
+
+
+-- =====================================================
+-- STORED PROCEDURES FOR ADMIN USER MANAGEMENT (DELETE)
+-- =====================================================
+
+-- Admin DeleteNongDan: Xóa nông dân (Soft Delete)
+CREATE OR ALTER PROCEDURE sp_Admin_DeleteNongDan
+    @MaNongDan INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        -- Lấy MaTaiKhoan
+        DECLARE @MaTaiKhoan INT;
+        SELECT @MaTaiKhoan = MaTaiKhoan FROM NongDan WHERE MaNongDan = @MaNongDan;
+        
+        IF @MaTaiKhoan IS NULL
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 0 AS RowsAffected;
+            RETURN;
+        END
+        
+        -- Đánh dấu tài khoản là đã xóa (Soft Delete)
+        UPDATE TaiKhoan 
+        SET TrangThai = N'da_xoa'
+        WHERE MaTaiKhoan = @MaTaiKhoan;
+        
+        COMMIT TRANSACTION;
+        SELECT 1 AS RowsAffected;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        SELECT 0 AS RowsAffected;
+    END CATCH
+END
+GO
+
+-- Admin DeleteDaiLy: Xóa đại lý (Soft Delete)
+CREATE OR ALTER PROCEDURE sp_Admin_DeleteDaiLy
+    @MaDaiLy INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        -- Lấy MaTaiKhoan
+        DECLARE @MaTaiKhoan INT;
+        SELECT @MaTaiKhoan = MaTaiKhoan FROM DaiLy WHERE MaDaiLy = @MaDaiLy;
+        
+        IF @MaTaiKhoan IS NULL
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 0 AS RowsAffected;
+            RETURN;
+        END
+        
+        -- Đánh dấu tài khoản là đã xóa (Soft Delete)
+        UPDATE TaiKhoan 
+        SET TrangThai = N'da_xoa'
+        WHERE MaTaiKhoan = @MaTaiKhoan;
+        
+        COMMIT TRANSACTION;
+        SELECT 1 AS RowsAffected;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        SELECT 0 AS RowsAffected;
+    END CATCH
+END
+GO
+
+-- Admin DeleteSieuThi: Xóa siêu thị (Soft Delete)
+CREATE OR ALTER PROCEDURE sp_Admin_DeleteSieuThi
+    @MaSieuThi INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        -- Lấy MaTaiKhoan
+        DECLARE @MaTaiKhoan INT;
+        SELECT @MaTaiKhoan = MaTaiKhoan FROM SieuThi WHERE MaSieuThi = @MaSieuThi;
+        
+        IF @MaTaiKhoan IS NULL
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 0 AS RowsAffected;
+            RETURN;
+        END
+        
+        -- Đánh dấu tài khoản là đã xóa (Soft Delete)
+        UPDATE TaiKhoan 
+        SET TrangThai = N'da_xoa'
+        WHERE MaTaiKhoan = @MaTaiKhoan;
+        
+        COMMIT TRANSACTION;
+        SELECT 1 AS RowsAffected;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        SELECT 0 AS RowsAffected;
+    END CATCH
+END
+GO
+
+
+-- =====================================================
+-- STORED PROCEDURE FOR AUTHENTICATION
+-- =====================================================
+
+-- Login: Đăng nhập
+CREATE OR ALTER PROCEDURE sp_Login
+    @TenDangNhap NVARCHAR(50),
+    @MatKhau NVARCHAR(255)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    DECLARE @MaTaiKhoan INT;
+    DECLARE @LoaiTaiKhoan NVARCHAR(20);
+    DECLARE @TrangThai NVARCHAR(20);
+    DECLARE @StoredPassword NVARCHAR(255);
+    
+    -- Lấy thông tin tài khoản
+    SELECT 
+        @MaTaiKhoan = MaTaiKhoan,
+        @LoaiTaiKhoan = LoaiTaiKhoan,
+        @TrangThai = TrangThai,
+        @StoredPassword = MatKhau
+    FROM TaiKhoan
+    WHERE TenDangNhap = @TenDangNhap;
+    
+    -- Kiểm tra tài khoản có tồn tại không
+    IF @MaTaiKhoan IS NULL
+    BEGIN
+        SELECT 0 AS Success, NULL AS LoaiTaiKhoan, NULL AS MaTaiKhoan, N'Tài khoản không tồn tại' AS Message;
+        RETURN;
+    END
+    
+    -- Kiểm tra trạng thái tài khoản (chỉ cho phép tài khoản hoạt động)
+    IF @TrangThai != N'hoat_dong'
+    BEGIN
+        SELECT 0 AS Success, NULL AS LoaiTaiKhoan, NULL AS MaTaiKhoan, N'Tài khoản không thể đăng nhập. Vui lòng liên hệ quản trị viên.' AS Message;
+        RETURN;
+    END
+    
+    -- Kiểm tra mật khẩu
+    IF @StoredPassword = @MatKhau
+    BEGIN
+        -- Cập nhật lần đăng nhập cuối
+        UPDATE TaiKhoan 
+        SET LanDangNhapCuoi = GETDATE()
+        WHERE MaTaiKhoan = @MaTaiKhoan;
+        
+        SELECT 1 AS Success, @LoaiTaiKhoan AS LoaiTaiKhoan, @MaTaiKhoan AS MaTaiKhoan, N'Đăng nhập thành công' AS Message;
+    END
+    ELSE
+    BEGIN
+        SELECT 0 AS Success, NULL AS LoaiTaiKhoan, NULL AS MaTaiKhoan, N'Mật khẩu không đúng' AS Message;
+    END
+END
+GO
