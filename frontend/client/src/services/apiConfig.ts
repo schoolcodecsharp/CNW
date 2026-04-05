@@ -32,7 +32,7 @@ export const API_ENDPOINTS = {
   trangTrai: {
     getAll: `${API_BASE_URLS.nongdan}/trang-trai/get-all`,
     getById: (id: number) => `${API_BASE_URLS.nongdan}/trang-trai/get-by-id/${id}`,
-    getByNongDan: (id: number) => `${API_BASE_URLS.nongdan}/trang-trai/nong-dan/${id}`,
+    getByNongDan: (id: number) => `${API_BASE_URLS.nongdan}/trang-trai/get-by-nong-dan/${id}`,
     create: `${API_BASE_URLS.nongdan}/trang-trai/create`,
     update: (id: number) => `${API_BASE_URLS.nongdan}/trang-trai/update/${id}`,
     delete: (id: number) => `${API_BASE_URLS.nongdan}/trang-trai/delete/${id}`

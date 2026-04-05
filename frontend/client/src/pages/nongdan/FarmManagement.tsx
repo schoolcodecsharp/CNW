@@ -38,7 +38,7 @@ function FarmManagement() {
       setMaNongDan(currentFarmer.maNongDan);
 
       // Load farms
-      const farmsRes = await axios.get(`${API_ENDPOINTS.nongDan.base}/trang-trai/get-by-nong-dan/${currentFarmer.maNongDan}`);
+      const farmsRes = await axios.get(API_ENDPOINTS.trangTrai.getByNongDan(currentFarmer.maNongDan));
       setFarms(farmsRes.data.data || []);
 
     } catch (error) {
@@ -84,14 +84,14 @@ function FarmManagement() {
       if (editingFarm) {
         // Update
         await axios.put(
-          `${API_ENDPOINTS.nongDan.base}/trang-trai/update/${editingFarm.maTrangTrai}`,
+          API_ENDPOINTS.trangTrai.update(editingFarm.maTrangTrai),
           formData
         );
         alert('Cập nhật trang trại thành công!');
       } else {
         // Create
         await axios.post(
-          `${API_ENDPOINTS.nongDan.base}/trang-trai/create`,
+          API_ENDPOINTS.trangTrai.create,
           {
             maNongDan: maNongDan,
             ...formData
@@ -114,7 +114,7 @@ function FarmManagement() {
     }
 
     try {
-      await axios.delete(`${API_ENDPOINTS.nongDan.base}/trang-trai/delete/${farm.maTrangTrai}`);
+      await axios.delete(API_ENDPOINTS.trangTrai.delete(farm.maTrangTrai));
       alert('Xóa trang trại thành công!');
       loadFarmerAndFarms();
     } catch (error) {
@@ -150,26 +150,28 @@ function FarmManagement() {
         ) : (
           farms.map((farm) => (
             <div key={farm.maTrangTrai} className="farm-card">
-              <div className="farm-icon">🌾</div>
-              <h3>{farm.tenTrangTrai}</h3>
-              <div className="farm-details">
-                <p><strong>Địa chỉ:</strong> {farm.diaChi || 'Chưa cập nhật'}</p>
-                <p><strong>Số chứng nhận:</strong> {farm.soChungNhan || 'Chưa có'}</p>
-                <p><strong>Ngày tạo:</strong> {new Date(farm.ngayTao).toLocaleDateString('vi-VN')}</p>
-              </div>
-              <div className="farm-actions">
-                <button 
-                  className="btn-action btn-edit"
-                  onClick={() => handleOpenModal(farm)}
-                >
-                  ✏️ Sửa
-                </button>
-                <button 
-                  className="btn-action btn-delete"
-                  onClick={() => handleDelete(farm)}
-                >
-                  🗑️ Xóa
-                </button>
+              <img src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=300&h=200&fit=crop" alt="Farm" className="farm-image" />
+              <div className="farm-content">
+                <h3>{farm.tenTrangTrai}</h3>
+                <div className="farm-details">
+                  <p><strong>📍 Địa chỉ:</strong> {farm.diaChi || 'Chưa cập nhật'}</p>
+                  <p><strong>📜 Số chứng nhận:</strong> {farm.soChungNhan || 'Chưa có'}</p>
+                  <p><strong>📅 Ngày tạo:</strong> {new Date(farm.ngayTao).toLocaleDateString('vi-VN')}</p>
+                </div>
+                <div className="farm-actions">
+                  <button 
+                    className="btn-action btn-edit"
+                    onClick={() => handleOpenModal(farm)}
+                  >
+                    ✏️ Sửa
+                  </button>
+                  <button 
+                    className="btn-action btn-delete"
+                    onClick={() => handleDelete(farm)}
+                  >
+                    🗑️ Xóa
+                  </button>
+                </div>
               </div>
             </div>
           ))

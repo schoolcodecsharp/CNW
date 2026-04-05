@@ -146,6 +146,7 @@ BEGIN
         TK.TrangThai
     FROM NongDan ND
     JOIN TaiKhoan TK ON ND.MaTaiKhoan = TK.MaTaiKhoan
+    WHERE TK.TrangThai = N'hoat_dong'
     ORDER BY ND.MaNongDan DESC;
 END;
 GO
@@ -243,7 +244,7 @@ BEGIN
 END;
 GO
 
--- SP DELETE
+-- SP DELETE (Soft Delete)
 CREATE OR ALTER PROCEDURE sp_NongDan_Delete
     @MaNongDan INT
 AS
@@ -263,11 +264,10 @@ BEGIN
             RETURN;
         END
         
-        -- Xóa nông dân
-        DELETE FROM NongDan WHERE MaNongDan = @MaNongDan;
-        
-        -- Xóa tài khoản
-        DELETE FROM TaiKhoan WHERE MaTaiKhoan = @MaTaiKhoan;
+        -- Đánh dấu tài khoản là đã xóa (Soft Delete)
+        UPDATE TaiKhoan 
+        SET TrangThai = N'da_xoa'
+        WHERE MaTaiKhoan = @MaTaiKhoan;
         
         COMMIT TRANSACTION;
     END TRY
@@ -329,6 +329,7 @@ BEGIN
         TK.TrangThai
     FROM DaiLy DL
     JOIN TaiKhoan TK ON DL.MaTaiKhoan = TK.MaTaiKhoan
+    WHERE TK.TrangThai = N'hoat_dong'
     ORDER BY DL.MaDaiLy DESC;
 END;
 GO
@@ -426,7 +427,7 @@ BEGIN
 END;
 GO
 
--- SP DELETE
+-- SP DELETE (Soft Delete)
 CREATE OR ALTER PROCEDURE sp_DaiLy_Delete
     @MaDaiLy INT
 AS
@@ -446,11 +447,10 @@ BEGIN
             RETURN;
         END
         
-        -- Xóa đại lý
-        DELETE FROM DaiLy WHERE MaDaiLy = @MaDaiLy;
-        
-        -- Xóa tài khoản
-        DELETE FROM TaiKhoan WHERE MaTaiKhoan = @MaTaiKhoan;
+        -- Đánh dấu tài khoản là đã xóa (Soft Delete)
+        UPDATE TaiKhoan 
+        SET TrangThai = N'da_xoa'
+        WHERE MaTaiKhoan = @MaTaiKhoan;
         
         COMMIT TRANSACTION;
     END TRY
@@ -1215,14 +1215,18 @@ BEGIN
     SET NOCOUNT ON;
     BEGIN TRY
         SELECT 
-            MaSieuThi,
-            MaTaiKhoan,
-            TenSieuThi,
-            SoDienThoai,
-            Email,
-            DiaChi
-        FROM SieuThi
-        ORDER BY TenSieuThi
+            ST.MaSieuThi,
+            ST.MaTaiKhoan,
+            ST.TenSieuThi,
+            ST.SoDienThoai,
+            ST.Email,
+            ST.DiaChi,
+            TK.TenDangNhap,
+            TK.TrangThai
+        FROM SieuThi ST
+        JOIN TaiKhoan TK ON ST.MaTaiKhoan = TK.MaTaiKhoan
+        WHERE TK.TrangThai = N'hoat_dong'
+        ORDER BY ST.TenSieuThi
     END TRY
     BEGIN CATCH
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
@@ -1352,11 +1356,10 @@ BEGIN
             RETURN;
         END
         
-        -- Xóa siêu thị
-        DELETE FROM SieuThi WHERE MaSieuThi = @MaSieuThi;
-        
-        -- Xóa tài khoản
-        DELETE FROM TaiKhoan WHERE MaTaiKhoan = @MaTaiKhoan;
+        -- Đánh dấu tài khoản là đã xóa (Soft Delete)
+        UPDATE TaiKhoan 
+        SET TrangThai = N'da_xoa'
+        WHERE MaTaiKhoan = @MaTaiKhoan;
         
         COMMIT TRANSACTION;
     END TRY

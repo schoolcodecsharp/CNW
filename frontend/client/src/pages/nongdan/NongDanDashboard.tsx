@@ -19,11 +19,11 @@ function NongDanDashboard() {
   };
 
   const menuItems = [
-    { id: 'dashboard', icon: '📊', label: 'Tổng quan', path: '/nongdan' },
-    { id: 'farms', icon: '🌾', label: 'Trang trại của tôi', path: '/nongdan/farms' },
-    { id: 'batches', icon: '📦', label: 'Lô nông sản', path: '/nongdan/batches' },
-    { id: 'orders', icon: '🛒', label: 'Đơn hàng', path: '/nongdan/orders' },
-    { id: 'products', icon: '🥬', label: 'Sản phẩm', path: '/nongdan/products' }
+    { id: 'dashboard', icon: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=80&h=80&fit=crop', label: 'Tổng quan', path: '/nongdan' },
+    { id: 'farms', icon: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=80&h=80&fit=crop', label: 'Trang trại của tôi', path: '/nongdan/farms' },
+    { id: 'batches', icon: 'https://images.unsplash.com/photo-1586771107445-d3ca888129ff?w=80&h=80&fit=crop', label: 'Lô nông sản', path: '/nongdan/batches' },
+    { id: 'orders', icon: 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=80&h=80&fit=crop', label: 'Đơn hàng', path: '/nongdan/orders' },
+    { id: 'products', icon: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=80&h=80&fit=crop', label: 'Sản phẩm', path: '/nongdan/products' }
   ];
 
   return (
@@ -32,11 +32,11 @@ function NongDanDashboard() {
       <aside className="sidebar">
         <div className="sidebar-header">
           <div className="logo">
-            <span className="logo-icon">🌾</span>
-            <span className="logo-text">Nông Dân</span>
+            <img src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=100&h=100&fit=crop" alt="Logo" className="logo-icon" />
+            <span className="logo-text" style={{ color: '#10b981' }}>Nông Dân</span>
           </div>
           <div className="user-info">
-            <div className="user-avatar">👨‍🌾</div>
+            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" alt="User" className="user-avatar" />
             <div className="user-details">
               <div className="user-name">{user?.tenDangNhap || 'Nông dân'}</div>
               <div className="user-role">Người trồng</div>
@@ -52,7 +52,7 @@ function NongDanDashboard() {
               className={`menu-item ${activeMenu === item.id ? 'active' : ''}`}
               onClick={() => setActiveMenu(item.id)}
             >
-              <span className="menu-icon">{item.icon}</span>
+              <img src={item.icon} alt={item.label} className="menu-icon" />
               <span className="menu-label">{item.label}</span>
             </Link>
           ))}
