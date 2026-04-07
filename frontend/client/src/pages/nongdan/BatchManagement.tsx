@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
 import { useAuth } from '../../context/AuthContext';
+import '../../components/Common.css';
 
 function BatchManagement() {
   const { user } = useAuth();
@@ -16,6 +17,8 @@ function BatchManagement() {
     maTrangTrai: '',
     maSanPham: '',
     soLuongBanDau: '',
+    ngayThuHoach: '',
+    hanSuDung: '',
     soChungNhanLo: ''
   });
 
@@ -41,15 +44,15 @@ function BatchManagement() {
       setMaNongDan(currentFarmer.maNongDan);
 
       // Load batches
-      const batchesRes = await axios.get(`${API_ENDPOINTS.nongDan.base}/lo-nong-san/get-by-nong-dan/${currentFarmer.maNongDan}`);
+      const batchesRes = await axios.get(API_ENDPOINTS.loNongSan.getByNongDan(currentFarmer.maNongDan));
       setBatches(batchesRes.data.data || []);
 
       // Load farms
-      const farmsRes = await axios.get(`${API_ENDPOINTS.nongDan.base}/trang-trai/get-by-nong-dan/${currentFarmer.maNongDan}`);
+      const farmsRes = await axios.get(API_ENDPOINTS.trangTrai.getByNongDan(currentFarmer.maNongDan));
       setFarms(farmsRes.data.data || []);
 
       // Load products
-      const productsRes = await axios.get(`${API_ENDPOINTS.nongDan.base}/san-pham/get-all`);
+      const productsRes = await axios.get(API_ENDPOINTS.sanPham.getAll);
       setProducts(productsRes.data.data || []);
 
     } catch (error) {
@@ -66,6 +69,8 @@ function BatchManagement() {
         maTrangTrai: batch.maTrangTrai,
         maSanPham: batch.maSanPham,
         soLuongBanDau: batch.soLuongBanDau,
+        ngayThuHoach: batch.ngayThuHoach ? batch.ngayThuHoach.split('T')[0] : '',
+        hanSuDung: batch.hanSuDung ? batch.hanSuDung.split('T')[0] : '',
         soChungNhanLo: batch.soChungNhanLo || ''
       });
     } else {
@@ -74,6 +79,8 @@ function BatchManagement() {
         maTrangTrai: '',
         maSanPham: '',
         soLuongBanDau: '',
+        ngayThuHoach: '',
+        hanSuDung: '',
         soChungNhanLo: ''
       });
     }
@@ -90,28 +97,39 @@ function BatchManagement() {
     
     try {
       if (editingBatch) {
-        // Update
+        // Update - gửi với PascalCase
+        const payload = {
+          SoChungNhanLo: formData.soChungNhanLo || null,
+          NgayThuHoach: formData.ngayThuHoach || null,
+          HanSuDung: formData.hanSuDung || null
+        };
         await axios.put(
-          `${API_ENDPOINTS.nongDan.base}/lo-nong-san/update/${editingBatch.maLo}`,
-          {
-            soChungNhanLo: formData.soChungNhanLo
-          }
+          API_ENDPOINTS.loNongSan.update(editingBatch.maLo),
+          payload
         );
-        alert('Cập nhật lô nông sản thành công!');
+        alert('✅ Cập nhật lô nông sản thành công!');
       } else {
-        // Create
+        // Create - gửi với PascalCase
+        const payload = {
+          MaTrangTrai: parseInt(formData.maTrangTrai),
+          MaSanPham: parseInt(formData.maSanPham),
+          SoLuongBanDau: parseFloat(formData.soLuongBanDau),
+          NgayThuHoach: formData.ngayThuHoach || null,
+          HanSuDung: formData.hanSuDung || null,
+          SoChungNhanLo: formData.soChungNhanLo || null
+        };
         await axios.post(
-          `${API_ENDPOINTS.nongDan.base}/lo-nong-san/create`,
-          formData
+          API_ENDPOINTS.loNongSan.create,
+          payload
         );
-        alert('Tạo lô nông sản thành công!');
+        alert('✅ Tạo lô nông sản thành công!');
       }
       
       handleCloseModal();
-      loadData();
+      await loadData();
     } catch (error) {
       console.error('Error saving batch:', error);
-      alert('Có lỗi xảy ra: ' + (error.response?.data?.message || error.message));
+      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
     }
   };
 
@@ -121,12 +139,22 @@ function BatchManagement() {
     }
 
     try {
-      await axios.delete(`${API_ENDPOINTS.nongDan.base}/lo-nong-san/delete/${batch.maLo}`);
-      alert('Xóa lô nông sản thành công!');
-      loadData();
+      await axios.delete(API_ENDPOINTS.loNongSan.delete(batch.maLo));
+      
+      // Reload danh sách ngay lập tức
+      await loadData();
+      
+      alert('✅ Xóa lô nông sản thành công!');
     } catch (error) {
       console.error('Error deleting batch:', error);
-      alert('Không thể xóa lô: ' + (error.response?.data?.message || error.message));
+      
+      // Nếu lỗi 404 hoặc không tìm thấy nhưng thực tế đã xóa, vẫn reload
+      if (error.response?.status === 404 || error.response?.data?.message?.includes('Không tìm thấy')) {
+        await loadData();
+        alert('✅ Xóa lô nông sản thành công!');
+      } else {
+        alert('❌ ' + (error.response?.data?.message || 'Không thể xóa lô'));
+      }
     }
   };
 
@@ -270,6 +298,22 @@ function BatchManagement() {
                     required
                     disabled={editingBatch}
                     placeholder="Nhập số lượng"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Ngày thu hoạch</label>
+                  <input
+                    type="date"
+                    value={formData.ngayThuHoach}
+                    onChange={(e) => setFormData({...formData, ngayThuHoach: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Hạn sử dụng</label>
+                  <input
+                    type="date"
+                    value={formData.hanSuDung}
+                    onChange={(e) => setFormData({...formData, hanSuDung: e.target.value})}
                   />
                 </div>
                 <div className="form-group">

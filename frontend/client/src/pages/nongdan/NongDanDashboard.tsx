@@ -6,8 +6,9 @@ import { API_ENDPOINTS } from '../../services/apiConfig';
 import NongDanOverview from './NongDanOverview';
 import FarmManagement from './FarmManagement';
 import BatchManagement from './BatchManagement';
+import ProductManagement from './ProductManagement';
 import OrderManagement from './OrderManagement';
-import ProductList from './ProductList';
+import Profile from './Profile';
 import './NongDanDashboard.css';
 
 function NongDanDashboard() {
@@ -47,8 +48,9 @@ function NongDanDashboard() {
     { id: 'dashboard', icon: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=80&h=80&fit=crop', label: 'Tổng quan', path: '/nongdan' },
     { id: 'farms', icon: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=80&h=80&fit=crop', label: 'Trang trại của tôi', path: '/nongdan/farms' },
     { id: 'batches', icon: 'https://images.unsplash.com/photo-1586771107445-d3ca888129ff?w=80&h=80&fit=crop', label: 'Lô nông sản', path: '/nongdan/batches' },
+    { id: 'products', icon: 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=80&h=80&fit=crop', label: 'Sản phẩm', path: '/nongdan/products' },
     { id: 'orders', icon: 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=80&h=80&fit=crop', label: 'Đơn hàng', path: '/nongdan/orders' },
-    { id: 'products', icon: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=80&h=80&fit=crop', label: 'Sản phẩm', path: '/nongdan/products' }
+    { id: 'profile', icon: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop', label: 'Hồ sơ', path: '/nongdan/profile' }
   ];
 
   return (
@@ -97,8 +99,9 @@ function NongDanDashboard() {
           <Route path="/" element={<NongDanOverview />} />
           <Route path="/farms" element={<FarmManagement />} />
           <Route path="/batches" element={<BatchManagement />} />
+          <Route path="/products" element={<ProductManagement />} />
           <Route path="/orders" element={<OrderManagement />} />
-          <Route path="/products" element={<ProductList />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </main>
     </div>

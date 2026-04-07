@@ -2,18 +2,29 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
 import { useAuth } from '../../context/AuthContext';
+import '../../components/Common.css';
 
 function OrderManagement() {
   const { user } = useAuth();
   const [orders, setOrders] = useState([]);
+  const [batches, setBatches] = useState([]);
+  const [dailyList, setDailyList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [showModal, setShowModal] = useState(false);
+  const [maNongDan, setMaNongDan] = useState(null);
+  const [formData, setFormData] = useState({
+    maDaiLy: '',
+    maLo: '',
+    soLuong: '',
+    donGia: '',
+    ghiChu: ''
+  });
 
   useEffect(() => {
-    loadOrders();
+    loadData();
   }, []);
 
-  const loadOrders = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
       
@@ -28,56 +39,82 @@ function OrderManagement() {
         return;
       }
 
-      // Load orders
-      const ordersRes = await axios.get(`${API_ENDPOINTS.nongDan.base}/don-hang-dai-ly/get-by-nong-dan/${currentFarmer.maNongDan}`);
+      setMaNongDan(currentFarmer.maNongDan);
+
+      // Load orders from this farmer
+      const ordersRes = await axios.get(API_ENDPOINTS.donHangDaiLy.getByNongDan(currentFarmer.maNongDan));
       setOrders(ordersRes.data.data || []);
 
+      // Load batches (only available batches)
+      const batchesRes = await axios.get(API_ENDPOINTS.loNongSan.getByNongDan(currentFarmer.maNongDan));
+      const availableBatches = (batchesRes.data.data || []).filter(b => 
+        b.trangThai === 'tai_trang_trai' && b.soLuongHienTai > 0
+      );
+      setBatches(availableBatches);
+
+      // Load daily list
+      const dailyRes = await axios.get(API_ENDPOINTS.daiLy.getAll);
+      setDailyList(dailyRes.data.data || []);
+
     } catch (error) {
-      console.error('Error loading orders:', error);
+      console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpdateStatus = async (orderId, newStatus) => {
+  const handleOpenModal = () => {
+    setFormData({
+      maDaiLy: '',
+      maLo: '',
+      soLuong: '',
+      donGia: '',
+      ghiChu: ''
+    });
+    setShowModal(true);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
     try {
-      await axios.put(
-        `${API_ENDPOINTS.nongDan.base}/don-hang-dai-ly/update-trang-thai/${orderId}`,
-        { trangThai: newStatus }
-      );
-      alert('Cập nhật trạng thái thành công!');
-      loadOrders();
+      // Validate số lượng
+      const selectedBatch = batches.find(b => b.maLo === parseInt(formData.maLo));
+      if (parseFloat(formData.soLuong) > selectedBatch.soLuongHienTai) {
+        alert('❌ Số lượng vượt quá số lượng hiện có của lô!');
+        return;
+      }
+
+      const payload = {
+        MaDaiLy: parseInt(formData.maDaiLy),
+        MaNongDan: maNongDan,
+        MaLo: parseInt(formData.maLo),
+        SoLuong: parseFloat(formData.soLuong),
+        DonGia: parseFloat(formData.donGia),
+        GhiChu: formData.ghiChu || null
+      };
+
+      await axios.post(API_ENDPOINTS.donHangDaiLy.create, payload);
+      alert('✅ Tạo đơn hàng thành công! Đang chờ đại lý xác nhận.');
+      
+      setShowModal(false);
+      await loadData();
     } catch (error) {
-      console.error('Error updating status:', error);
-      alert('Không thể cập nhật trạng thái: ' + (error.response?.data?.message || error.message));
+      console.error('Error creating order:', error);
+      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
     }
   };
 
-  const getStatusBadgeClass = (status) => {
-    const statusMap = {
-      'cho_xu_ly': 'warning',
-      'dang_xu_ly': 'info',
-      'dang_giao': 'primary',
-      'hoan_thanh': 'success',
-      'huy': 'danger'
+  const getStatusBadge = (status) => {
+    const badges = {
+      'chua_nhan': <span className="badge badge-warning">⏳ Chờ xác nhận</span>,
+      'da_nhan': <span className="badge badge-success">✅ Đã chấp nhận</span>,
+      'dang_xu_ly': <span className="badge badge-info">🔄 Đang xử lý</span>,
+      'hoan_thanh': <span className="badge badge-success">✅ Hoàn thành</span>,
+      'da_huy': <span className="badge badge-danger">❌ Đã từ chối</span>
     };
-    return statusMap[status] || 'secondary';
+    return badges[status] || <span className="badge">{status}</span>;
   };
-
-  const getStatusText = (status) => {
-    const statusMap = {
-      'cho_xu_ly': 'Chờ xử lý',
-      'dang_xu_ly': 'Đang xử lý',
-      'dang_giao': 'Đang giao',
-      'hoan_thanh': 'Hoàn thành',
-      'huy': 'Đã hủy'
-    };
-    return statusMap[status] || status;
-  };
-
-  const filteredOrders = filterStatus === 'all' 
-    ? orders 
-    : orders.filter(o => o.trangThai === filterStatus);
 
   if (loading) {
     return <div className="loading">Đang tải danh sách đơn hàng...</div>;
@@ -86,106 +123,194 @@ function OrderManagement() {
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1>Quản lý đơn hàng</h1>
-      </div>
-
-      {/* Filters */}
-      <div className="filters">
-        <div className="filter-group">
-          <label>Lọc theo trạng thái:</label>
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-            <option value="all">Tất cả ({orders.length})</option>
-            <option value="cho_xu_ly">Chờ xử lý ({orders.filter(o => o.trangThai === 'cho_xu_ly').length})</option>
-            <option value="dang_xu_ly">Đang xử lý ({orders.filter(o => o.trangThai === 'dang_xu_ly').length})</option>
-            <option value="dang_giao">Đang giao ({orders.filter(o => o.trangThai === 'dang_giao').length})</option>
-            <option value="hoan_thanh">Hoàn thành ({orders.filter(o => o.trangThai === 'hoan_thanh').length})</option>
-            <option value="huy">Đã hủy ({orders.filter(o => o.trangThai === 'huy').length})</option>
-          </select>
+        <h1>📦 Quản lý đơn hàng</h1>
+        <div className="header-actions">
+          <button 
+            className="btn btn-primary" 
+            onClick={handleOpenModal}
+            disabled={batches.length === 0}
+          >
+            ➕ Tạo đơn hàng mới
+          </button>
         </div>
       </div>
 
-      {/* Orders Table */}
+      {batches.length === 0 && (
+        <div className="alert alert-warning">
+          ⚠️ Bạn cần có lô nông sản khả dụng để tạo đơn hàng
+        </div>
+      )}
+
       <div className="table-container">
         <table className="data-table">
           <thead>
             <tr>
-              <th>Mã đơn</th>
+              <th>Mã ĐH</th>
               <th>Đại lý</th>
-              <th>Loại đơn</th>
               <th>Ngày đặt</th>
               <th>Ngày giao</th>
               <th>Tổng SL</th>
               <th>Tổng giá trị</th>
               <th>Trạng thái</th>
-              <th>Hành động</th>
+              <th>Ghi chú</th>
             </tr>
           </thead>
           <tbody>
-            {filteredOrders.length === 0 ? (
+            {orders.length === 0 ? (
               <tr>
-                <td colSpan={9} className="text-center">Không có đơn hàng nào</td>
+                <td colSpan={8} className="text-center">Chưa có đơn hàng nào</td>
               </tr>
             ) : (
-              filteredOrders.map((order) => (
+              orders.map((order) => (
                 <tr key={order.maDonHang}>
                   <td>{order.maDonHang}</td>
-                  <td>{order.tenDaiLy || 'N/A'}</td>
-                  <td>{order.loaiDon}</td>
+                  <td>{order.tenDaiLy}</td>
                   <td>{new Date(order.ngayDat).toLocaleDateString('vi-VN')}</td>
-                  <td>{order.ngayGiao ? new Date(order.ngayGiao).toLocaleDateString('vi-VN') : 'Chưa xác định'}</td>
-                  <td>{order.tongSoLuong || 0} kg</td>
-                  <td>{order.tongGiaTri?.toLocaleString('vi-VN') || 0} đ</td>
-                  <td>
-                    <span className={`badge badge-${getStatusBadgeClass(order.trangThai)}`}>
-                      {getStatusText(order.trangThai)}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      {order.trangThai === 'cho_xu_ly' && (
-                        <button 
-                          className="btn-action btn-success"
-                          onClick={() => handleUpdateStatus(order.maDonHang, 'dang_xu_ly')}
-                          title="Xác nhận đơn"
-                        >
-                          ✓
-                        </button>
-                      )}
-                      {order.trangThai === 'dang_xu_ly' && (
-                        <button 
-                          className="btn-action btn-primary"
-                          onClick={() => handleUpdateStatus(order.maDonHang, 'dang_giao')}
-                          title="Bắt đầu giao hàng"
-                        >
-                          🚚
-                        </button>
-                      )}
-                      {order.trangThai === 'dang_giao' && (
-                        <button 
-                          className="btn-action btn-success"
-                          onClick={() => handleUpdateStatus(order.maDonHang, 'hoan_thanh')}
-                          title="Hoàn thành"
-                        >
-                          ✓
-                        </button>
-                      )}
-                      {(order.trangThai === 'cho_xu_ly' || order.trangThai === 'dang_xu_ly') && (
-                        <button 
-                          className="btn-action btn-danger"
-                          onClick={() => handleUpdateStatus(order.maDonHang, 'huy')}
-                          title="Hủy đơn"
-                        >
-                          ✕
-                        </button>
-                      )}
-                    </div>
-                  </td>
+                  <td>{order.ngayGiao ? new Date(order.ngayGiao).toLocaleDateString('vi-VN') : '-'}</td>
+                  <td>{order.tongSoLuong} kg</td>
+                  <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.tongGiaTri)}</td>
+                  <td>{getStatusBadge(order.trangThai)}</td>
+                  <td>{order.ghiChu || '-'}</td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
       </div>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>➕ Tạo đơn hàng mới</h2>
+              <button className="btn-close" onClick={() => setShowModal(false)}>✕</button>
+            </div>
+            
+            <form onSubmit={handleSubmit}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>
+                    <span className="label-icon">🏪</span>
+                    Đại lý <span className="required">*</span>
+                  </label>
+                  <select
+                    value={formData.maDaiLy}
+                    onChange={(e) => setFormData({...formData, maDaiLy: e.target.value})}
+                    required
+                    className="form-control"
+                  >
+                    <option value="">-- Chọn đại lý --</option>
+                    {dailyList.map(daily => (
+                      <option key={daily.maDaiLy} value={daily.maDaiLy}>
+                        {daily.tenDaiLy}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>
+                    <span className="label-icon">📦</span>
+                    Lô nông sản <span className="required">*</span>
+                  </label>
+                  <select
+                    value={formData.maLo}
+                    onChange={(e) => setFormData({...formData, maLo: e.target.value})}
+                    required
+                    className="form-control"
+                  >
+                    <option value="">-- Chọn lô nông sản --</option>
+                    {batches.map(batch => (
+                      <option key={batch.maLo} value={batch.maLo}>
+                        {batch.tenSanPham} - {batch.tenTrangTrai} (Còn: {batch.soLuongHienTai} kg)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>
+                    <span className="label-icon">⚖️</span>
+                    Số lượng (kg) <span className="required">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.soLuong}
+                    onChange={(e) => setFormData({...formData, soLuong: e.target.value})}
+                    required
+                    placeholder="Nhập số lượng"
+                    className="form-control"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>
+                    <span className="label-icon">💰</span>
+                    Đơn giá (VNĐ/kg) <span className="required">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="1000"
+                    value={formData.donGia}
+                    onChange={(e) => setFormData({...formData, donGia: e.target.value})}
+                    required
+                    placeholder="Nhập đơn giá"
+                    className="form-control"
+                  />
+                </div>
+
+                {formData.soLuong && formData.donGia && (
+                  <div className="form-group">
+                    <label>💵 Tổng giá trị</label>
+                    <div className="total-value">
+                      {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
+                        parseFloat(formData.soLuong) * parseFloat(formData.donGia)
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="form-group">
+                  <label>
+                    <span className="label-icon">📝</span>
+                    Ghi chú
+                  </label>
+                  <textarea
+                    value={formData.ghiChu}
+                    onChange={(e) => setFormData({...formData, ghiChu: e.target.value})}
+                    placeholder="Nhập ghi chú (nếu có)"
+                    rows={3}
+                    className="form-control"
+                  />
+                </div>
+              </div>
+              
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                  <span>✕</span> Hủy
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  <span>➕</span> Tạo đơn hàng
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        .total-value {
+          font-size: 24px;
+          font-weight: bold;
+          color: #10b981;
+          padding: 12px;
+          background: #f0fdf4;
+          border-radius: 8px;
+          text-align: center;
+        }
+      `}</style>
     </div>
   );
 }
