@@ -30,6 +30,7 @@ export const API_ENDPOINTS = {
   
   // Trang Trai
   trangTrai: {
+    base: API_BASE_URLS.nongdan,
     getAll: `${API_BASE_URLS.nongdan}/trang-trai/get-all`,
     getById: (id: number) => `${API_BASE_URLS.nongdan}/trang-trai/get-by-id/${id}`,
     getByNongDan: (id: number) => `${API_BASE_URLS.nongdan}/trang-trai/get-by-nong-dan/${id}`,
@@ -40,9 +41,11 @@ export const API_ENDPOINTS = {
   
   // Lo Nong San
   loNongSan: {
+    base: API_BASE_URLS.nongdan,
     getAll: `${API_BASE_URLS.nongdan}/lo-nong-san/get-all`,
     getById: (id: number) => `${API_BASE_URLS.nongdan}/lo-nong-san/get-by-id/${id}`,
     getByTrangTrai: (id: number) => `${API_BASE_URLS.nongdan}/lo-nong-san/trang-trai/${id}`,
+    getByNongDan: (id: number) => `${API_BASE_URLS.nongdan}/lo-nong-san/get-by-nong-dan/${id}`,
     create: `${API_BASE_URLS.nongdan}/lo-nong-san/create`,
     update: (id: number) => `${API_BASE_URLS.nongdan}/lo-nong-san/update/${id}`,
     delete: (id: number) => `${API_BASE_URLS.nongdan}/lo-nong-san/delete/${id}`
@@ -50,6 +53,7 @@ export const API_ENDPOINTS = {
   
   // San Pham
   sanPham: {
+    base: API_BASE_URLS.nongdan,
     getAll: `${API_BASE_URLS.nongdan}/san-pham/get-all`,
     getById: (id: number) => `${API_BASE_URLS.nongdan}/san-pham/get-by-id/${id}`,
     create: `${API_BASE_URLS.nongdan}/san-pham/create`,
@@ -90,9 +94,11 @@ export const API_ENDPOINTS = {
   
   // Don Hang Dai Ly
   donHangDaiLy: {
+    base: API_BASE_URLS.daily,
     getAll: `${API_BASE_URLS.daily}/don-hang-dai-ly/get-all`,
     getById: (id: number) => `${API_BASE_URLS.daily}/don-hang-dai-ly/${id}`,
     getByDaiLy: (id: number) => `${API_BASE_URLS.daily}/don-hang-dai-ly/dai-ly/${id}`,
+    getByNongDan: (id: number) => `${API_BASE_URLS.daily}/don-hang-dai-ly/nong-dan/${id}`,
     create: `${API_BASE_URLS.daily}/don-hang-dai-ly/create`,
     updateTrangThai: (id: number) => `${API_BASE_URLS.daily}/don-hang-dai-ly/update-trang-thai/${id}`,
     delete: (id: number) => `${API_BASE_URLS.daily}/don-hang-dai-ly/delete/${id}`
@@ -110,9 +116,11 @@ export const API_ENDPOINTS = {
   
   // Don Hang Sieu Thi
   donHangSieuThi: {
+    base: API_BASE_URLS.sieuthi,
     getAll: `${API_BASE_URLS.sieuthi}/DonHangSieuThi/get-all`,
     getById: (id: number) => `${API_BASE_URLS.sieuthi}/DonHangSieuThi/${id}`,
     getBySieuThi: (id: number) => `${API_BASE_URLS.sieuthi}/DonHangSieuThi/sieu-thi/${id}`,
+    getByDaiLy: (id: number) => `${API_BASE_URLS.sieuthi}/DonHangSieuThi/dai-ly/${id}`,
     create: `${API_BASE_URLS.sieuthi}/DonHangSieuThi/tao-don-hang`,
     updateTrangThai: (id: number) => `${API_BASE_URLS.sieuthi}/DonHangSieuThi/nhan-hang/${id}`,
     delete: (id: number) => `${API_BASE_URLS.sieuthi}/DonHangSieuThi/huy-don-hang/${id}`
