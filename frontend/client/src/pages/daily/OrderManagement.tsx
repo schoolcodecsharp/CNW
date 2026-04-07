@@ -1,23 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
 import { useAuth } from '../../context/AuthContext';
+import '../../components/Common.css';
 
 function OrderManagement() {
   const { user } = useAuth();
-  const [orders, setOrders] = useState([]);
+  const [activeTab, setActiveTab] = useState('from-farmers');
+  const [ordersFromFarmers, setOrdersFromFarmers] = useState([]);
+  const [ordersToSupermarkets, setOrdersToSupermarkets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [maDaiLy, setMaDaiLy] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [sieuThiList, setSieuThiList] = useState([]);
+  const [khoList, setKhoList] = useState([]);
+  const [formData, setFormData] = useState({
+    maSieuThi: '',
+    maKho: '',
+    ghiChu: ''
+  });
 
   useEffect(() => {
-    loadOrders();
+    loadData();
   }, []);
 
-  const loadOrders = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
       
-      // Get distributor ID
+      // Get daily ID
       const dailyRes = await axios.get(API_ENDPOINTS.daiLy.getAll);
       const currentDaily = dailyRes.data.data?.find(
         dl => dl.maTaiKhoan === user?.maTaiKhoan
@@ -28,42 +39,102 @@ function OrderManagement() {
         return;
       }
 
-      // Load orders
-      const ordersRes = await axios.get(`${API_ENDPOINTS.daiLy.base}/don-hang-dai-ly/get-by-dai-ly/${currentDaily.maDaiLy}`);
-      setOrders(ordersRes.data.data || []);
+      setMaDaiLy(currentDaily.maDaiLy);
+
+      // Load orders from farmers
+      const ordersFromRes = await axios.get(API_ENDPOINTS.donHangDaiLy.getByDaiLy(currentDaily.maDaiLy));
+      setOrdersFromFarmers(ordersFromRes.data.data || []);
+
+      // Load orders to supermarkets
+      const ordersToRes = await axios.get(API_ENDPOINTS.donHangSieuThi.getByDaiLy(currentDaily.maDaiLy));
+      setOrdersToSupermarkets(ordersToRes.data.data || []);
+
+      // Load supermarket list
+      const sieuThiRes = await axios.get(API_ENDPOINTS.sieuThi.getAll);
+      setSieuThiList(sieuThiRes.data.data || []);
+
+      // Load warehouse list
+      const khoRes = await axios.get(API_ENDPOINTS.kho.getByDaiLy(currentDaily.maDaiLy));
+      setKhoList(khoRes.data.data || []);
 
     } catch (error) {
-      console.error('Error loading orders:', error);
+      console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusBadgeClass = (status) => {
-    const statusMap = {
-      'cho_xu_ly': 'warning',
-      'dang_xu_ly': 'info',
-      'dang_giao': 'primary',
-      'hoan_thanh': 'success',
-      'huy': 'danger'
-    };
-    return statusMap[status] || 'secondary';
+  const handleAcceptOrder = async (maDonHang) => {
+    if (!window.confirm('Xác nhận chấp nhận đơn hàng này?')) return;
+    
+    try {
+      await axios.put(API_ENDPOINTS.donHangDaiLy.updateTrangThai(maDonHang), {
+        TrangThai: 'da_nhan'
+      });
+      alert('✅ Đã chấp nhận đơn hàng');
+      await loadData();
+    } catch (error) {
+      console.error('Error accepting order:', error);
+      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
+    }
   };
 
-  const getStatusText = (status) => {
-    const statusMap = {
-      'cho_xu_ly': 'Chờ xử lý',
-      'dang_xu_ly': 'Đang xử lý',
-      'dang_giao': 'Đang giao',
-      'hoan_thanh': 'Hoàn thành',
-      'huy': 'Đã hủy'
-    };
-    return statusMap[status] || status;
+  const handleRejectOrder = async (maDonHang) => {
+    if (!window.confirm('Xác nhận từ chối đơn hàng này?')) return;
+    
+    try {
+      await axios.put(API_ENDPOINTS.donHangDaiLy.updateTrangThai(maDonHang), {
+        TrangThai: 'da_huy'
+      });
+      alert('✅ Đã từ chối đơn hàng');
+      await loadData();
+    } catch (error) {
+      console.error('Error rejecting order:', error);
+      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
+    }
   };
 
-  const filteredOrders = filterStatus === 'all' 
-    ? orders 
-    : orders.filter(o => o.trangThai === filterStatus);
+  const handleOpenModal = () => {
+    setFormData({
+      maSieuThi: '',
+      maKho: '',
+      ghiChu: ''
+    });
+    setShowModal(true);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const payload = {
+        MaSieuThi: parseInt(formData.maSieuThi),
+        MaDaiLy: maDaiLy,
+        MaKho: parseInt(formData.maKho),
+        GhiChu: formData.ghiChu || null
+      };
+
+      await axios.post(API_ENDPOINTS.donHangSieuThi.create, payload);
+      alert('✅ Tạo đơn hàng thành công! Đang chờ siêu thị xác nhận.');
+      
+      setShowModal(false);
+      await loadData();
+    } catch (error) {
+      console.error('Error creating order:', error);
+      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    const badges = {
+      'chua_nhan': <span className="badge badge-warning">⏳ Chờ xác nhận</span>,
+      'da_nhan': <span className="badge badge-success">✅ Đã chấp nhận</span>,
+      'dang_xu_ly': <span className="badge badge-info">🔄 Đang xử lý</span>,
+      'hoan_thanh': <span className="badge badge-success">✅ Hoàn thành</span>,
+      'da_huy': <span className="badge badge-danger">❌ Đã từ chối</span>
+    };
+    return badges[status] || <span className="badge">{status}</span>;
+  };
 
   if (loading) {
     return <div className="loading">Đang tải danh sách đơn hàng...</div>;
@@ -72,67 +143,256 @@ function OrderManagement() {
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1>Quản lý đơn hàng</h1>
+        <h1>📦 Quản lý đơn hàng</h1>
+        {activeTab === 'to-supermarkets' && (
+          <div className="header-actions">
+            <button 
+              className="btn btn-primary" 
+              onClick={handleOpenModal}
+              disabled={khoList.length === 0}
+            >
+              ➕ Tạo đơn hàng cho siêu thị
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Filters */}
-      <div className="filters">
-        <div className="filter-group">
-          <label>Lọc theo trạng thái:</label>
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-            <option value="all">Tất cả ({orders.length})</option>
-            <option value="cho_xu_ly">Chờ xử lý ({orders.filter(o => o.trangThai === 'cho_xu_ly').length})</option>
-            <option value="dang_xu_ly">Đang xử lý ({orders.filter(o => o.trangThai === 'dang_xu_ly').length})</option>
-            <option value="dang_giao">Đang giao ({orders.filter(o => o.trangThai === 'dang_giao').length})</option>
-            <option value="hoan_thanh">Hoàn thành ({orders.filter(o => o.trangThai === 'hoan_thanh').length})</option>
-            <option value="huy">Đã hủy ({orders.filter(o => o.trangThai === 'huy').length})</option>
-          </select>
+      {khoList.length === 0 && activeTab === 'to-supermarkets' && (
+        <div className="alert alert-warning">
+          ⚠️ Bạn cần có kho hàng để tạo đơn hàng cho siêu thị
         </div>
+      )}
+
+      <div className="tabs">
+        <button 
+          className={`tab ${activeTab === 'from-farmers' ? 'active' : ''}`}
+          onClick={() => setActiveTab('from-farmers')}
+        >
+          📥 Đơn hàng từ nông dân
+        </button>
+        <button 
+          className={`tab ${activeTab === 'to-supermarkets' ? 'active' : ''}`}
+          onClick={() => setActiveTab('to-supermarkets')}
+        >
+          📤 Đơn hàng gửi siêu thị
+        </button>
       </div>
 
-      {/* Orders Table */}
-      <div className="table-container">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Mã đơn</th>
-              <th>Nông dân</th>
-              <th>Loại đơn</th>
-              <th>Ngày đặt</th>
-              <th>Ngày giao</th>
-              <th>Tổng SL</th>
-              <th>Tổng giá trị</th>
-              <th>Trạng thái</th>
-              <th>Ghi chú</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredOrders.length === 0 ? (
+      {activeTab === 'from-farmers' && (
+        <div className="table-container">
+          <table className="data-table">
+            <thead>
               <tr>
-                <td colSpan={9} className="text-center">Không có đơn hàng nào</td>
+                <th>Mã ĐH</th>
+                <th>Nông dân</th>
+                <th>Ngày đặt</th>
+                <th>Ngày giao</th>
+                <th>Tổng SL</th>
+                <th>Tổng giá trị</th>
+                <th>Trạng thái</th>
+                <th>Ghi chú</th>
+                <th>Thao tác</th>
               </tr>
-            ) : (
-              filteredOrders.map((order) => (
-                <tr key={order.maDonHang}>
-                  <td>{order.maDonHang}</td>
-                  <td>{order.tenNongDan || 'N/A'}</td>
-                  <td>{order.loaiDon}</td>
-                  <td>{new Date(order.ngayDat).toLocaleDateString('vi-VN')}</td>
-                  <td>{order.ngayGiao ? new Date(order.ngayGiao).toLocaleDateString('vi-VN') : 'Chưa xác định'}</td>
-                  <td>{order.tongSoLuong || 0} kg</td>
-                  <td>{order.tongGiaTri?.toLocaleString('vi-VN') || 0} đ</td>
-                  <td>
-                    <span className={`badge badge-${getStatusBadgeClass(order.trangThai)}`}>
-                      {getStatusText(order.trangThai)}
-                    </span>
-                  </td>
-                  <td>{order.ghiChu || '-'}</td>
+            </thead>
+            <tbody>
+              {ordersFromFarmers.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="text-center">Chưa có đơn hàng nào</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                ordersFromFarmers.map((order) => (
+                  <tr key={order.maDonHang}>
+                    <td>{order.maDonHang}</td>
+                    <td>{order.tenNongDan}</td>
+                    <td>{new Date(order.ngayDat).toLocaleDateString('vi-VN')}</td>
+                    <td>{order.ngayGiao ? new Date(order.ngayGiao).toLocaleDateString('vi-VN') : '-'}</td>
+                    <td>{order.tongSoLuong} kg</td>
+                    <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.tongGiaTri)}</td>
+                    <td>{getStatusBadge(order.trangThai)}</td>
+                    <td>{order.ghiChu || '-'}</td>
+                    <td>
+                      {order.trangThai === 'chua_nhan' && (
+                        <div className="action-buttons">
+                          <button 
+                            className="btn btn-sm btn-success"
+                            onClick={() => handleAcceptOrder(order.maDonHang)}
+                          >
+                            ✅ Chấp nhận
+                          </button>
+                          <button 
+                            className="btn btn-sm btn-danger"
+                            onClick={() => handleRejectOrder(order.maDonHang)}
+                          >
+                            ❌ Từ chối
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {activeTab === 'to-supermarkets' && (
+        <div className="table-container">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Mã ĐH</th>
+                <th>Siêu thị</th>
+                <th>Ngày đặt</th>
+                <th>Ngày giao</th>
+                <th>Tổng SL</th>
+                <th>Tổng giá trị</th>
+                <th>Trạng thái</th>
+                <th>Ghi chú</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ordersToSupermarkets.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="text-center">Chưa có đơn hàng nào</td>
+                </tr>
+              ) : (
+                ordersToSupermarkets.map((order) => (
+                  <tr key={order.maDonHang}>
+                    <td>{order.maDonHang}</td>
+                    <td>{order.tenSieuThi}</td>
+                    <td>{new Date(order.ngayDat).toLocaleDateString('vi-VN')}</td>
+                    <td>{order.ngayGiao ? new Date(order.ngayGiao).toLocaleDateString('vi-VN') : '-'}</td>
+                    <td>{order.tongSoLuong} kg</td>
+                    <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.tongGiaTri)}</td>
+                    <td>{getStatusBadge(order.trangThai)}</td>
+                    <td>{order.ghiChu || '-'}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Modal */}
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>➕ Tạo đơn hàng cho siêu thị</h2>
+              <button className="btn-close" onClick={() => setShowModal(false)}>✕</button>
+            </div>
+            
+            <form onSubmit={handleSubmit}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>
+                    <span className="label-icon">🏬</span>
+                    Siêu thị <span className="required">*</span>
+                  </label>
+                  <select
+                    value={formData.maSieuThi}
+                    onChange={(e) => setFormData({...formData, maSieuThi: e.target.value})}
+                    required
+                    className="form-control"
+                  >
+                    <option value="">-- Chọn siêu thị --</option>
+                    {sieuThiList.map(st => (
+                      <option key={st.maSieuThi} value={st.maSieuThi}>
+                        {st.tenSieuThi}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>
+                    <span className="label-icon">🏪</span>
+                    Kho hàng <span className="required">*</span>
+                  </label>
+                  <select
+                    value={formData.maKho}
+                    onChange={(e) => setFormData({...formData, maKho: e.target.value})}
+                    required
+                    className="form-control"
+                  >
+                    <option value="">-- Chọn kho hàng --</option>
+                    {khoList.map(kho => (
+                      <option key={kho.maKho} value={kho.maKho}>
+                        {kho.tenKho}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>
+                    <span className="label-icon">📝</span>
+                    Ghi chú
+                  </label>
+                  <textarea
+                    value={formData.ghiChu}
+                    onChange={(e) => setFormData({...formData, ghiChu: e.target.value})}
+                    placeholder="Nhập ghi chú (nếu có)"
+                    rows={3}
+                    className="form-control"
+                  />
+                </div>
+              </div>
+              
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                  <span>✕</span> Hủy
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  <span>➕</span> Tạo đơn hàng
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        .tabs {
+          display: flex;
+          gap: 8px;
+          margin-bottom: 20px;
+          border-bottom: 2px solid #e5e7eb;
+        }
+
+        .tab {
+          padding: 12px 24px;
+          background: none;
+          border: none;
+          border-bottom: 3px solid transparent;
+          cursor: pointer;
+          font-size: 16px;
+          color: #6b7280;
+          transition: all 0.2s;
+        }
+
+        .tab:hover {
+          color: #10b981;
+        }
+
+        .tab.active {
+          color: #10b981;
+          border-bottom-color: #10b981;
+          font-weight: 600;
+        }
+
+        .action-buttons {
+          display: flex;
+          gap: 8px;
+        }
+
+        .btn-sm {
+          padding: 6px 12px;
+          font-size: 14px;
+        }
+      `}</style>
     </div>
   );
 }

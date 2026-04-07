@@ -6,7 +6,6 @@ import { API_ENDPOINTS } from '../../services/apiConfig';
 import DaiLyOverview from './DaiLyOverview';
 import WarehouseManagement from './WarehouseManagement';
 import OrderManagement from './OrderManagement';
-import PlaceOrder from './PlaceOrder';
 import './DaiLyDashboard.css';
 
 function DaiLyDashboard() {
@@ -45,8 +44,7 @@ function DaiLyDashboard() {
   const menuItems = [
     { id: 'dashboard', icon: '📊', label: 'Tổng quan', path: '/daily' },
     { id: 'warehouse', icon: '🏪', label: 'Quản lý kho', path: '/daily/warehouse' },
-    { id: 'orders', icon: '📦', label: 'Đơn hàng', path: '/daily/orders' },
-    { id: 'place-order', icon: '🛒', label: 'Đặt hàng', path: '/daily/place-order' }
+    { id: 'orders', icon: '📦', label: 'Đơn hàng', path: '/daily/orders' }
   ];
 
   return (
@@ -95,7 +93,6 @@ function DaiLyDashboard() {
           <Route path="/" element={<DaiLyOverview />} />
           <Route path="/warehouse" element={<WarehouseManagement />} />
           <Route path="/orders" element={<OrderManagement />} />
-          <Route path="/place-order" element={<PlaceOrder />} />
         </Routes>
       </main>
     </div>

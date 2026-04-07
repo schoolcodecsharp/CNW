@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
 import { useAuth } from '../../context/AuthContext';
+import '../../components/Common.css';
 
 function WarehouseManagement() {
   const { user } = useAuth();
@@ -74,30 +75,36 @@ function WarehouseManagement() {
     
     try {
       if (editingWarehouse) {
-        // Update
+        // Update - gửi với PascalCase
+        const payload = {
+          TenKho: formData.tenKho,
+          DiaChi: formData.diaChi || null
+        };
         await axios.put(
           `${API_ENDPOINTS.sieuThi.base}/kho/update/${editingWarehouse.maKho}`,
-          formData
+          payload
         );
-        alert('Cập nhật kho thành công!');
+        alert('✅ Cập nhật kho thành công!');
       } else {
-        // Create
+        // Create - gửi với PascalCase
+        const payload = {
+          LoaiKho: 'sieuthi',
+          MaSieuThi: maSieuThi,
+          TenKho: formData.tenKho,
+          DiaChi: formData.diaChi || null
+        };
         await axios.post(
           `${API_ENDPOINTS.sieuThi.base}/kho/create`,
-          {
-            loaiKho: 'sieuthi',
-            maSieuThi: maSieuThi,
-            ...formData
-          }
+          payload
         );
-        alert('Tạo kho thành công!');
+        alert('✅ Tạo kho thành công!');
       }
       
       handleCloseModal();
-      loadData();
+      await loadData();
     } catch (error) {
       console.error('Error saving warehouse:', error);
-      alert('Có lỗi xảy ra: ' + (error.response?.data?.message || error.message));
+      alert('❌ ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -108,11 +115,21 @@ function WarehouseManagement() {
 
     try {
       await axios.delete(`${API_ENDPOINTS.sieuThi.base}/kho/delete/${warehouse.maKho}`);
-      alert('Xóa kho thành công!');
-      loadData();
+      
+      // Reload danh sách ngay lập tức
+      await loadData();
+      
+      alert('✅ Xóa kho thành công!');
     } catch (error) {
       console.error('Error deleting warehouse:', error);
-      alert('Không thể xóa kho: ' + (error.response?.data?.message || error.message));
+      
+      // Nếu lỗi 404 hoặc không tìm thấy nhưng thực tế đã xóa, vẫn reload
+      if (error.response?.status === 404 || error.response?.data?.message?.includes('Không tìm thấy')) {
+        await loadData();
+        alert('✅ Xóa kho thành công!');
+      } else {
+        alert('❌ ' + (error.response?.data?.message || 'Không thể xóa kho'));
+      }
     }
   };
 
