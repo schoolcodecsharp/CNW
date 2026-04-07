@@ -6,7 +6,6 @@ import { API_ENDPOINTS } from '../../services/apiConfig';
 import SieuThiOverview from './SieuThiOverview';
 import WarehouseManagement from './WarehouseManagement';
 import OrderManagement from './OrderManagement';
-import PlaceOrder from './PlaceOrder';
 import './SieuThiDashboard.css';
 
 function SieuThiDashboard() {
@@ -45,8 +44,7 @@ function SieuThiDashboard() {
   const menuItems = [
     { id: 'dashboard', icon: '📊', label: 'Tổng quan', path: '/sieuthi' },
     { id: 'warehouse', icon: '🏬', label: 'Quản lý kho', path: '/sieuthi/warehouse' },
-    { id: 'orders', icon: '📦', label: 'Đơn hàng', path: '/sieuthi/orders' },
-    { id: 'place-order', icon: '🛒', label: 'Đặt hàng', path: '/sieuthi/place-order' }
+    { id: 'orders', icon: '📦', label: 'Đơn hàng', path: '/sieuthi/orders' }
   ];
 
   return (
@@ -95,7 +93,6 @@ function SieuThiDashboard() {
           <Route path="/" element={<SieuThiOverview />} />
           <Route path="/warehouse" element={<WarehouseManagement />} />
           <Route path="/orders" element={<OrderManagement />} />
-          <Route path="/place-order" element={<PlaceOrder />} />
         </Routes>
       </main>
     </div>
