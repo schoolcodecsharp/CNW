@@ -764,6 +764,35 @@ BEGIN
 END;
 GO
 
+-- SP GET BY NONG DAN
+CREATE OR ALTER PROCEDURE sp_LoNongSan_GetByNongDan
+    @MaNongDan INT
+AS
+BEGIN
+    SELECT 
+        LNS.MaLo,
+        LNS.MaTrangTrai,
+        LNS.MaSanPham,
+        LNS.SoLuongBanDau,
+        LNS.SoLuongHienTai,
+        LNS.NgayThuHoach,
+        LNS.HanSuDung,
+        LNS.SoChungNhanLo,
+        LNS.MaQR,
+        LNS.TrangThai,
+        LNS.NgayTao,
+        TT.TenTrangTrai,
+        SP.TenSanPham,
+        SP.DonViTinh
+    FROM LoNongSan LNS
+    JOIN TrangTrai TT ON LNS.MaTrangTrai = TT.MaTrangTrai
+    JOIN SanPham SP ON LNS.MaSanPham = SP.MaSanPham
+    JOIN NongDan ND ON TT.MaNongDan = ND.MaNongDan
+    WHERE ND.MaNongDan = @MaNongDan
+    ORDER BY LNS.MaLo DESC;
+END;
+GO
+
 -- ============================================================================
 -- STORED PROCEDURES FOR DONHANG TABLE
 -- ============================================================================
