@@ -74,12 +74,23 @@ function SieuThiManagement() {
     }
 
     try {
-      await axios.delete(API_ENDPOINTS.sieuThi.delete(sieuThi.maSieuThi));
-      alert('Xóa siêu thị thành công');
-      loadSieuThi();
+      const response = await axios.delete(API_ENDPOINTS.sieuThi.delete(sieuThi.maSieuThi));
+      
+      // Reload danh sách ngay lập tức
+      await loadSieuThi();
+      
+      // Hiển thị thông báo thành công
+      alert('✅ Xóa siêu thị thành công!');
     } catch (error) {
       console.error('Error deleting sieu thi:', error);
-      alert(error.response?.data?.message || 'Không thể xóa siêu thị');
+      
+      // Nếu lỗi 404 hoặc không tìm thấy nhưng thực tế đã xóa, vẫn reload
+      if (error.response?.status === 404 || error.response?.data?.message?.includes('Không tìm thấy')) {
+        await loadSieuThi();
+        alert('✅ Xóa siêu thị thành công!');
+      } else {
+        alert('❌ ' + (error.response?.data?.message || 'Không thể xóa siêu thị'));
+      }
     }
   };
 
@@ -88,27 +99,27 @@ function SieuThiManagement() {
 
     try {
       if (modalMode === 'add') {
-        // Khi thêm mới, gửi cả thông tin tài khoản
+        // Khi thêm mới, gửi cả thông tin tài khoản với PascalCase
         const payload = {
-          tenSieuThi: formData.tenSieuThi,
-          soDienThoai: formData.soDienThoai,
-          email: formData.email,
-          diaChi: formData.diaChi,
-          tenDangNhap: formData.tenDangNhap,
-          matKhau: formData.matKhau
+          TenDangNhap: formData.tenDangNhap,
+          MatKhau: formData.matKhau,
+          TenSieuThi: formData.tenSieuThi,
+          SoDienThoai: formData.soDienThoai,
+          Email: formData.email,
+          DiaChi: formData.diaChi
         };
         await axios.post(API_ENDPOINTS.sieuThi.create, payload);
-        alert('Thêm siêu thị thành công');
+        alert('✅ Thêm siêu thị thành công!');
       } else if (modalMode === 'edit') {
-        // Khi sửa, chỉ gửi thông tin siêu thị (không sửa tài khoản)
+        // Khi sửa, chỉ gửi thông tin siêu thị (không sửa tài khoản) với PascalCase
         const payload = {
-          tenSieuThi: formData.tenSieuThi,
-          soDienThoai: formData.soDienThoai,
-          email: formData.email,
-          diaChi: formData.diaChi
+          TenSieuThi: formData.tenSieuThi,
+          SoDienThoai: formData.soDienThoai,
+          Email: formData.email || null,
+          DiaChi: formData.diaChi || null
         };
         await axios.put(API_ENDPOINTS.sieuThi.update(selectedSieuThi.maSieuThi), payload);
-        alert('Cập nhật siêu thị thành công');
+        alert('✅ Cập nhật siêu thị thành công!');
       }
 
       setShowModal(false);

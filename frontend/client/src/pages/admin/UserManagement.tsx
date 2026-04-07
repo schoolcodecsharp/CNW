@@ -132,11 +132,22 @@ function UserManagement() {
       }
 
       await axios.delete(endpoint);
-      alert('Xóa người dùng thành công');
-      loadUsers();
+      
+      // Reload danh sách ngay lập tức
+      await loadUsers();
+      
+      // Hiển thị thông báo thành công
+      alert('✅ Xóa người dùng thành công!');
     } catch (error) {
       console.error('Error deleting user:', error);
-      alert(error.response?.data?.message || 'Không thể xóa người dùng');
+      
+      // Nếu lỗi 404 hoặc không tìm thấy nhưng thực tế đã xóa, vẫn reload
+      if (error.response?.status === 404 || error.response?.data?.message?.includes('Không tìm thấy')) {
+        await loadUsers();
+        alert('✅ Xóa người dùng thành công!');
+      } else {
+        alert('❌ ' + (error.response?.data?.message || 'Không thể xóa người dùng'));
+      }
     }
   };
 
@@ -144,62 +155,85 @@ function UserManagement() {
     e.preventDefault();
 
     try {
-      let payload: any = {
-        soDienThoai: formData.soDienThoai,
-        email: formData.email,
-        diaChi: formData.diaChi
-      };
-
-      // Adjust payload based on role type and mode
-      if (modalMode === 'add') {
-        // Khi thêm mới, cần có tài khoản
-        payload.tenDangNhap = formData.tenDangNhap;
-        payload.matKhau = formData.matKhau;
-      }
-
-      if (formData.roleType === 'nong_dan') {
-        payload.hoTen = formData.hoTen;
-      } else if (formData.roleType === 'dai_ly') {
-        payload.tenDaiLy = formData.hoTen;
-      } else if (formData.roleType === 'sieu_thi') {
-        payload.tenSieuThi = formData.hoTen;
-      }
+      let payload: any = {};
 
       if (modalMode === 'add') {
         let endpoint;
         if (formData.roleType === 'nong_dan') {
           endpoint = API_ENDPOINTS.nongDan.create;
+          // Gửi với PascalCase
+          payload = {
+            TenDangNhap: formData.tenDangNhap,
+            MatKhau: formData.matKhau,
+            HoTen: formData.hoTen,
+            SoDienThoai: formData.soDienThoai,
+            Email: formData.email || null,
+            DiaChi: formData.diaChi || null
+          };
         } else if (formData.roleType === 'dai_ly') {
           endpoint = API_ENDPOINTS.daiLy.create;
+          // Gửi với PascalCase
+          payload = {
+            TenDangNhap: formData.tenDangNhap,
+            MatKhau: formData.matKhau,
+            TenDaiLy: formData.hoTen,
+            SoDienThoai: formData.soDienThoai,
+            Email: formData.email || null,
+            DiaChi: formData.diaChi || null
+          };
         } else if (formData.roleType === 'sieu_thi') {
           endpoint = API_ENDPOINTS.sieuThi.create;
+          // Gửi với PascalCase
+          payload = {
+            TenDangNhap: formData.tenDangNhap,
+            MatKhau: formData.matKhau,
+            TenSieuThi: formData.hoTen,
+            SoDienThoai: formData.soDienThoai,
+            Email: formData.email || null,
+            DiaChi: formData.diaChi || null
+          };
         }
 
         await axios.post(endpoint, payload);
-        alert('Thêm người dùng thành công');
+        alert('✅ Thêm người dùng thành công!');
       } else if (modalMode === 'edit') {
-        // Khi sửa, không gửi thông tin tài khoản
-        delete payload.tenDangNhap;
-        delete payload.matKhau;
-        
+        // Khi sửa, gửi với PascalCase
         let endpoint;
         if (selectedUser.roleType === 'nong_dan') {
           endpoint = API_ENDPOINTS.nongDan.update(selectedUser.id);
+          payload = {
+            HoTen: formData.hoTen,
+            SoDienThoai: formData.soDienThoai,
+            Email: formData.email || null,
+            DiaChi: formData.diaChi || null
+          };
         } else if (selectedUser.roleType === 'dai_ly') {
           endpoint = API_ENDPOINTS.daiLy.update(selectedUser.id);
+          payload = {
+            TenDaiLy: formData.hoTen,
+            SoDienThoai: formData.soDienThoai,
+            Email: formData.email || null,
+            DiaChi: formData.diaChi || null
+          };
         } else if (selectedUser.roleType === 'sieu_thi') {
           endpoint = API_ENDPOINTS.sieuThi.update(selectedUser.id);
+          payload = {
+            TenSieuThi: formData.hoTen,
+            SoDienThoai: formData.soDienThoai,
+            Email: formData.email || null,
+            DiaChi: formData.diaChi || null
+          };
         }
 
         await axios.put(endpoint, payload);
-        alert('Cập nhật người dùng thành công');
+        alert('✅ Cập nhật người dùng thành công!');
       }
 
       setShowModal(false);
       loadUsers();
     } catch (error) {
       console.error('Error saving user:', error);
-      alert(error.response?.data?.message || 'Lỗi khi lưu người dùng');
+      alert('❌ ' + (error.response?.data?.message || 'Lỗi khi lưu người dùng'));
     }
   };
 

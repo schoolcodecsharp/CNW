@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
 
-function DaiLyManagement() {
-  const [dailyList, setDailyList] = useState([]);
+function NongDanManagement() {
+  const [nongDanList, setNongDanList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState('view');
-  const [selectedDaily, setSelectedDaily] = useState(null);
+  const [selectedNongDan, setSelectedNongDan] = useState(null);
   const [formData, setFormData] = useState({
-    tenDaiLy: '',
+    hoTen: '',
     soDienThoai: '',
     email: '',
     diaChi: '',
@@ -19,16 +19,16 @@ function DaiLyManagement() {
   });
 
   useEffect(() => {
-    loadDaiLy();
+    loadNongDan();
   }, []);
 
-  const loadDaiLy = async () => {
+  const loadNongDan = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(API_ENDPOINTS.daiLy.getAll);
-      setDailyList(response.data.data || []);
+      const response = await axios.get(API_ENDPOINTS.nongDan.getAll);
+      setNongDanList(response.data.data || []);
     } catch (error) {
-      console.error('Error loading dai ly:', error);
+      console.error('Error loading nong dan:', error);
     } finally {
       setLoading(false);
     }
@@ -36,9 +36,9 @@ function DaiLyManagement() {
 
   const handleAdd = () => {
     setModalMode('add');
-    setSelectedDaily(null);
+    setSelectedNongDan(null);
     setFormData({
-      tenDaiLy: '',
+      hoTen: '',
       soDienThoai: '',
       email: '',
       diaChi: '',
@@ -48,48 +48,48 @@ function DaiLyManagement() {
     setShowModal(true);
   };
 
-  const handleEdit = (daily) => {
+  const handleEdit = (nongDan) => {
     setModalMode('edit');
-    setSelectedDaily(daily);
+    setSelectedNongDan(nongDan);
     setFormData({
-      tenDaiLy: daily.tenDaiLy || '',
-      soDienThoai: daily.soDienThoai || '',
-      email: daily.email || '',
-      diaChi: daily.diaChi || '',
+      hoTen: nongDan.hoTen || '',
+      soDienThoai: nongDan.soDienThoai || '',
+      email: nongDan.email || '',
+      diaChi: nongDan.diaChi || '',
       tenDangNhap: '', // Không cho sửa tài khoản
       matKhau: ''
     });
     setShowModal(true);
   };
 
-  const handleView = (daily) => {
+  const handleView = (nongDan) => {
     setModalMode('view');
-    setSelectedDaily(daily);
+    setSelectedNongDan(nongDan);
     setShowModal(true);
   };
 
-  const handleDelete = async (daily) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa đại lý "${daily.tenDaiLy}"?`)) {
+  const handleDelete = async (nongDan) => {
+    if (!window.confirm(`Bạn có chắc muốn xóa nông dân "${nongDan.hoTen}"?`)) {
       return;
     }
 
     try {
-      const response = await axios.delete(API_ENDPOINTS.daiLy.delete(daily.maDaiLy));
+      const response = await axios.delete(API_ENDPOINTS.nongDan.delete(nongDan.maNongDan));
       
       // Reload danh sách ngay lập tức
-      await loadDaiLy();
+      await loadNongDan();
       
       // Hiển thị thông báo thành công
-      alert('✅ Xóa đại lý thành công!');
+      alert('✅ Xóa nông dân thành công!');
     } catch (error) {
-      console.error('Error deleting dai ly:', error);
+      console.error('Error deleting nong dan:', error);
       
       // Nếu lỗi 404 hoặc không tìm thấy nhưng thực tế đã xóa, vẫn reload
       if (error.response?.status === 404 || error.response?.data?.message?.includes('Không tìm thấy')) {
-        await loadDaiLy();
-        alert('✅ Xóa đại lý thành công!');
+        await loadNongDan();
+        alert('✅ Xóa nông dân thành công!');
       } else {
-        alert('❌ ' + (error.response?.data?.message || 'Không thể xóa đại lý'));
+        alert('❌ ' + (error.response?.data?.message || 'Không thể xóa nông dân'));
       }
     }
   };
@@ -103,30 +103,30 @@ function DaiLyManagement() {
         const payload = {
           TenDangNhap: formData.tenDangNhap,
           MatKhau: formData.matKhau,
-          TenDaiLy: formData.tenDaiLy,
+          HoTen: formData.hoTen,
           SoDienThoai: formData.soDienThoai,
           Email: formData.email,
           DiaChi: formData.diaChi
         };
-        await axios.post(API_ENDPOINTS.daiLy.create, payload);
-        alert('✅ Thêm đại lý thành công!');
+        await axios.post(API_ENDPOINTS.nongDan.create, payload);
+        alert('✅ Thêm nông dân thành công!');
       } else if (modalMode === 'edit') {
-        // Khi sửa, chỉ gửi thông tin đại lý (không sửa tài khoản) với PascalCase
+        // Khi sửa, chỉ gửi thông tin nông dân (không sửa tài khoản) với PascalCase
         const payload = {
-          TenDaiLy: formData.tenDaiLy,
+          HoTen: formData.hoTen,
           SoDienThoai: formData.soDienThoai,
           Email: formData.email || null,
           DiaChi: formData.diaChi || null
         };
-        await axios.put(API_ENDPOINTS.daiLy.update(selectedDaily.maDaiLy), payload);
-        alert('✅ Cập nhật đại lý thành công!');
+        await axios.put(API_ENDPOINTS.nongDan.update(selectedNongDan.maNongDan), payload);
+        alert('✅ Cập nhật nông dân thành công!');
       }
 
       setShowModal(false);
-      loadDaiLy();
+      loadNongDan();
     } catch (error) {
-      console.error('Error saving dai ly:', error);
-      alert(error.response?.data?.message || 'Lỗi khi lưu đại lý');
+      console.error('Error saving nong dan:', error);
+      alert(error.response?.data?.message || 'Lỗi khi lưu nông dân');
     }
   };
 
@@ -139,16 +139,16 @@ function DaiLyManagement() {
   };
 
   if (loading) {
-    return <div className="loading">Đang tải danh sách đại lý...</div>;
+    return <div className="loading">Đang tải danh sách nông dân...</div>;
   }
 
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1>Quản lý đại lý</h1>
+        <h1>Quản lý nông dân</h1>
         <div className="header-actions">
           <button className="btn btn-primary" onClick={handleAdd}>
-            ➕ Thêm đại lý
+            ➕ Thêm nông dân
           </button>
         </div>
       </div>
@@ -158,7 +158,7 @@ function DaiLyManagement() {
           <thead>
             <tr>
               <th>Mã</th>
-              <th>Tên đại lý</th>
+              <th>Họ tên</th>
               <th>Số điện thoại</th>
               <th>Email</th>
               <th>Địa chỉ</th>
@@ -167,18 +167,18 @@ function DaiLyManagement() {
             </tr>
           </thead>
           <tbody>
-            {dailyList.length === 0 ? (
+            {nongDanList.length === 0 ? (
               <tr>
                 <td colSpan={7} className="text-center">Không có dữ liệu</td>
               </tr>
             ) : (
-              dailyList.map((daily) => (
-                <tr key={daily.maDaiLy}>
-                  <td>{daily.maDaiLy}</td>
-                  <td>{daily.tenDaiLy}</td>
-                  <td>{daily.soDienThoai || 'N/A'}</td>
-                  <td>{daily.email || 'N/A'}</td>
-                  <td>{daily.diaChi || 'N/A'}</td>
+              nongDanList.map((nongDan) => (
+                <tr key={nongDan.maNongDan}>
+                  <td>{nongDan.maNongDan}</td>
+                  <td>{nongDan.hoTen}</td>
+                  <td>{nongDan.soDienThoai || 'N/A'}</td>
+                  <td>{nongDan.email || 'N/A'}</td>
+                  <td>{nongDan.diaChi || 'N/A'}</td>
                   <td>
                     <span className="badge badge-success">Hoạt động</span>
                   </td>
@@ -186,21 +186,21 @@ function DaiLyManagement() {
                     <div className="action-buttons">
                       <button 
                         className="btn-action btn-view" 
-                        onClick={() => handleView(daily)}
+                        onClick={() => handleView(nongDan)}
                         title="Xem chi tiết"
                       >
                         👁️
                       </button>
                       <button 
                         className="btn-action btn-edit"
-                        onClick={() => handleEdit(daily)}
+                        onClick={() => handleEdit(nongDan)}
                         title="Chỉnh sửa"
                       >
                         ✏️
                       </button>
                       <button 
                         className="btn-action btn-delete"
-                        onClick={() => handleDelete(daily)}
+                        onClick={() => handleDelete(nongDan)}
                         title="Xóa"
                       >
                         🗑️
@@ -218,14 +218,14 @@ function DaiLyManagement() {
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content modal-user-detail" onClick={(e) => e.stopPropagation()}>
-            {modalMode === 'view' && selectedDaily ? (
+            {modalMode === 'view' && selectedNongDan ? (
               <>
                 <div className="modal-header">
                   <div className="modal-title-section">
-                    <div className="user-avatar-large">🏪</div>
+                    <div className="user-avatar-large">👨‍🌾</div>
                     <div>
-                      <h2>{selectedDaily.tenDaiLy}</h2>
-                      <span className="badge badge-dai_ly badge-large">Đại lý</span>
+                      <h2>{selectedNongDan.hoTen}</h2>
+                      <span className="badge badge-nongdan badge-large">Nông dân</span>
                     </div>
                   </div>
                   <button className="btn-close" onClick={() => setShowModal(false)}>✕</button>
@@ -235,22 +235,22 @@ function DaiLyManagement() {
                   <div className="user-detail-card">
                     <h3 className="section-title">
                       <span className="section-icon">📋</span>
-                      Thông tin đại lý
+                      Thông tin nông dân
                     </h3>
                     <div className="detail-grid-modern">
                       <div className="detail-item-modern">
                         <div className="detail-icon">🆔</div>
                         <div className="detail-content">
-                          <span className="detail-label">Mã đại lý</span>
-                          <span className="detail-value">{selectedDaily.maDaiLy}</span>
+                          <span className="detail-label">Mã nông dân</span>
+                          <span className="detail-value">{selectedNongDan.maNongDan}</span>
                         </div>
                       </div>
                       
                       <div className="detail-item-modern">
-                        <div className="detail-icon">🏪</div>
+                        <div className="detail-icon">👨‍🌾</div>
                         <div className="detail-content">
-                          <span className="detail-label">Tên đại lý</span>
-                          <span className="detail-value">{selectedDaily.tenDaiLy}</span>
+                          <span className="detail-label">Họ tên</span>
+                          <span className="detail-value">{selectedNongDan.hoTen}</span>
                         </div>
                       </div>
                       
@@ -258,7 +258,7 @@ function DaiLyManagement() {
                         <div className="detail-icon">📞</div>
                         <div className="detail-content">
                           <span className="detail-label">Số điện thoại</span>
-                          <span className="detail-value">{selectedDaily.soDienThoai || 'Chưa cập nhật'}</span>
+                          <span className="detail-value">{selectedNongDan.soDienThoai || 'Chưa cập nhật'}</span>
                         </div>
                       </div>
                       
@@ -266,7 +266,7 @@ function DaiLyManagement() {
                         <div className="detail-icon">📧</div>
                         <div className="detail-content">
                           <span className="detail-label">Email</span>
-                          <span className="detail-value">{selectedDaily.email || 'Chưa cập nhật'}</span>
+                          <span className="detail-value">{selectedNongDan.email || 'Chưa cập nhật'}</span>
                         </div>
                       </div>
                       
@@ -274,7 +274,7 @@ function DaiLyManagement() {
                         <div className="detail-icon">📍</div>
                         <div className="detail-content">
                           <span className="detail-label">Địa chỉ</span>
-                          <span className="detail-value">{selectedDaily.diaChi || 'Chưa cập nhật'}</span>
+                          <span className="detail-value">{selectedNongDan.diaChi || 'Chưa cập nhật'}</span>
                         </div>
                       </div>
                     </div>
@@ -285,7 +285,7 @@ function DaiLyManagement() {
                   <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
                     <span>✕</span> Đóng
                   </button>
-                  <button className="btn btn-primary" onClick={() => handleEdit(selectedDaily)}>
+                  <button className="btn btn-primary" onClick={() => handleEdit(selectedNongDan)}>
                     <span>✏️</span> Chỉnh sửa
                   </button>
                 </div>
@@ -293,7 +293,7 @@ function DaiLyManagement() {
             ) : (
               <>
                 <div className="modal-header">
-                  <h2>{modalMode === 'add' ? '➕ Thêm đại lý mới' : '✏️ Chỉnh sửa đại lý'}</h2>
+                  <h2>{modalMode === 'add' ? '➕ Thêm nông dân mới' : '✏️ Chỉnh sửa nông dân'}</h2>
                   <button className="btn-close" onClick={() => setShowModal(false)}>✕</button>
                 </div>
                 
@@ -346,25 +346,25 @@ function DaiLyManagement() {
                         </div>
 
                         <div className="form-section-title">
-                          <span className="section-icon">🏪</span>
-                          Thông tin đại lý
+                          <span className="section-icon">👨‍🌾</span>
+                          Thông tin nông dân
                         </div>
                       </>
                     )}
 
                     <div className="form-group">
-                      <label htmlFor="tenDaiLy">
-                        <span className="label-icon">🏪</span>
-                        Tên đại lý <span className="required">*</span>
+                      <label htmlFor="hoTen">
+                        <span className="label-icon">👨‍🌾</span>
+                        Họ tên <span className="required">*</span>
                       </label>
                       <input
                         type="text"
-                        id="tenDaiLy"
-                        name="tenDaiLy"
-                        value={formData.tenDaiLy}
+                        id="hoTen"
+                        name="hoTen"
+                        value={formData.hoTen}
                         onChange={handleInputChange}
                         required
-                        placeholder="Nhập tên đại lý"
+                        placeholder="Nhập họ tên"
                         className="form-control"
                       />
                     </div>
@@ -440,4 +440,4 @@ function DaiLyManagement() {
   );
 }
 
-export default DaiLyManagement;
+export default NongDanManagement;
