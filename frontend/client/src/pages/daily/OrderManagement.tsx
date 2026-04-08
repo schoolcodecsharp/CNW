@@ -6,9 +6,7 @@ import '../../components/Common.css';
 
 function OrderManagement() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('from-farmers'); // 'from-farmers' or 'from-supermarkets'
-  const [ordersFromFarmers, setOrdersFromFarmers] = useState([]);
-  const [ordersToSupermarkets, setOrdersToSupermarkets] = useState([]);
+  const [allOrders, setAllOrders] = useState([]);
   const [nongdanList, setNongdanList] = useState([]);
   const [sieuThiList, setSieuThiList] = useState([]);
   const [batches, setBatches] = useState([]);
@@ -40,7 +38,6 @@ function OrderManagement() {
     try {
       setLoading(true);
       
-      // Get daily ID
       const dailyRes = await axios.get(API_ENDPOINTS.daiLy.getAll);
       const currentDaily = dailyRes.data.data?.find(
         (dl: any) => dl.maTaiKhoan === user?.maTaiKhoan
@@ -53,13 +50,16 @@ function OrderManagement() {
 
       setMaDaiLy(currentDaily.maDaiLy);
 
-      // Load orders from farmers (nông dân tạo đơn bán cho đại lý)
+      // Load orders from farmers
       const farmersRes = await axios.get(API_ENDPOINTS.donHangDaiLy.getByDaiLy(currentDaily.maDaiLy));
-      setOrdersFromFarmers(farmersRes.data.data || []);
+      const ordersFromFarmers = (farmersRes.data.data || []).map((o: any) => ({...o, loaiDon: 'Từ nông dân'}));
 
-      // Load orders to supermarkets (đại lý tạo đơn bán cho siêu thị)
+      // Load orders to supermarkets
       const supermarketsRes = await axios.get(API_ENDPOINTS.donHangSieuThi.getByDaiLy(currentDaily.maDaiLy));
-      setOrdersToSupermarkets(supermarketsRes.data.data || []);
+      const ordersToSupermarkets = (supermarketsRes.data.data || []).map((o: any) => ({...o, loaiDon: 'Bán cho siêu thị'}));
+
+      // Combine all orders
+      setAllOrders([...ordersFromFarmers, ...ordersToSupermarkets]);
 
       // Load nongdan list
       const nongdanRes = await axios.get(API_ENDPOINTS.nongDan.getAll);
@@ -72,7 +72,7 @@ function OrderManagement() {
       );
       setBatches(availableBatches);
 
-      // Load ton kho (inventory) for this daily
+      // Load ton kho
       const tonKhoRes = await axios.get(API_ENDPOINTS.tonKho.getByDaiLy(currentDaily.maDaiLy));
       const availableTonKho = (tonKhoRes.data.data || []).filter((tk: any) => tk.soLuong > 0);
       setTonKho(availableTonKho);
@@ -88,7 +88,7 @@ function OrderManagement() {
     }
   };
 
-  const handleAcceptFromFarmer = async (orderId: number) => {
+  const handleAcceptOrder = async (orderId: number) => {
     if (!window.confirm('Bạn có chắc muốn chấp nhận đơn hàng này?')) return;
     
     try {
@@ -101,7 +101,7 @@ function OrderManagement() {
     }
   };
 
-  const handleRejectFromFarmer = async (orderId: number) => {
+  const handleRejectOrder = async (orderId: number) => {
     if (!window.confirm('Bạn có chắc muốn từ chối đơn hàng này?')) return;
     
     try {
@@ -114,33 +114,10 @@ function OrderManagement() {
     }
   };
 
-  const handleOpenModalFarmer = () => {
-    setFormDataFarmer({
-      maNongDan: '',
-      maLo: '',
-      soLuong: '',
-      donGia: '',
-      ghiChu: ''
-    });
-    setShowModalFarmer(true);
-  };
-
-  const handleOpenModalSupermarket = () => {
-    setFormDataSupermarket({
-      maSieuThi: '',
-      maLo: '',
-      soLuong: '',
-      donGia: '',
-      ghiChu: ''
-    });
-    setShowModalSupermarket(true);
-  };
-
   const handleSubmitFarmer = async (e: any) => {
     e.preventDefault();
     
     try {
-      // Validate số lượng
       const selectedBatch = batches.find((b: any) => b.maLo === parseInt(formDataFarmer.maLo));
       if (!selectedBatch) {
         alert('❌ Vui lòng chọn lô nông sản!');
@@ -163,7 +140,7 @@ function OrderManagement() {
       };
 
       await axios.post(API_ENDPOINTS.donHangDaiLy.create, payload);
-      alert('✅ Tạo đơn mua hàng thành công! Đang chờ nông dân xác nhận.');
+      alert('✅ Tạo đơn mua hàng thành công!');
       
       setShowModalFarmer(false);
       await loadData();
@@ -177,7 +154,6 @@ function OrderManagement() {
     e.preventDefault();
     
     try {
-      // Validate số lượng
       const selectedTonKho = tonKho.find((tk: any) => tk.maLo === parseInt(formDataSupermarket.maLo));
       if (!selectedTonKho) {
         alert('❌ Vui lòng chọn lô hàng từ kho!');
@@ -195,7 +171,7 @@ function OrderManagement() {
       };
 
       await axios.post(API_ENDPOINTS.donHangSieuThi.create, payload);
-      alert('✅ Tạo đơn bán hàng thành công! Đang chờ siêu thị xác nhận.');
+      alert('✅ Tạo đơn bán hàng thành công!');
       
       setShowModalSupermarket(false);
       await loadData();
@@ -232,14 +208,14 @@ function OrderManagement() {
         <div className="header-actions">
           <button 
             className="btn btn-success" 
-            onClick={handleOpenModalFarmer}
+            onClick={() => setShowModalFarmer(true)}
             disabled={batches.length === 0}
           >
             ➕ Tạo đơn mua từ nông dân
           </button>
           <button 
             className="btn btn-primary" 
-            onClick={handleOpenModalSupermarket}
+            onClick={() => setShowModalSupermarket(true)}
             disabled={tonKho.length === 0}
           >
             ➕ Tạo đơn bán cho siêu thị
@@ -259,122 +235,61 @@ function OrderManagement() {
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="tabs">
-        <button 
-          className={`tab ${activeTab === 'from-farmers' ? 'active' : ''}`}
-          onClick={() => setActiveTab('from-farmers')}
-        >
-          🌾 Đơn từ nông dân ({ordersFromFarmers.length})
-          <span className="tab-desc">Nông dân muốn bán</span>
-        </button>
-        <button 
-          className={`tab ${activeTab === 'from-supermarkets' ? 'active' : ''}`}
-          onClick={() => setActiveTab('from-supermarkets')}
-        >
-          🏪 Đơn bán cho siêu thị ({ordersToSupermarkets.length})
-          <span className="tab-desc">Tôi muốn bán</span>
-        </button>
-      </div>
-
-      {/* Tab Content: Orders from Farmers */}
-      {activeTab === 'from-farmers' && (
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
+      <div className="table-container">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Loại đơn</th>
+              <th>Mã ĐH</th>
+              <th>Đối tác</th>
+              <th>Ngày đặt</th>
+              <th>Tổng SL</th>
+              <th>Tổng giá trị</th>
+              <th>Trạng thái</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allOrders.length === 0 ? (
               <tr>
-                <th>Mã ĐH</th>
-                <th>Nông dân</th>
-                <th>Ngày đặt</th>
-                <th>Tổng SL</th>
-                <th>Tổng giá trị</th>
-                <th>Trạng thái</th>
-                <th>Ghi chú</th>
-                <th>Hành động</th>
+                <td colSpan={8} className="text-center">Chưa có đơn hàng nào</td>
               </tr>
-            </thead>
-            <tbody>
-              {ordersFromFarmers.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="text-center">
-                    Chưa có đơn hàng nào từ nông dân
+            ) : (
+              allOrders.map((order: any) => (
+                <tr key={`${order.loaiDon}-${order.maDonHang}`}>
+                  <td><span className="order-type">{order.loaiDon}</span></td>
+                  <td>{order.maDonHang}</td>
+                  <td>{order.tenNongDan || order.tenSieuThi}</td>
+                  <td>{new Date(order.ngayDat).toLocaleDateString('vi-VN')}</td>
+                  <td>{order.tongSoLuong} kg</td>
+                  <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.tongGiaTri)}</td>
+                  <td>{getStatusBadge(order.trangThai)}</td>
+                  <td>
+                    {order.loaiDon === 'Từ nông dân' && order.trangThai === 'chua_nhan' && (
+                      <div className="action-buttons">
+                        <button 
+                          className="btn-action btn-success"
+                          onClick={() => handleAcceptOrder(order.maDonHang)}
+                        >
+                          ✓
+                        </button>
+                        <button 
+                          className="btn-action btn-danger"
+                          onClick={() => handleRejectOrder(order.maDonHang)}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
-              ) : (
-                ordersFromFarmers.map((order: any) => (
-                  <tr key={order.maDonHang}>
-                    <td>{order.maDonHang}</td>
-                    <td>{order.tenNongDan}</td>
-                    <td>{new Date(order.ngayDat).toLocaleDateString('vi-VN')}</td>
-                    <td>{order.tongSoLuong} kg</td>
-                    <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.tongGiaTri)}</td>
-                    <td>{getStatusBadge(order.trangThai)}</td>
-                    <td>{order.ghiChu || '-'}</td>
-                    <td>
-                      {order.trangThai === 'chua_nhan' && (
-                        <div className="action-buttons">
-                          <button 
-                            className="btn-action btn-success"
-                            onClick={() => handleAcceptFromFarmer(order.maDonHang)}
-                          >
-                            ✓ Chấp nhận
-                          </button>
-                          <button 
-                            className="btn-action btn-danger"
-                            onClick={() => handleRejectFromFarmer(order.maDonHang)}
-                          >
-                            ✕ Từ chối
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
-      {/* Tab Content: Orders to Supermarkets */}
-      {activeTab === 'from-supermarkets' && (
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Mã ĐH</th>
-                <th>Siêu thị</th>
-                <th>Ngày đặt</th>
-                <th>Tổng SL</th>
-                <th>Tổng giá trị</th>
-                <th>Trạng thái</th>
-                <th>Ghi chú</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ordersToSupermarkets.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="text-center">Chưa có đơn hàng nào</td>
-                </tr>
-              ) : (
-                ordersToSupermarkets.map((order: any) => (
-                  <tr key={order.maDonHang}>
-                    <td>{order.maDonHang}</td>
-                    <td>{order.tenSieuThi}</td>
-                    <td>{new Date(order.ngayDat).toLocaleDateString('vi-VN')}</td>
-                    <td>{order.tongSoLuong} kg</td>
-                    <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.tongGiaTri)}</td>
-                    <td>{getStatusBadge(order.trangThai)}</td>
-                    <td>{order.ghiChu || '-'}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Modal: Create order to buy from farmer */}
+      {/* Modal: Tạo đơn mua từ nông dân */}
       {showModalFarmer && (
         <div className="modal-overlay" onClick={() => setShowModalFarmer(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -500,7 +415,7 @@ function OrderManagement() {
         </div>
       )}
 
-      {/* Modal: Create order to sell to supermarket */}
+      {/* Modal: Tạo đơn bán cho siêu thị */}
       {showModalSupermarket && (
         <div className="modal-overlay" onClick={() => setShowModalSupermarket(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -623,43 +538,33 @@ function OrderManagement() {
       )}
 
       <style>{`
-        .tabs {
-          display: flex;
-          gap: 10px;
-          margin-bottom: 20px;
-          border-bottom: 2px solid #e5e7eb;
-        }
-
-        .tab {
-          padding: 12px 24px;
-          background: none;
-          border: none;
-          border-bottom: 3px solid transparent;
-          cursor: pointer;
-          font-size: 16px;
-          font-weight: 500;
-          color: #6b7280;
-          transition: all 0.3s;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .tab:hover {
-          color: #3b82f6;
-          background: #eff6ff;
-        }
-
-        .tab.active {
-          color: #3b82f6;
-          border-bottom-color: #3b82f6;
-        }
-
-        .tab-desc {
+        .order-type {
+          display: inline-block;
+          padding: 4px 8px;
+          border-radius: 4px;
           font-size: 12px;
-          font-weight: normal;
-          color: #9ca3af;
+          font-weight: 500;
+          background: #e0f2fe;
+          color: #0369a1;
+        }
+
+        .total-value {
+          font-size: 24px;
+          font-weight: bold;
+          color: #3b82f6;
+          padding: 12px;
+          background: #eff6ff;
+          border-radius: 8px;
+          text-align: center;
+        }
+
+        .alert-warning {
+          background: #fef3c7;
+          border: 1px solid #f59e0b;
+          color: #92400e;
+          padding: 12px;
+          border-radius: 8px;
+          margin-bottom: 16px;
         }
 
         .btn-success {
@@ -675,6 +580,11 @@ function OrderManagement() {
 
         .btn-success:hover {
           background: #059669;
+        }
+
+        .btn-success:disabled {
+          background: #9ca3af;
+          cursor: not-allowed;
         }
 
         .btn-action.btn-success {
@@ -693,34 +603,6 @@ function OrderManagement() {
 
         .btn-action.btn-danger:hover {
           background: #dc2626;
-        }
-
-        .alert-info {
-          background: #eff6ff;
-          border: 1px solid #3b82f6;
-          color: #1e40af;
-          padding: 12px;
-          border-radius: 8px;
-          margin-bottom: 16px;
-        }
-
-        .alert-warning {
-          background: #fef3c7;
-          border: 1px solid #f59e0b;
-          color: #92400e;
-          padding: 12px;
-          border-radius: 8px;
-          margin-bottom: 16px;
-        }
-
-        .total-value {
-          font-size: 24px;
-          font-weight: bold;
-          color: #3b82f6;
-          padding: 12px;
-          background: #eff6ff;
-          border-radius: 8px;
-          text-align: center;
         }
       `}</style>
     </div>

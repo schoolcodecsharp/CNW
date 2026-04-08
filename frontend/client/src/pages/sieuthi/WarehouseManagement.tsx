@@ -24,10 +24,9 @@ function WarehouseManagement() {
     try {
       setLoading(true);
       
-      // Get supermarket ID
       const sieuThiRes = await axios.get(API_ENDPOINTS.sieuThi.getAll);
       const currentSieuThi = sieuThiRes.data.data?.find(
-        st => st.maTaiKhoan === user?.maTaiKhoan
+        (st: any) => st.maTaiKhoan === user?.maTaiKhoan
       );
       
       if (!currentSieuThi) {
@@ -38,21 +37,23 @@ function WarehouseManagement() {
       setMaSieuThi(currentSieuThi.maSieuThi);
 
       // Load warehouses
-      const warehousesRes = await axios.get(`${API_ENDPOINTS.sieuThi.base}/kho/get-by-sieu-thi/${currentSieuThi.maSieuThi}`);
-      setWarehouses(warehousesRes.data.data || []);
+      const warehousesRes = await axios.get(API_ENDPOINTS.kho.getBySieuThi(currentSieuThi.maSieuThi));
+      if (warehousesRes.data.success) {
+        setWarehouses(warehousesRes.data.data || []);
+      }
 
     } catch (error) {
-      console.error('Error loading warehouses:', error);
+      console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOpenModal = (warehouse = null) => {
+  const handleOpenModal = (warehouse: any = null) => {
     if (warehouse) {
       setEditingWarehouse(warehouse);
       setFormData({
-        tenKho: warehouse.tenKho,
+        tenKho: warehouse.tenKho || '',
         diaChi: warehouse.diaChi || ''
       });
     } else {
@@ -65,71 +66,48 @@ function WarehouseManagement() {
     setShowModal(true);
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setEditingWarehouse(null);
-  };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
     
     try {
       if (editingWarehouse) {
-        // Update - gửi với PascalCase
-        const payload = {
+        const updatePayload = {
           TenKho: formData.tenKho,
-          DiaChi: formData.diaChi || null
+          DiaChi: formData.diaChi || null,
+          TrangThai: 'hoat_dong'
         };
-        await axios.put(
-          `${API_ENDPOINTS.sieuThi.base}/kho/update/${editingWarehouse.maKho}`,
-          payload
-        );
+        await axios.put(API_ENDPOINTS.kho.update(editingWarehouse.maKho), updatePayload);
         alert('✅ Cập nhật kho thành công!');
       } else {
-        // Create - gửi với PascalCase
-        const payload = {
+        const createPayload = {
           LoaiKho: 'sieuthi',
+          MaDaiLy: null,
           MaSieuThi: maSieuThi,
           TenKho: formData.tenKho,
           DiaChi: formData.diaChi || null
         };
-        await axios.post(
-          `${API_ENDPOINTS.sieuThi.base}/kho/create`,
-          payload
-        );
+        await axios.post(API_ENDPOINTS.kho.create, createPayload);
         alert('✅ Tạo kho thành công!');
       }
       
-      handleCloseModal();
+      setShowModal(false);
       await loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving warehouse:', error);
-      alert('❌ ' + (error.response?.data?.message || error.message));
+      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
     }
   };
 
-  const handleDelete = async (warehouse) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa kho "${warehouse.tenKho}"?`)) {
-      return;
-    }
-
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Bạn có chắc muốn xóa kho này?')) return;
+    
     try {
-      await axios.delete(`${API_ENDPOINTS.sieuThi.base}/kho/delete/${warehouse.maKho}`);
-      
-      // Reload danh sách ngay lập tức
-      await loadData();
-      
+      await axios.delete(API_ENDPOINTS.kho.delete(id));
       alert('✅ Xóa kho thành công!');
-    } catch (error) {
+      await loadData();
+    } catch (error: any) {
       console.error('Error deleting warehouse:', error);
-      
-      // Nếu lỗi 404 hoặc không tìm thấy nhưng thực tế đã xóa, vẫn reload
-      if (error.response?.status === 404 || error.response?.data?.message?.includes('Không tìm thấy')) {
-        await loadData();
-        alert('✅ Xóa kho thành công!');
-      } else {
-        alert('❌ ' + (error.response?.data?.message || 'Không thể xóa kho'));
-      }
+      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
     }
   };
 
@@ -140,99 +118,142 @@ function WarehouseManagement() {
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1>Quản lý kho</h1>
+        <h1>🏭 Quản lý kho</h1>
         <div className="header-actions">
-          <button className="btn btn-primary" onClick={() => handleOpenModal()}>
+          <button 
+            className="btn btn-primary" 
+            onClick={() => handleOpenModal()}
+          >
             ➕ Thêm kho
           </button>
         </div>
       </div>
 
-      {/* Warehouses Grid */}
-      <div className="warehouses-grid">
-        {warehouses.length === 0 ? (
-          <div className="empty-state">
-            <p>Bạn chưa có kho nào</p>
-            <button className="btn btn-primary" onClick={() => handleOpenModal()}>
-              Tạo kho đầu tiên
-            </button>
-          </div>
-        ) : (
-          warehouses.map((warehouse) => (
-            <div key={warehouse.maKho} className="warehouse-card">
-              <div className="warehouse-icon">🏬</div>
-              <h3>{warehouse.tenKho}</h3>
-              <div className="warehouse-details">
-                <p><strong>Địa chỉ:</strong> {warehouse.diaChi || 'Chưa cập nhật'}</p>
-                <p><strong>Trạng thái:</strong> 
-                  <span className={`badge badge-${warehouse.trangThai}`}>
-                    {warehouse.trangThai === 'hoat_dong' ? 'Hoạt động' : 'Ngừng hoạt động'}
-                  </span>
-                </p>
-                <p><strong>Tồn kho:</strong> {warehouse.tongSoLuong || 0} kg</p>
-                <p><strong>Số lô:</strong> {warehouse.tongSoLoHang || 0} lô</p>
-              </div>
-              <div className="warehouse-actions">
-                <button 
-                  className="btn-action btn-edit"
-                  onClick={() => handleOpenModal(warehouse)}
-                >
-                  ✏️ Sửa
-                </button>
-                <button 
-                  className="btn-action btn-delete"
-                  onClick={() => handleDelete(warehouse)}
-                >
-                  🗑️ Xóa
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+      {warehouses.length === 0 ? (
+        <div className="empty-state">
+          <p>Bạn chưa có kho nào</p>
+          <button className="btn btn-primary" onClick={() => handleOpenModal()}>
+            ➕ Tạo kho đầu tiên
+          </button>
+        </div>
+      ) : (
+        <div className="table-container">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Mã kho</th>
+                <th>Tên kho</th>
+                <th>Địa chỉ</th>
+                <th>Trạng thái</th>
+                <th>Ngày tạo</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              {warehouses.map((warehouse: any) => (
+                <tr key={warehouse.maKho}>
+                  <td>{warehouse.maKho}</td>
+                  <td>{warehouse.tenKho}</td>
+                  <td>{warehouse.diaChi || '-'}</td>
+                  <td>
+                    {warehouse.trangThai === 'hoat_dong' ? (
+                      <span className="badge badge-success">✅ Hoạt động</span>
+                    ) : (
+                      <span className="badge badge-secondary">⏸️ Ngừng hoạt động</span>
+                    )}
+                  </td>
+                  <td>{warehouse.ngayTao ? new Date(warehouse.ngayTao).toLocaleDateString('vi-VN') : '-'}</td>
+                  <td>
+                    <div className="action-buttons">
+                      <button 
+                        className="btn-action btn-edit"
+                        onClick={() => handleOpenModal(warehouse)}
+                      >
+                        ✏️
+                      </button>
+                      <button 
+                        className="btn-action btn-delete"
+                        onClick={() => handleDelete(warehouse.maKho)}
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-      {/* Modal */}
       {showModal && (
-        <div className="modal-overlay" onClick={handleCloseModal}>
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editingWarehouse ? 'Cập nhật kho' : 'Thêm kho mới'}</h2>
-              <button className="modal-close" onClick={handleCloseModal}>✕</button>
+              <h2>{editingWarehouse ? '✏️ Cập nhật kho' : '➕ Thêm kho mới'}</h2>
+              <button className="btn-close" onClick={() => setShowModal(false)}>✕</button>
             </div>
+            
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
                 <div className="form-group">
-                  <label>Tên kho <span className="required">*</span></label>
+                  <label>
+                    <span className="label-icon">🏭</span>
+                    Tên kho <span className="required">*</span>
+                  </label>
                   <input
                     type="text"
                     value={formData.tenKho}
                     onChange={(e) => setFormData({...formData, tenKho: e.target.value})}
                     required
                     placeholder="Nhập tên kho"
+                    className="form-control"
                   />
                 </div>
+
                 <div className="form-group">
-                  <label>Địa chỉ</label>
+                  <label>
+                    <span className="label-icon">📍</span>
+                    Địa chỉ
+                  </label>
                   <input
                     type="text"
                     value={formData.diaChi}
                     onChange={(e) => setFormData({...formData, diaChi: e.target.value})}
-                    placeholder="Nhập địa chỉ kho"
+                    placeholder="Nhập địa chỉ"
+                    className="form-control"
                   />
                 </div>
               </div>
+              
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>
-                  Hủy
+                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                  <span>✕</span> Hủy
                 </button>
                 <button type="submit" className="btn btn-primary">
-                  {editingWarehouse ? 'Cập nhật' : 'Tạo mới'}
+                  <span>{editingWarehouse ? '💾' : '➕'}</span> {editingWarehouse ? 'Cập nhật' : 'Thêm kho'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      <style>{`
+        .empty-state {
+          text-align: center;
+          padding: 60px 20px;
+          background: #f9fafb;
+          border-radius: 12px;
+          margin: 20px 0;
+        }
+
+        .empty-state p {
+          font-size: 18px;
+          color: #6b7280;
+          margin-bottom: 20px;
+        }
+      `}</style>
     </div>
   );
 }

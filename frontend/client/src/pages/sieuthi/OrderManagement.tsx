@@ -6,9 +6,7 @@ import '../../components/Common.css';
 
 function OrderManagement() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('received'); // 'received' or 'sent'
-  const [receivedOrders, setReceivedOrders] = useState([]);
-  const [sentOrders, setSentOrders] = useState([]);
+  const [allOrders, setAllOrders] = useState([]);
   const [dailyList, setDailyList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -26,7 +24,6 @@ function OrderManagement() {
     try {
       setLoading(true);
       
-      // Get supermarket ID
       const sieuThiRes = await axios.get(API_ENDPOINTS.sieuThi.getAll);
       const currentSieuThi = sieuThiRes.data.data?.find(
         (st: any) => st.maTaiKhoan === user?.maTaiKhoan
@@ -39,15 +36,9 @@ function OrderManagement() {
 
       setMaSieuThi(currentSieuThi.maSieuThi);
 
-      // Load orders received from daily (đại lý tạo đơn bán cho siêu thị)
-      const receivedRes = await axios.get(API_ENDPOINTS.donHangSieuThi.getBySieuThi(currentSieuThi.maSieuThi));
-      setReceivedOrders(receivedRes.data.data || []);
+      const ordersRes = await axios.get(API_ENDPOINTS.donHangSieuThi.getBySieuThi(currentSieuThi.maSieuThi));
+      setAllOrders(ordersRes.data.data || []);
 
-      // Load orders sent to daily (siêu thị tạo đơn mua từ đại lý)
-      // TODO: Cần API endpoint mới
-      setSentOrders([]);
-
-      // Load daily list
       const dailyRes = await axios.get(API_ENDPOINTS.daiLy.getAll);
       setDailyList(dailyRes.data.data || []);
 
@@ -77,7 +68,7 @@ function OrderManagement() {
       };
 
       await axios.post(API_ENDPOINTS.donHangSieuThi.create, payload);
-      alert('✅ Tạo đơn hàng thành công! Đang chờ đại lý xác nhận.');
+      alert('✅ Tạo đơn hàng thành công!');
       
       setShowModal(false);
       await loadData();
@@ -144,120 +135,60 @@ function OrderManagement() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="tabs">
-        <button 
-          className={`tab ${activeTab === 'received' ? 'active' : ''}`}
-          onClick={() => setActiveTab('received')}
-        >
-          📥 Đơn hàng đến ({receivedOrders.length})
-          <span className="tab-desc">Đại lý muốn bán</span>
-        </button>
-        <button 
-          className={`tab ${activeTab === 'sent' ? 'active' : ''}`}
-          onClick={() => setActiveTab('sent')}
-        >
-          📤 Đơn hàng đi ({sentOrders.length})
-          <span className="tab-desc">Tôi muốn mua</span>
-        </button>
-      </div>
-
-      {/* Tab Content: Received Orders */}
-      {activeTab === 'received' && (
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
+      <div className="table-container">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Mã ĐH</th>
+              <th>Đại lý</th>
+              <th>Ngày đặt</th>
+              <th>Tổng SL</th>
+              <th>Tổng giá trị</th>
+              <th>Trạng thái</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allOrders.length === 0 ? (
               <tr>
-                <th>Mã ĐH</th>
-                <th>Đại lý</th>
-                <th>Ngày đặt</th>
-                <th>Tổng SL</th>
-                <th>Tổng giá trị</th>
-                <th>Trạng thái</th>
-                <th>Hành động</th>
+                <td colSpan={7} className="text-center">
+                  Chưa có đơn hàng nào
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {receivedOrders.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="text-center">
-                    Chưa có đơn hàng nào từ đại lý
+            ) : (
+              allOrders.map((order: any) => (
+                <tr key={order.maDonHang}>
+                  <td>{order.maDonHang}</td>
+                  <td>{order.tenDaiLy}</td>
+                  <td>{new Date(order.ngayDat).toLocaleDateString('vi-VN')}</td>
+                  <td>{order.tongSoLuong} kg</td>
+                  <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.tongGiaTri)}</td>
+                  <td>{getStatusBadge(order.trangThai)}</td>
+                  <td>
+                    {order.trangThai === 'chua_nhan' && (
+                      <div className="action-buttons">
+                        <button 
+                          className="btn-action btn-success"
+                          onClick={() => handleAcceptOrder(order.maDonHang)}
+                        >
+                          ✓
+                        </button>
+                        <button 
+                          className="btn-action btn-danger"
+                          onClick={() => handleRejectOrder(order.maDonHang)}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
-              ) : (
-                receivedOrders.map((order: any) => (
-                  <tr key={order.maDonHang}>
-                    <td>{order.maDonHang}</td>
-                    <td>{order.tenDaiLy}</td>
-                    <td>{new Date(order.ngayDat).toLocaleDateString('vi-VN')}</td>
-                    <td>{order.tongSoLuong} kg</td>
-                    <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.tongGiaTri)}</td>
-                    <td>{getStatusBadge(order.trangThai)}</td>
-                    <td>
-                      {order.trangThai === 'chua_nhan' && (
-                        <div className="action-buttons">
-                          <button 
-                            className="btn-action btn-success"
-                            onClick={() => handleAcceptOrder(order.maDonHang)}
-                          >
-                            ✓ Chấp nhận
-                          </button>
-                          <button 
-                            className="btn-action btn-danger"
-                            onClick={() => handleRejectOrder(order.maDonHang)}
-                          >
-                            ✕ Từ chối
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
-      {/* Tab Content: Sent Orders */}
-      {activeTab === 'sent' && (
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Mã ĐH</th>
-                <th>Đại lý</th>
-                <th>Ngày đặt</th>
-                <th>Tổng SL</th>
-                <th>Tổng giá trị</th>
-                <th>Trạng thái</th>
-                <th>Ghi chú</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sentOrders.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="text-center">Chưa có đơn hàng nào</td>
-                </tr>
-              ) : (
-                sentOrders.map((order: any) => (
-                  <tr key={order.maDonHang}>
-                    <td>{order.maDonHang}</td>
-                    <td>{order.tenDaiLy}</td>
-                    <td>{new Date(order.ngayDat).toLocaleDateString('vi-VN')}</td>
-                    <td>{order.tongSoLuong} kg</td>
-                    <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.tongGiaTri)}</td>
-                    <td>{getStatusBadge(order.trangThai)}</td>
-                    <td>{order.ghiChu || '-'}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -317,45 +248,6 @@ function OrderManagement() {
       )}
 
       <style>{`
-        .tabs {
-          display: flex;
-          gap: 10px;
-          margin-bottom: 20px;
-          border-bottom: 2px solid #e5e7eb;
-        }
-
-        .tab {
-          padding: 12px 24px;
-          background: none;
-          border: none;
-          border-bottom: 3px solid transparent;
-          cursor: pointer;
-          font-size: 16px;
-          font-weight: 500;
-          color: #6b7280;
-          transition: all 0.3s;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .tab:hover {
-          color: #8b5cf6;
-          background: #f5f3ff;
-        }
-
-        .tab.active {
-          color: #8b5cf6;
-          border-bottom-color: #8b5cf6;
-        }
-
-        .tab-desc {
-          font-size: 12px;
-          font-weight: normal;
-          color: #9ca3af;
-        }
-
         .btn-success {
           background: #10b981;
           color: white;

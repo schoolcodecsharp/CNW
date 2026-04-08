@@ -5,6 +5,8 @@ import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
 import SieuThiOverview from './SieuThiOverview';
 import WarehouseManagement from './WarehouseManagement';
+import InventoryManagement from './InventoryManagement';
+import TraceabilityManagement from './TraceabilityManagement';
 import OrderManagement from './OrderManagement';
 import './SieuThiDashboard.css';
 
@@ -42,9 +44,11 @@ function SieuThiDashboard() {
   };
 
   const menuItems = [
-    { id: 'dashboard', icon: '📊', label: 'Tổng quan', path: '/sieuthi' },
-    { id: 'warehouse', icon: '🏬', label: 'Quản lý kho', path: '/sieuthi/warehouse' },
-    { id: 'orders', icon: '📦', label: 'Đơn hàng', path: '/sieuthi/orders' }
+    { id: 'dashboard', icon: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=80&h=80&fit=crop', label: 'Tổng quan', path: '/sieuthi' },
+    { id: 'orders', icon: 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=80&h=80&fit=crop', label: 'Đơn hàng', path: '/sieuthi/orders' },
+    { id: 'warehouse', icon: 'https://images.unsplash.com/photo-1553413077-190dd305871c?w=80&h=80&fit=crop', label: 'Quản lý kho', path: '/sieuthi/warehouse' },
+    { id: 'inventory', icon: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=80&h=80&fit=crop', label: 'Tồn kho', path: '/sieuthi/inventory' },
+    { id: 'traceability', icon: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=80&h=80&fit=crop', label: 'Truy xuất nguồn gốc', path: '/sieuthi/traceability' }
   ];
 
   return (
@@ -53,11 +57,11 @@ function SieuThiDashboard() {
       <aside className="sidebar">
         <div className="sidebar-header">
           <div className="logo">
-            <span className="logo-icon">🏬</span>
-            <span className="logo-text">Siêu Thị</span>
+            <img src="https://images.unsplash.com/photo-1534723452862-4c874018d66d?w=100&h=100&fit=crop" alt="Logo" className="logo-icon" />
+            <span className="logo-text" style={{ color: '#8b5cf6' }}>Siêu Thị</span>
           </div>
           <div className="user-info">
-            <div className="user-avatar">🏪</div>
+            <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop" alt="User" className="user-avatar" />
             <div className="user-details">
               <div className="user-name">{displayName}</div>
               <div className="user-role">Nhà bán lẻ</div>
@@ -73,7 +77,7 @@ function SieuThiDashboard() {
               className={`menu-item ${activeMenu === item.id ? 'active' : ''}`}
               onClick={() => setActiveMenu(item.id)}
             >
-              <span className="menu-icon">{item.icon}</span>
+              <img src={item.icon} alt={item.label} className="menu-icon" />
               <span className="menu-label">{item.label}</span>
             </Link>
           ))}
@@ -91,8 +95,10 @@ function SieuThiDashboard() {
       <main className="main-content">
         <Routes>
           <Route path="/" element={<SieuThiOverview />} />
-          <Route path="/warehouse" element={<WarehouseManagement />} />
           <Route path="/orders" element={<OrderManagement />} />
+          <Route path="/warehouse" element={<WarehouseManagement />} />
+          <Route path="/inventory" element={<InventoryManagement />} />
+          <Route path="/traceability" element={<TraceabilityManagement />} />
         </Routes>
       </main>
     </div>

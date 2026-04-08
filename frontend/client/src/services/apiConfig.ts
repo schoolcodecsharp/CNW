@@ -77,6 +77,7 @@ export const API_ENDPOINTS = {
     getAll: `${API_BASE_URLS.daily}/kho/get-all`,
     getById: (id: number) => `${API_BASE_URLS.daily}/kho/get-by-id/${id}`,
     getByDaiLy: (id: number) => `${API_BASE_URLS.daily}/kho/dai-ly/${id}`,
+    getBySieuThi: (id: number) => `${API_BASE_URLS.daily}/kho/sieu-thi/${id}`,
     create: `${API_BASE_URLS.daily}/kho/create`,
     update: (id: number) => `${API_BASE_URLS.daily}/kho/update/${id}`,
     delete: (id: number) => `${API_BASE_URLS.daily}/kho/delete/${id}`
