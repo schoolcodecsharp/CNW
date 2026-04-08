@@ -670,22 +670,26 @@ CREATE OR ALTER PROCEDURE sp_LoNongSan_Create
     @MaTrangTrai INT,
     @MaSanPham INT,
     @SoLuongBanDau DECIMAL(18,2),
-    @NgayThuHoach DATE,
-    @HanSuDung DATE,
+    @NgayThuHoach DATE = NULL,
+    @HanSuDung DATE = NULL,
     @SoChungNhanLo NVARCHAR(50) = NULL,
-    @MaQR NVARCHAR(255) = NULL,
+    @MaQR NVARCHAR(255) OUTPUT,
     @MaLo INT OUTPUT
 AS
 BEGIN
+    SET NOCOUNT ON;
     BEGIN TRY
-        INSERT INTO LoNongSan (MaTrangTrai, MaSanPham, SoLuongBanDau, SoLuongHienTai, NgayThuHoach, HanSuDung, SoChungNhanLo, MaQR, TrangThai)
-        VALUES (@MaTrangTrai, @MaSanPham, @SoLuongBanDau, @SoLuongBanDau, @NgayThuHoach, @HanSuDung, @SoChungNhanLo, @MaQR, N'tai_trang_trai');
+        -- Tạo mã QR tự động
+        SET @MaQR = 'QR-' + CAST(NEWID() AS NVARCHAR(50));
+        
+        INSERT INTO LoNongSan (MaTrangTrai, MaSanPham, SoLuongBanDau, SoLuongHienTai, NgayThuHoach, HanSuDung, SoChungNhanLo, MaQR, TrangThai, NgayTao)
+        VALUES (@MaTrangTrai, @MaSanPham, @SoLuongBanDau, @SoLuongBanDau, @NgayThuHoach, @HanSuDung, @SoChungNhanLo, @MaQR, N'tai_trang_trai', GETDATE());
         
         SET @MaLo = SCOPE_IDENTITY();
-        SELECT 'SUCCESS' AS Status, @MaLo AS MaLo;
     END TRY
     BEGIN CATCH
-        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END;
 GO
@@ -694,22 +698,28 @@ GO
 CREATE OR ALTER PROCEDURE sp_LoNongSan_Update
     @MaLo INT,
     @SoLuongHienTai DECIMAL(18,2) = NULL,
-    @TrangThai NVARCHAR(30) = NULL,
-    @HanSuDung DATE = NULL
+    @NgayThuHoach DATE = NULL,
+    @HanSuDung DATE = NULL,
+    @SoChungNhanLo NVARCHAR(50) = NULL,
+    @TrangThai NVARCHAR(30) = NULL
 AS
 BEGIN
+    SET NOCOUNT ON;
     BEGIN TRY
         UPDATE LoNongSan
         SET 
             SoLuongHienTai = ISNULL(@SoLuongHienTai, SoLuongHienTai),
-            TrangThai = ISNULL(@TrangThai, TrangThai),
-            HanSuDung = ISNULL(@HanSuDung, HanSuDung)
+            NgayThuHoach = ISNULL(@NgayThuHoach, NgayThuHoach),
+            HanSuDung = ISNULL(@HanSuDung, HanSuDung),
+            SoChungNhanLo = ISNULL(@SoChungNhanLo, SoChungNhanLo),
+            TrangThai = ISNULL(@TrangThai, TrangThai)
         WHERE MaLo = @MaLo;
         
-        SELECT 'SUCCESS' AS Status, 'Cập nhật thành công' AS Message;
+        SELECT @@ROWCOUNT AS RowsAffected;
     END TRY
     BEGIN CATCH
-        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END;
 GO
