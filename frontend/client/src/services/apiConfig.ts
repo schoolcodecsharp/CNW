@@ -127,5 +127,16 @@ export const API_ENDPOINTS = {
     create: `${API_BASE_URLS.sieuthi}/DonHangSieuThi/tao-don-hang`,
     updateTrangThai: (id: number) => `${API_BASE_URLS.sieuthi}/DonHangSieuThi/nhan-hang/${id}`,
     delete: (id: number) => `${API_BASE_URLS.sieuthi}/DonHangSieuThi/huy-don-hang/${id}`
+  },
+
+  // Ton Kho
+  tonKho: {
+    base: API_BASE_URLS.daily,
+    getAll: `${API_BASE_URLS.daily}/ton-kho/get-all`,
+    getByKho: (id: number) => `${API_BASE_URLS.daily}/ton-kho/kho/${id}`,
+    getByDaiLy: (id: number) => `${API_BASE_URLS.daily}/ton-kho/dai-ly/${id}`,
+    create: `${API_BASE_URLS.daily}/ton-kho/create`,
+    update: `${API_BASE_URLS.daily}/ton-kho/update`,
+    delete: `${API_BASE_URLS.daily}/ton-kho/delete`
   }
 };

@@ -72,6 +72,7 @@ namespace SieuThiService.Models.DTOs
         public int MaSieuThi { get; set; }
         public int MaDaiLy { get; set; }
         public string? TenSieuThi { get; set; }
+        public string? TenDaiLy { get; set; }
     }
 
     // DTO cho stored procedure sp_GetChiTietDonHangByMaDonHang

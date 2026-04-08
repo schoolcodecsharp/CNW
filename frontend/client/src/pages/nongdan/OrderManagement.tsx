@@ -6,7 +6,9 @@ import '../../components/Common.css';
 
 function OrderManagement() {
   const { user } = useAuth();
-  const [orders, setOrders] = useState([]);
+  const [activeTab, setActiveTab] = useState('received'); // 'received' or 'sent'
+  const [receivedOrders, setReceivedOrders] = useState([]);
+  const [sentOrders, setSentOrders] = useState([]);
   const [batches, setBatches] = useState([]);
   const [dailyList, setDailyList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,9 +43,13 @@ function OrderManagement() {
 
       setMaNongDan(currentFarmer.maNongDan);
 
-      // Load orders from this farmer
-      const ordersRes = await axios.get(API_ENDPOINTS.donHangDaiLy.getByNongDan(currentFarmer.maNongDan));
-      setOrders(ordersRes.data.data || []);
+      // Load orders sent by this farmer (đơn nông dân tạo)
+      const sentRes = await axios.get(API_ENDPOINTS.donHangDaiLy.getByNongDan(currentFarmer.maNongDan));
+      setSentOrders(sentRes.data.data || []);
+
+      // Load orders received (đơn đại lý tạo để mua từ nông dân)
+      // TODO: Cần API endpoint mới để lấy đơn hàng mà đại lý tạo cho nông dân này
+      setReceivedOrders([]);
 
       // Load batches (only available batches)
       const batchesRes = await axios.get(API_ENDPOINTS.loNongSan.getByNongDan(currentFarmer.maNongDan));
@@ -74,12 +80,12 @@ function OrderManagement() {
     setShowModal(true);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
     
     try {
       // Validate số lượng
-      const selectedBatch = batches.find(b => b.maLo === parseInt(formData.maLo));
+      const selectedBatch = batches.find((b: any) => b.maLo === parseInt(formData.maLo));
       if (parseFloat(formData.soLuong) > selectedBatch.soLuongHienTai) {
         alert('❌ Số lượng vượt quá số lượng hiện có của lô!');
         return;
@@ -88,9 +94,11 @@ function OrderManagement() {
       const payload = {
         MaDaiLy: parseInt(formData.maDaiLy),
         MaNongDan: maNongDan,
-        MaLo: parseInt(formData.maLo),
-        SoLuong: parseFloat(formData.soLuong),
-        DonGia: parseFloat(formData.donGia),
+        ChiTietDonHang: [{
+          MaLo: parseInt(formData.maLo),
+          SoLuong: parseFloat(formData.soLuong),
+          DonGia: parseFloat(formData.donGia)
+        }],
         GhiChu: formData.ghiChu || null
       };
 
@@ -99,14 +107,40 @@ function OrderManagement() {
       
       setShowModal(false);
       await loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating order:', error);
       alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
     }
   };
 
-  const getStatusBadge = (status) => {
-    const badges = {
+  const handleAcceptOrder = async (orderId: number) => {
+    if (!window.confirm('Bạn có chắc muốn chấp nhận đơn hàng này?')) return;
+    
+    try {
+      await axios.put(API_ENDPOINTS.donHangDaiLy.xacNhan(orderId));
+      alert('✅ Đã chấp nhận đơn hàng!');
+      await loadData();
+    } catch (error: any) {
+      console.error('Error accepting order:', error);
+      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
+    }
+  };
+
+  const handleRejectOrder = async (orderId: number) => {
+    if (!window.confirm('Bạn có chắc muốn từ chối đơn hàng này?')) return;
+    
+    try {
+      await axios.put(API_ENDPOINTS.donHangDaiLy.huyDon(orderId));
+      alert('✅ Đã từ chối đơn hàng!');
+      await loadData();
+    } catch (error: any) {
+      console.error('Error rejecting order:', error);
+      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const badges: any = {
       'chua_nhan': <span className="badge badge-warning">⏳ Chờ xác nhận</span>,
       'da_nhan': <span className="badge badge-success">✅ Đã chấp nhận</span>,
       'dang_xu_ly': <span className="badge badge-info">🔄 Đang xử lý</span>,
@@ -130,60 +164,136 @@ function OrderManagement() {
             onClick={handleOpenModal}
             disabled={batches.length === 0}
           >
-            ➕ Tạo đơn hàng mới
+            ➕ Tạo đơn bán hàng
           </button>
         </div>
       </div>
 
-      {batches.length === 0 && (
+      {/* Tabs */}
+      <div className="tabs">
+        <button 
+          className={`tab ${activeTab === 'received' ? 'active' : ''}`}
+          onClick={() => setActiveTab('received')}
+        >
+          📥 Đơn hàng đến ({receivedOrders.length})
+          <span className="tab-desc">Đại lý muốn mua</span>
+        </button>
+        <button 
+          className={`tab ${activeTab === 'sent' ? 'active' : ''}`}
+          onClick={() => setActiveTab('sent')}
+        >
+          📤 Đơn hàng đi ({sentOrders.length})
+          <span className="tab-desc">Tôi muốn bán</span>
+        </button>
+      </div>
+
+      {batches.length === 0 && activeTab === 'sent' && (
         <div className="alert alert-warning">
           ⚠️ Bạn cần có lô nông sản khả dụng để tạo đơn hàng
         </div>
       )}
 
-      <div className="table-container">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Mã ĐH</th>
-              <th>Đại lý</th>
-              <th>Ngày đặt</th>
-              <th>Ngày giao</th>
-              <th>Tổng SL</th>
-              <th>Tổng giá trị</th>
-              <th>Trạng thái</th>
-              <th>Ghi chú</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.length === 0 ? (
+      {/* Tab Content: Received Orders */}
+      {activeTab === 'received' && (
+        <div className="table-container">
+          <table className="data-table">
+            <thead>
               <tr>
-                <td colSpan={8} className="text-center">Chưa có đơn hàng nào</td>
+                <th>Mã ĐH</th>
+                <th>Đại lý</th>
+                <th>Ngày đặt</th>
+                <th>Tổng SL</th>
+                <th>Tổng giá trị</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
               </tr>
-            ) : (
-              orders.map((order) => (
-                <tr key={order.maDonHang}>
-                  <td>{order.maDonHang}</td>
-                  <td>{order.tenDaiLy}</td>
-                  <td>{new Date(order.ngayDat).toLocaleDateString('vi-VN')}</td>
-                  <td>{order.ngayGiao ? new Date(order.ngayGiao).toLocaleDateString('vi-VN') : '-'}</td>
-                  <td>{order.tongSoLuong} kg</td>
-                  <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.tongGiaTri)}</td>
-                  <td>{getStatusBadge(order.trangThai)}</td>
-                  <td>{order.ghiChu || '-'}</td>
+            </thead>
+            <tbody>
+              {receivedOrders.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center">
+                    Chưa có đơn hàng nào từ đại lý
+                  </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                receivedOrders.map((order: any) => (
+                  <tr key={order.maDonHang}>
+                    <td>{order.maDonHang}</td>
+                    <td>{order.tenDaiLy}</td>
+                    <td>{new Date(order.ngayDat).toLocaleDateString('vi-VN')}</td>
+                    <td>{order.tongSoLuong} kg</td>
+                    <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.tongGiaTri)}</td>
+                    <td>{getStatusBadge(order.trangThai)}</td>
+                    <td>
+                      {order.trangThai === 'chua_nhan' && (
+                        <div className="action-buttons">
+                          <button 
+                            className="btn-action btn-success"
+                            onClick={() => handleAcceptOrder(order.maDonHang)}
+                          >
+                            ✓ Chấp nhận
+                          </button>
+                          <button 
+                            className="btn-action btn-danger"
+                            onClick={() => handleRejectOrder(order.maDonHang)}
+                          >
+                            ✕ Từ chối
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Tab Content: Sent Orders */}
+      {activeTab === 'sent' && (
+        <div className="table-container">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Mã ĐH</th>
+                <th>Đại lý</th>
+                <th>Ngày đặt</th>
+                <th>Tổng SL</th>
+                <th>Tổng giá trị</th>
+                <th>Trạng thái</th>
+                <th>Ghi chú</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sentOrders.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center">Chưa có đơn hàng nào</td>
+                </tr>
+              ) : (
+                sentOrders.map((order: any) => (
+                  <tr key={order.maDonHang}>
+                    <td>{order.maDonHang}</td>
+                    <td>{order.tenDaiLy}</td>
+                    <td>{new Date(order.ngayDat).toLocaleDateString('vi-VN')}</td>
+                    <td>{order.tongSoLuong} kg</td>
+                    <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.tongGiaTri)}</td>
+                    <td>{getStatusBadge(order.trangThai)}</td>
+                    <td>{order.ghiChu || '-'}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>➕ Tạo đơn hàng mới</h2>
+              <h2>➕ Tạo đơn bán hàng cho đại lý</h2>
               <button className="btn-close" onClick={() => setShowModal(false)}>✕</button>
             </div>
             
@@ -201,7 +311,7 @@ function OrderManagement() {
                     className="form-control"
                   >
                     <option value="">-- Chọn đại lý --</option>
-                    {dailyList.map(daily => (
+                    {dailyList.map((daily: any) => (
                       <option key={daily.maDaiLy} value={daily.maDaiLy}>
                         {daily.tenDaiLy}
                       </option>
@@ -221,7 +331,7 @@ function OrderManagement() {
                     className="form-control"
                   >
                     <option value="">-- Chọn lô nông sản --</option>
-                    {batches.map(batch => (
+                    {batches.map((batch: any) => (
                       <option key={batch.maLo} value={batch.maLo}>
                         {batch.tenSanPham} - {batch.tenTrangTrai} (Còn: {batch.soLuongHienTai} kg)
                       </option>
@@ -301,6 +411,45 @@ function OrderManagement() {
       )}
 
       <style>{`
+        .tabs {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 20px;
+          border-bottom: 2px solid #e5e7eb;
+        }
+
+        .tab {
+          padding: 12px 24px;
+          background: none;
+          border: none;
+          border-bottom: 3px solid transparent;
+          cursor: pointer;
+          font-size: 16px;
+          font-weight: 500;
+          color: #6b7280;
+          transition: all 0.3s;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .tab:hover {
+          color: #10b981;
+          background: #f0fdf4;
+        }
+
+        .tab.active {
+          color: #10b981;
+          border-bottom-color: #10b981;
+        }
+
+        .tab-desc {
+          font-size: 12px;
+          font-weight: normal;
+          color: #9ca3af;
+        }
+
         .total-value {
           font-size: 24px;
           font-weight: bold;
@@ -309,6 +458,34 @@ function OrderManagement() {
           background: #f0fdf4;
           border-radius: 8px;
           text-align: center;
+        }
+
+        .btn-success {
+          background: #10b981;
+          color: white;
+          padding: 6px 12px;
+          border-radius: 6px;
+          border: none;
+          cursor: pointer;
+          font-size: 14px;
+        }
+
+        .btn-success:hover {
+          background: #059669;
+        }
+
+        .btn-danger {
+          background: #ef4444;
+          color: white;
+          padding: 6px 12px;
+          border-radius: 6px;
+          border: none;
+          cursor: pointer;
+          font-size: 14px;
+        }
+
+        .btn-danger:hover {
+          background: #dc2626;
         }
       `}</style>
     </div>
