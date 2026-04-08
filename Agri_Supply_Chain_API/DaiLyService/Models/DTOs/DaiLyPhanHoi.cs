@@ -3,6 +3,7 @@
     public class DaiLyPhanHoi
     {
         public int MaDaiLy { get; set; }
+        public int MaTaiKhoan { get; set; }        // Thêm MaTaiKhoan
         public string? TenDaiLy { get; set; }
         public string? SoDienThoai { get; set; }
         public string? Email { get; set; }

@@ -85,11 +85,22 @@ namespace DaiLyService.Controllers
         {
             try
             {
+                // Debug logging
+                Console.WriteLine($"=== CREATE KHO DEBUG ===");
+                Console.WriteLine($"LoaiKho: {dto.LoaiKho}");
+                Console.WriteLine($"MaDaiLy: {dto.MaDaiLy}");
+                Console.WriteLine($"MaSieuThi: {dto.MaSieuThi}");
+                Console.WriteLine($"TenKho: {dto.TenKho}");
+                Console.WriteLine($"DiaChi: {dto.DiaChi}");
+                Console.WriteLine($"========================");
+                
                 var newId = _khoService.Create(dto);
                 return Ok(new { success = true, message = "Tạo kho thành công", data = new { maKho = newId } });
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"ERROR: {ex.Message}");
+                Console.WriteLine($"STACK: {ex.StackTrace}");
                 return BadRequest(new { success = false, message = ex.Message });
             }
         }

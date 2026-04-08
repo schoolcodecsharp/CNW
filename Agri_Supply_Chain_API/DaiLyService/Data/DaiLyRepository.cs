@@ -126,6 +126,7 @@ namespace DaiLyService.Data
             return new DaiLyPhanHoi
             {
                 MaDaiLy = (int)reader["MaDaiLy"],
+                MaTaiKhoan = (int)reader["MaTaiKhoan"],  // Thêm mapping MaTaiKhoan
                 TenDaiLy = reader["TenDaiLy"] as string,
                 SoDienThoai = reader["SoDienThoai"] as string,
                 Email = reader["Email"] as string,

@@ -33,7 +33,12 @@ builder.Services.AddScoped<ITonKhoService, TonKhoService>();
 // ====================
 
 // Controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Serialize to camelCase for frontend
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    });
 
 // Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
