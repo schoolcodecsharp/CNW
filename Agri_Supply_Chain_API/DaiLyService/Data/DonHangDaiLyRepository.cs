@@ -202,6 +202,7 @@ namespace DaiLyService.Data
                 MaDaiLy = (int)reader["MaDaiLy"],
                 MaNongDan = (int)reader["MaNongDan"],
                 TenNongDan = reader["TenNongDan"] as string,
+                TenDaiLy = reader["TenDaiLy"] as string,
                 NgayDat = reader["NgayDat"] as DateTime?,
                 NgayGiao = reader["NgayGiao"] as DateTime?,
                 TrangThai = reader["TrangThai"] as string,

@@ -2390,14 +2390,55 @@ CREATE OR ALTER PROCEDURE sp_ChiTietDonHang_Create
     @ThanhTien DECIMAL(18,2) = NULL
 AS
 BEGIN
+    SET NOCOUNT ON;
     BEGIN TRY
-        INSERT INTO ChiTietDonHang (MaDonHang, MaLo, SoLuong, DonGia, ThanhTien)
-        VALUES (@MaDonHang, @MaLo, @SoLuong, @DonGia, @ThanhTien)
+        BEGIN TRANSACTION;
         
-        SELECT 'Success' AS Status, 'Tạo chi tiết đơn hàng thành công' AS Message
+        -- Tính ThanhTien nếu chưa có
+        IF @ThanhTien IS NULL AND @DonGia IS NOT NULL
+            SET @ThanhTien = @SoLuong * @DonGia;
+        
+        -- Kiểm tra số lượng hiện tại trong lô
+        DECLARE @SoLuongHienTai DECIMAL(18,2);
+        SELECT @SoLuongHienTai = SoLuongHienTai 
+        FROM LoNongSan 
+        WHERE MaLo = @MaLo;
+        
+        IF @SoLuongHienTai IS NULL
+        BEGIN
+            ROLLBACK TRANSACTION;
+            RAISERROR(N'Không tìm thấy lô nông sản', 16, 1);
+            RETURN;
+        END
+        
+        IF @SoLuongHienTai < @SoLuong
+        BEGIN
+            ROLLBACK TRANSACTION;
+            RAISERROR(N'Số lượng trong lô không đủ', 16, 1);
+            RETURN;
+        END
+        
+        -- Thêm chi tiết đơn hàng
+        INSERT INTO ChiTietDonHang (MaDonHang, MaLo, SoLuong, DonGia, ThanhTien)
+        VALUES (@MaDonHang, @MaLo, @SoLuong, @DonGia, @ThanhTien);
+        
+        -- Trừ số lượng trong lô
+        UPDATE LoNongSan
+        SET SoLuongHienTai = SoLuongHienTai - @SoLuong
+        WHERE MaLo = @MaLo;
+        
+        -- Cập nhật trạng thái lô nếu hết hàng
+        UPDATE LoNongSan
+        SET TrangThai = N'da_ban_het'
+        WHERE MaLo = @MaLo AND SoLuongHienTai <= 0;
+        
+        COMMIT TRANSACTION;
+        SELECT 'Success' AS Status, N'Tạo chi tiết đơn hàng thành công' AS Message;
     END TRY
     BEGIN CATCH
-        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message;
     END CATCH
 END
 GO

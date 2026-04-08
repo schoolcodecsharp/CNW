@@ -6,6 +6,7 @@ namespace DaiLyService.Models.DTOs
         public int MaDaiLy { get; set; }
         public int MaNongDan { get; set; }
         public string? TenNongDan { get; set; }
+        public string? TenDaiLy { get; set; }
         public DateTime? NgayDat { get; set; }
         public DateTime? NgayGiao { get; set; }
         public string? TrangThai { get; set; }
