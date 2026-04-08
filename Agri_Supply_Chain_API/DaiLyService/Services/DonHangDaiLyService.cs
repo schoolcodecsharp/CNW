@@ -26,5 +26,11 @@ namespace DaiLyService.Services
             => _repo.UpdateTrangThai(maDonHang, dto);
 
         public bool Delete(int maDonHang) => _repo.Delete(maDonHang);
+
+        public bool XacNhanDon(int maDonHang) => _repo.XacNhanDon(maDonHang);
+
+        public bool HuyDon(int maDonHang) => _repo.HuyDon(maDonHang);
+
+        public bool XuatDon(int maDonHang, XuatDonRequest request) => _repo.XuatDon(maDonHang, request);
     }
 }

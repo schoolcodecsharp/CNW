@@ -135,5 +135,65 @@ namespace DaiLyService.Controllers
                 data = (object?)null
             });
         }
+
+        // PUT: api/don-hang-dai-ly/xac-nhan/5
+        [HttpPut("xac-nhan/{id}")]
+        public IActionResult XacNhanDon(int id)
+        {
+            try
+            {
+                if (id <= 0) return BadRequest(new { success = false, message = "ID đơn hàng không hợp lệ" });
+
+                bool result = _donHangService.XacNhanDon(id);
+
+                if (!result) return NotFound(new { success = false, message = "Không tìm thấy đơn hàng để xác nhận" });
+
+                return Ok(new { success = true, message = "Đã chấp nhận đơn hàng thành công" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        // PUT: api/don-hang-dai-ly/huy-don/5
+        [HttpPut("huy-don/{id}")]
+        public IActionResult HuyDon(int id)
+        {
+            try
+            {
+                if (id <= 0) return BadRequest(new { success = false, message = "ID đơn hàng không hợp lệ" });
+
+                bool result = _donHangService.HuyDon(id);
+
+                if (!result) return NotFound(new { success = false, message = "Không tìm thấy đơn hàng để hủy" });
+
+                return Ok(new { success = true, message = "Đã từ chối đơn hàng thành công" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        // PUT: api/don-hang-dai-ly/xuat-don/5
+        [HttpPut("xuat-don/{id}")]
+        public IActionResult XuatDon(int id, [FromBody] XuatDonRequest request)
+        {
+            try
+            {
+                if (id <= 0) return BadRequest(new { success = false, message = "ID đơn hàng không hợp lệ" });
+
+                bool result = _donHangService.XuatDon(id, request);
+
+                if (!result) return NotFound(new { success = false, message = "Không thể xuất đơn hàng" });
+
+                return Ok(new { success = true, message = "Xuất đơn hàng thành công" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
     }
 }
