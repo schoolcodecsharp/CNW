@@ -13,6 +13,7 @@ namespace SieuThiService.Models.DTOs
         public decimal? TongGiaTri { get; set; }
         public string? GhiChu { get; set; }
         public string? TenSieuThi { get; set; }
+        public string? TenDaiLy { get; set; }  // Thêm TenDaiLy
         public List<ChiTietDonHangResponse> ChiTietDonHangs { get; set; } = new List<ChiTietDonHangResponse>();
     }
 

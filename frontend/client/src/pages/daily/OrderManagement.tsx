@@ -38,28 +38,43 @@ function OrderManagement() {
     try {
       setLoading(true);
       
+      console.log('[OrderManagement] Loading data...');
+      console.log('[OrderManagement] User:', user);
+      
       const dailyRes = await axios.get(API_ENDPOINTS.daiLy.getAll);
+      console.log('[OrderManagement] DaiLy response:', dailyRes.data);
+      
       const currentDaily = dailyRes.data.data?.find(
         (dl: any) => dl.maTaiKhoan === user?.maTaiKhoan
       );
       
+      console.log('[OrderManagement] Current Daily:', currentDaily);
+      
       if (!currentDaily) {
+        console.error('[OrderManagement] Không tìm thấy đại lý với maTaiKhoan:', user?.maTaiKhoan);
         setLoading(false);
         return;
       }
 
       setMaDaiLy(currentDaily.maDaiLy);
+      console.log('[OrderManagement] MaDaiLy:', currentDaily.maDaiLy);
 
       // Load orders from farmers
+      console.log('[OrderManagement] Loading orders from farmers...');
       const farmersRes = await axios.get(API_ENDPOINTS.donHangDaiLy.getByDaiLy(currentDaily.maDaiLy));
+      console.log('[OrderManagement] Farmers orders response:', farmersRes.data);
       const ordersFromFarmers = (farmersRes.data.data || []).map((o: any) => ({...o, loaiDon: 'Từ nông dân'}));
 
       // Load orders to supermarkets
+      console.log('[OrderManagement] Loading orders to supermarkets...');
       const supermarketsRes = await axios.get(API_ENDPOINTS.donHangSieuThi.getByDaiLy(currentDaily.maDaiLy));
+      console.log('[OrderManagement] Supermarkets orders response:', supermarketsRes.data);
       const ordersToSupermarkets = (supermarketsRes.data.data || []).map((o: any) => ({...o, loaiDon: 'Bán cho siêu thị'}));
 
       // Combine all orders
-      setAllOrders([...ordersFromFarmers, ...ordersToSupermarkets]);
+      const combinedOrders = [...ordersFromFarmers, ...ordersToSupermarkets];
+      console.log('[OrderManagement] Combined orders:', combinedOrders);
+      setAllOrders(combinedOrders);
 
       // Load nongdan list
       const nongdanRes = await axios.get(API_ENDPOINTS.nongDan.getAll);
@@ -70,11 +85,13 @@ function OrderManagement() {
       const availableBatches = (allBatchesRes.data.data || []).filter((b: any) => 
         b.trangThai === 'tai_trang_trai' && b.soLuongHienTai > 0
       );
+      console.log('[OrderManagement] Available batches:', availableBatches.length);
       setBatches(availableBatches);
 
       // Load ton kho
       const tonKhoRes = await axios.get(API_ENDPOINTS.tonKho.getByDaiLy(currentDaily.maDaiLy));
       const availableTonKho = (tonKhoRes.data.data || []).filter((tk: any) => tk.soLuong > 0);
+      console.log('[OrderManagement] Available ton kho:', availableTonKho.length);
       setTonKho(availableTonKho);
 
       // Load sieuthi list

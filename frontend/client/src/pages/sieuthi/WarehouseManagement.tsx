@@ -10,7 +10,7 @@ function WarehouseManagement() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingWarehouse, setEditingWarehouse] = useState(null);
-  const [maSieuThi, setMaSieuThi] = useState(null);
+  const [maSieuThi, setMaSieuThi] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     tenKho: '',
     diaChi: ''
@@ -18,26 +18,43 @@ function WarehouseManagement() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [user]);
 
   const loadData = async () => {
     try {
       setLoading(true);
       
-      const sieuThiRes = await axios.get(API_ENDPOINTS.sieuThi.getAll);
-      const currentSieuThi = sieuThiRes.data.data?.find(
-        (st: any) => st.maTaiKhoan === user?.maTaiKhoan
-      );
-      
-      if (!currentSieuThi) {
+      if (!user || !user.maTaiKhoan) {
+        console.error('User not logged in or missing maTaiKhoan');
         setLoading(false);
         return;
       }
 
+      // Get sieuthi ID by MaTaiKhoan
+      const sieuThiRes = await axios.get(API_ENDPOINTS.sieuThi.getAll);
+      
+      if (!sieuThiRes.data.success || !sieuThiRes.data.data) {
+        console.error('Failed to load sieuthi');
+        setLoading(false);
+        return;
+      }
+
+      const currentSieuThi = sieuThiRes.data.data.find(
+        (st: any) => st.maTaiKhoan === user.maTaiKhoan
+      );
+      
+      if (!currentSieuThi) {
+        console.error('Current sieuthi not found for maTaiKhoan:', user.maTaiKhoan);
+        setLoading(false);
+        return;
+      }
+
+      console.log('Found sieuthi:', currentSieuThi);
       setMaSieuThi(currentSieuThi.maSieuThi);
 
-      // Load warehouses
+      // Load warehouses for this sieuthi
       const warehousesRes = await axios.get(API_ENDPOINTS.kho.getBySieuThi(currentSieuThi.maSieuThi));
+      
       if (warehousesRes.data.success) {
         setWarehouses(warehousesRes.data.data || []);
       }
@@ -69,24 +86,37 @@ function WarehouseManagement() {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     
+    if (!maSieuThi) {
+      alert('Không tìm thấy thông tin siêu thị. Vui lòng đăng nhập lại.');
+      return;
+    }
+    
     try {
       if (editingWarehouse) {
-        const updatePayload = {
-          TenKho: formData.tenKho,
-          DiaChi: formData.diaChi || null,
-          TrangThai: 'hoat_dong'
-        };
-        await axios.put(API_ENDPOINTS.kho.update(editingWarehouse.maKho), updatePayload);
+        // Update
+        await axios.put(
+          API_ENDPOINTS.kho.update(editingWarehouse.maKho),
+          {
+            TenKho: formData.tenKho,
+            DiaChi: formData.diaChi || null,
+            TrangThai: 'hoat_dong'
+          }
+        );
         alert('✅ Cập nhật kho thành công!');
       } else {
-        const createPayload = {
-          LoaiKho: 'sieuthi',
-          MaDaiLy: null,
-          MaSieuThi: maSieuThi,
-          TenKho: formData.tenKho,
-          DiaChi: formData.diaChi || null
-        };
-        await axios.post(API_ENDPOINTS.kho.create, createPayload);
+        // Create - Sử dụng PascalCase để khớp với backend DTO
+        console.log('Creating warehouse with MaSieuThi:', maSieuThi);
+        const response = await axios.post(
+          API_ENDPOINTS.kho.create,
+          {
+            LoaiKho: 'sieuthi',
+            MaDaiLy: null,
+            MaSieuThi: maSieuThi,
+            TenKho: formData.tenKho,
+            DiaChi: formData.diaChi || null
+          }
+        );
+        console.log('Create response:', response.data);
         alert('✅ Tạo kho thành công!');
       }
       
@@ -94,7 +124,8 @@ function WarehouseManagement() {
       await loadData();
     } catch (error: any) {
       console.error('Error saving warehouse:', error);
-      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
+      console.error('Error response:', error.response?.data);
+      alert('❌ Có lỗi xảy ra: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -113,6 +144,16 @@ function WarehouseManagement() {
 
   if (loading) {
     return <div className="loading">Đang tải danh sách kho...</div>;
+  }
+
+  if (!maSieuThi) {
+    return (
+      <div className="page-container">
+        <div className="empty-state">
+          <p>Không tìm thấy thông tin siêu thị. Vui lòng đăng nhập lại.</p>
+        </div>
+      </div>
+    );
   }
 
   return (

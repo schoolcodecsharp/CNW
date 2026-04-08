@@ -10,7 +10,9 @@ function WarehouseManagement() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingWarehouse, setEditingWarehouse] = useState(null);
-  const [maDaiLy, setMaDaiLy] = useState(null);
+  const [maDaiLy, setMaDaiLy] = useState<number | null>(null);
+  const [expandedWarehouses, setExpandedWarehouses] = useState<Set<number>>(new Set());
+  const [warehouseInventory, setWarehouseInventory] = useState<{[key: number]: any[]}>({});
   const [formData, setFormData] = useState({
     tenKho: '',
     diaChi: ''
@@ -18,25 +20,43 @@ function WarehouseManagement() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [user]);
 
   const loadData = async () => {
     try {
       setLoading(true);
       
-      const dailyRes = await axios.get(API_ENDPOINTS.daiLy.getAll);
-      const currentDaily = dailyRes.data.data?.find(
-        (dl: any) => dl.maTaiKhoan === user?.maTaiKhoan
-      );
-      
-      if (!currentDaily) {
+      if (!user || !user.maTaiKhoan) {
+        console.error('User not logged in or missing maTaiKhoan');
         setLoading(false);
         return;
       }
 
-      setMaDaiLy(currentDaily.maDaiLy);
+      // Get daily ID by MaTaiKhoan
+      const dailyRes = await axios.get(API_ENDPOINTS.daiLy.getAll);
+      
+      if (!dailyRes.data.success || !dailyRes.data.data) {
+        console.error('Failed to load daily');
+        setLoading(false);
+        return;
+      }
 
-      const warehousesRes = await axios.get(API_ENDPOINTS.kho.getByDaiLy(currentDaily.maDaiLy));
+      const currentDaily = dailyRes.data.data.find(
+        (dl: any) => dl.maTaiKhoan === user.maTaiKhoan
+      );
+      
+      if (!currentDaily) {
+        console.error('Current daily not found for maTaiKhoan:', user.maTaiKhoan);
+        setLoading(false);
+        return;
+      }
+
+      const maDaiLyValue = currentDaily.maDaiLy || currentDaily.MaDaiLy;
+      setMaDaiLy(maDaiLyValue);
+
+      // Load warehouses for this daily
+      const warehousesRes = await axios.get(API_ENDPOINTS.kho.getByDaiLy(maDaiLyValue));
+      
       if (warehousesRes.data.success) {
         setWarehouses(warehousesRes.data.data || []);
       }
@@ -46,6 +66,34 @@ function WarehouseManagement() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadWarehouseInventory = async (maKho: number) => {
+    try {
+      const response = await axios.get(API_ENDPOINTS.tonKho.getByKho(maKho));
+      if (response.data.success) {
+        setWarehouseInventory(prev => ({
+          ...prev,
+          [maKho]: response.data.data || []
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading warehouse inventory:', error);
+    }
+  };
+
+  const toggleWarehouse = async (maKho: number) => {
+    const newExpanded = new Set(expandedWarehouses);
+    if (newExpanded.has(maKho)) {
+      newExpanded.delete(maKho);
+    } else {
+      newExpanded.add(maKho);
+      // Load inventory if not loaded yet
+      if (!warehouseInventory[maKho]) {
+        await loadWarehouseInventory(maKho);
+      }
+    }
+    setExpandedWarehouses(newExpanded);
   };
 
   const handleOpenModal = (warehouse: any = null) => {
@@ -68,24 +116,37 @@ function WarehouseManagement() {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     
+    if (!maDaiLy) {
+      alert('Không tìm thấy thông tin đại lý. Vui lòng đăng nhập lại.');
+      return;
+    }
+    
     try {
       if (editingWarehouse) {
-        const updatePayload = {
-          TenKho: formData.tenKho,
-          DiaChi: formData.diaChi || null,
-          TrangThai: 'hoat_dong'
-        };
-        await axios.put(API_ENDPOINTS.kho.update(editingWarehouse.maKho), updatePayload);
+        // Update
+        await axios.put(
+          API_ENDPOINTS.kho.update(editingWarehouse.maKho),
+          {
+            TenKho: formData.tenKho,
+            DiaChi: formData.diaChi || null,
+            TrangThai: 'hoat_dong'
+          }
+        );
         alert('✅ Cập nhật kho thành công!');
       } else {
-        const createPayload = {
-          LoaiKho: 'daily',
-          MaDaiLy: maDaiLy,
-          MaSieuThi: null,
-          TenKho: formData.tenKho,
-          DiaChi: formData.diaChi || null
-        };
-        await axios.post(API_ENDPOINTS.kho.create, createPayload);
+        // Create - Sử dụng PascalCase để khớp với backend DTO
+        console.log('Creating warehouse with MaDaiLy:', maDaiLy);
+        const response = await axios.post(
+          API_ENDPOINTS.kho.create,
+          {
+            LoaiKho: 'daily',
+            MaDaiLy: maDaiLy,
+            MaSieuThi: null,
+            TenKho: formData.tenKho,
+            DiaChi: formData.diaChi || null
+          }
+        );
+        console.log('Create response:', response.data);
         alert('✅ Tạo kho thành công!');
       }
       
@@ -93,7 +154,8 @@ function WarehouseManagement() {
       await loadData();
     } catch (error: any) {
       console.error('Error saving warehouse:', error);
-      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
+      console.error('Error response:', error.response?.data);
+      alert('❌ Có lỗi xảy ra: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -112,6 +174,16 @@ function WarehouseManagement() {
 
   if (loading) {
     return <div className="loading">Đang tải danh sách kho...</div>;
+  }
+
+  if (!maDaiLy) {
+    return (
+      <div className="page-container">
+        <div className="empty-state">
+          <p>Không tìm thấy thông tin đại lý. Vui lòng đăng nhập lại.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -136,52 +208,104 @@ function WarehouseManagement() {
           </button>
         </div>
       ) : (
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Mã kho</th>
-                <th>Tên kho</th>
-                <th>Địa chỉ</th>
-                <th>Trạng thái</th>
-                <th>Ngày tạo</th>
-                <th>Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              {warehouses.map((warehouse: any) => (
-                <tr key={warehouse.maKho}>
-                  <td>{warehouse.maKho}</td>
-                  <td>{warehouse.tenKho}</td>
-                  <td>{warehouse.diaChi || '-'}</td>
-                  <td>
-                    {warehouse.trangThai === 'hoat_dong' ? (
-                      <span className="badge badge-success">✅ Hoạt động</span>
-                    ) : (
-                      <span className="badge badge-secondary">⏸️ Ngừng hoạt động</span>
-                    )}
-                  </td>
-                  <td>{warehouse.ngayTao ? new Date(warehouse.ngayTao).toLocaleDateString('vi-VN') : '-'}</td>
-                  <td>
-                    <div className="action-buttons">
-                      <button 
-                        className="btn-action btn-edit"
-                        onClick={() => handleOpenModal(warehouse)}
-                      >
-                        ✏️
-                      </button>
-                      <button 
-                        className="btn-action btn-delete"
-                        onClick={() => handleDelete(warehouse.maKho)}
-                      >
-                        🗑️
-                      </button>
+        <div className="warehouse-list">
+          {warehouses.map((warehouse: any) => (
+            <div key={warehouse.maKho} className="warehouse-card">
+              <div className="warehouse-header" onClick={() => toggleWarehouse(warehouse.maKho)}>
+                <div className="warehouse-info">
+                  <div className="warehouse-title">
+                    <span className="expand-icon">
+                      {expandedWarehouses.has(warehouse.maKho) ? '▼' : '▶'}
+                    </span>
+                    <h3>🏭 {warehouse.tenKho}</h3>
+                    <span className="warehouse-id">#{warehouse.maKho}</span>
+                  </div>
+                  <div className="warehouse-details">
+                    <span className="detail-item">
+                      📍 {warehouse.diaChi || 'Chưa có địa chỉ'}
+                    </span>
+                    <span className="detail-item">
+                      {warehouse.trangThai === 'hoat_dong' ? (
+                        <span className="badge badge-success">✅ Hoạt động</span>
+                      ) : (
+                        <span className="badge badge-secondary">⏸️ Ngừng hoạt động</span>
+                      )}
+                    </span>
+                    <span className="detail-item">
+                      📅 {warehouse.ngayTao ? new Date(warehouse.ngayTao).toLocaleDateString('vi-VN') : '-'}
+                    </span>
+                  </div>
+                </div>
+                <div className="warehouse-actions" onClick={(e) => e.stopPropagation()}>
+                  <button 
+                    className="btn-action btn-edit"
+                    onClick={() => handleOpenModal(warehouse)}
+                    title="Chỉnh sửa kho"
+                  >
+                    ✏️
+                  </button>
+                  <button 
+                    className="btn-action btn-delete"
+                    onClick={() => handleDelete(warehouse.maKho)}
+                    title="Xóa kho"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+
+              {expandedWarehouses.has(warehouse.maKho) && (
+                <div className="warehouse-inventory">
+                  <h4>📦 Tồn kho</h4>
+                  {!warehouseInventory[warehouse.maKho] ? (
+                    <div className="loading-inventory">Đang tải...</div>
+                  ) : warehouseInventory[warehouse.maKho].length === 0 ? (
+                    <div className="empty-inventory">
+                      <p>Kho này chưa có hàng</p>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  ) : (
+                    <div className="inventory-table-container">
+                      <table className="inventory-table">
+                        <thead>
+                          <tr>
+                            <th>Mã lô</th>
+                            <th>Sản phẩm</th>
+                            <th>Mã QR</th>
+                            <th>Số lượng tồn</th>
+                            <th>Cập nhật cuối</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {warehouseInventory[warehouse.maKho].map((item: any) => (
+                            <tr key={item.maLo}>
+                              <td>
+                                <span className="batch-id">#{item.maLo}</span>
+                              </td>
+                              <td>
+                                <strong>{item.tenSanPham || 'N/A'}</strong>
+                              </td>
+                              <td>
+                                <code className="qr-code">{item.maQR || 'N/A'}</code>
+                              </td>
+                              <td>
+                                <span className="quantity">{item.soLuong} kg</span>
+                              </td>
+                              <td>
+                                {item.capNhatCuoi 
+                                  ? new Date(item.capNhatCuoi).toLocaleString('vi-VN')
+                                  : '-'
+                                }
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
 

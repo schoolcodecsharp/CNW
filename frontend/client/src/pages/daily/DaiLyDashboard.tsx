@@ -7,6 +7,7 @@ import DaiLyOverview from './DaiLyOverview';
 import WarehouseManagement from './WarehouseManagement';
 import InventoryManagement from './InventoryManagement';
 import OrderManagement from './OrderManagement';
+import TestKho from './TestKho';
 import './DaiLyDashboard.css';
 
 function DaiLyDashboard() {
@@ -96,6 +97,7 @@ function DaiLyDashboard() {
           <Route path="/warehouse" element={<WarehouseManagement />} />
           <Route path="/inventory" element={<InventoryManagement />} />
           <Route path="/orders" element={<OrderManagement />} />
+          <Route path="/test-kho" element={<TestKho />} />
         </Routes>
       </main>
     </div>
