@@ -1744,6 +1744,60 @@ BEGIN
 END
 GO
 
+-- GetByMaDaiLy: Lấy danh sách kho theo đại lý
+CREATE OR ALTER PROCEDURE sp_Kho_GetByMaDaiLy
+    @MaDaiLy INT
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaKho,
+            LoaiKho,
+            MaDaiLy,
+            MaSieuThi,
+            TenKho,
+            DiaChi,
+            TrangThai,
+            NgayTao
+        FROM Kho
+        WHERE MaDaiLy = @MaDaiLy
+        ORDER BY NgayTao DESC
+        
+        SELECT 'Success' AS Status, N'Lấy danh sách kho thành công' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
+-- GetByMaSieuThi: Lấy danh sách kho theo siêu thị
+CREATE OR ALTER PROCEDURE sp_Kho_GetByMaSieuThi
+    @MaSieuThi INT
+AS
+BEGIN
+    BEGIN TRY
+        SELECT 
+            MaKho,
+            LoaiKho,
+            MaDaiLy,
+            MaSieuThi,
+            TenKho,
+            DiaChi,
+            TrangThai,
+            NgayTao
+        FROM Kho
+        WHERE MaSieuThi = @MaSieuThi
+        ORDER BY NgayTao DESC
+        
+        SELECT 'Success' AS Status, N'Lấy danh sách kho thành công' AS Message
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+    END CATCH
+END
+GO
+
 -- Search: Tìm kiếm kho theo loại hoặc tên
 CREATE OR ALTER PROCEDURE sp_Kho_Search
     @SearchText NVARCHAR(100)

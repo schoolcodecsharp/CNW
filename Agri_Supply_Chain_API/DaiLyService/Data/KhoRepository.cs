@@ -67,6 +67,26 @@ namespace DaiLyService.Data
             return list;
         }
 
+        public List<KhoDTO> GetByMaSieuThi(int maSieuThi)
+        {
+            var list = new List<KhoDTO>();
+
+            using var conn = new SqlConnection(_connectionString);
+            using var cmd = new SqlCommand("sp_Kho_GetByMaSieuThi", conn);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@MaSieuThi", maSieuThi);
+
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                list.Add(MapToDto(reader));
+            }
+
+            return list;
+        }
+
         public int Create(KhoCreateDTO dto)
         {
             using var conn = new SqlConnection(_connectionString);

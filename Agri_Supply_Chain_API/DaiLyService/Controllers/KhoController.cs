@@ -19,60 +19,117 @@ namespace DaiLyService.Controllers
         [HttpGet("get-all")]
         public IActionResult GetAll()
         {
-            var data = _khoService.GetAll();
-            return Ok(data);
+            try
+            {
+                var data = _khoService.GetAll();
+                return Ok(new { success = true, message = "Lấy danh sách kho thành công", data });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
-        // GET: api/kho/5
+        // GET: api/kho/{id}
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
-            var result = _khoService.GetById(id);
+            try
+            {
+                var result = _khoService.GetById(id);
 
-            if (result == null)
-                return NotFound();
+                if (result == null)
+                    return NotFound(new { success = false, message = "Không tìm thấy kho" });
 
-            return Ok(result);
+                return Ok(new { success = true, message = "Lấy thông tin kho thành công", data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
-        // GET: api/kho/dai-ly/5
+        // GET: api/kho/dai-ly/{maDaiLy}
         [HttpGet("dai-ly/{maDaiLy}")]
         public IActionResult GetByMaDaiLy(int maDaiLy)
         {
-            var data = _khoService.GetByMaDaiLy(maDaiLy);
-            return Ok(data);
+            try
+            {
+                var data = _khoService.GetByMaDaiLy(maDaiLy);
+                return Ok(new { success = true, message = "Lấy danh sách kho thành công", data });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        // GET: api/kho/sieu-thi/{maSieuThi}
+        [HttpGet("sieu-thi/{maSieuThi}")]
+        public IActionResult GetByMaSieuThi(int maSieuThi)
+        {
+            try
+            {
+                var data = _khoService.GetByMaSieuThi(maSieuThi);
+                return Ok(new { success = true, message = "Lấy danh sách kho thành công", data });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         // POST: api/kho/create
         [HttpPost("create")]
-        public IActionResult Create(KhoCreateDTO dto)
+        public IActionResult Create([FromBody] KhoCreateDTO dto)
         {
-            var newId = _khoService.Create(dto);
-            return Ok(newId);
+            try
+            {
+                var newId = _khoService.Create(dto);
+                return Ok(new { success = true, message = "Tạo kho thành công", data = new { maKho = newId } });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
-        // PUT: api/kho/update/5
+        // PUT: api/kho/update/{id}
         [HttpPut("update/{id}")]
-        public IActionResult Update(int id, KhoUpdateDTO dto)
+        public IActionResult Update(int id, [FromBody] KhoUpdateDTO dto)
         {
-            bool result = _khoService.Update(id, dto);
+            try
+            {
+                bool result = _khoService.Update(id, dto);
 
-            if (result == false)
-                return NotFound();
+                if (result == false)
+                    return NotFound(new { success = false, message = "Không tìm thấy kho" });
 
-            return Ok();
+                return Ok(new { success = true, message = "Cập nhật kho thành công" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
-        // DELETE: api/kho/delete/5
+        // DELETE: api/kho/delete/{id}
         [HttpDelete("delete/{id}")]
         public IActionResult Delete(int id)
         {
-            bool result = _khoService.Delete(id);
+            try
+            {
+                bool result = _khoService.Delete(id);
 
-            if (result == false)
-                return NotFound();
+                if (result == false)
+                    return NotFound(new { success = false, message = "Không tìm thấy kho" });
 
-            return Ok();
+                return Ok(new { success = true, message = "Xóa kho thành công" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
     }
 }
