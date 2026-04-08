@@ -5,6 +5,7 @@ import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
 import DaiLyOverview from './DaiLyOverview';
 import WarehouseManagement from './WarehouseManagement';
+import InventoryManagement from './InventoryManagement';
 import OrderManagement from './OrderManagement';
 import './DaiLyDashboard.css';
 
@@ -42,9 +43,10 @@ function DaiLyDashboard() {
   };
 
   const menuItems = [
-    { id: 'dashboard', icon: '📊', label: 'Tổng quan', path: '/daily' },
-    { id: 'warehouse', icon: '🏪', label: 'Quản lý kho', path: '/daily/warehouse' },
-    { id: 'orders', icon: '📦', label: 'Đơn hàng', path: '/daily/orders' }
+    { id: 'dashboard', icon: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=80&h=80&fit=crop', label: 'Tổng quan', path: '/daily' },
+    { id: 'warehouse', icon: 'https://images.unsplash.com/photo-1553413077-190dd305871c?w=80&h=80&fit=crop', label: 'Quản lý kho', path: '/daily/warehouse' },
+    { id: 'inventory', icon: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=80&h=80&fit=crop', label: 'Tồn kho', path: '/daily/inventory' },
+    { id: 'orders', icon: 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=80&h=80&fit=crop', label: 'Đơn hàng', path: '/daily/orders' }
   ];
 
   return (
@@ -53,11 +55,11 @@ function DaiLyDashboard() {
       <aside className="sidebar">
         <div className="sidebar-header">
           <div className="logo">
-            <span className="logo-icon">🏪</span>
-            <span className="logo-text">Đại Lý</span>
+            <img src="https://images.unsplash.com/photo-1553413077-190dd305871c?w=100&h=100&fit=crop" alt="Logo" className="logo-icon" />
+            <span className="logo-text" style={{ color: '#3b82f6' }}>Đại Lý</span>
           </div>
           <div className="user-info">
-            <div className="user-avatar">👨‍💼</div>
+            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop" alt="User" className="user-avatar" />
             <div className="user-details">
               <div className="user-name">{displayName}</div>
               <div className="user-role">Nhà phân phối</div>
@@ -73,7 +75,7 @@ function DaiLyDashboard() {
               className={`menu-item ${activeMenu === item.id ? 'active' : ''}`}
               onClick={() => setActiveMenu(item.id)}
             >
-              <span className="menu-icon">{item.icon}</span>
+              <img src={item.icon} alt={item.label} className="menu-icon" />
               <span className="menu-label">{item.label}</span>
             </Link>
           ))}
@@ -92,6 +94,7 @@ function DaiLyDashboard() {
         <Routes>
           <Route path="/" element={<DaiLyOverview />} />
           <Route path="/warehouse" element={<WarehouseManagement />} />
+          <Route path="/inventory" element={<InventoryManagement />} />
           <Route path="/orders" element={<OrderManagement />} />
         </Routes>
       </main>

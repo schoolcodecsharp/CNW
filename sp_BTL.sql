@@ -1679,12 +1679,15 @@ CREATE OR ALTER PROCEDURE sp_Kho_Create
     @MaDaiLy INT = NULL,
     @MaSieuThi INT = NULL,
     @TenKho NVARCHAR(100),
-    @DiaChi NVARCHAR(255)
+    @DiaChi NVARCHAR(255) = NULL,
+    @MaKho INT OUTPUT
 AS
 BEGIN
     BEGIN TRY
         INSERT INTO Kho (LoaiKho, MaDaiLy, MaSieuThi, TenKho, DiaChi)
         VALUES (@LoaiKho, @MaDaiLy, @MaSieuThi, @TenKho, @DiaChi)
+        
+        SET @MaKho = SCOPE_IDENTITY()
         
         SELECT 'Success' AS Status, 'Tạo kho thành công' AS Message
     END TRY
