@@ -17,6 +17,7 @@ namespace SieuThiService.Data
         bool CreateDonHang(CreateDonHangSieuThiRequest request);
         DonHangSieuThiResponse? GetDonHangById(int maDonHang);
         List<DonHangSieuThiResponse> GetDonHangsBySieuThi(int maSieuThi);
+        List<DonHangSieuThiResponse> GetDonHangsByDaiLy(int maDaiLy);
         List<DonHangSieuThiResponse> GetAllDonHangSieuThi();
         
         // API riêng biệt cho quản lý

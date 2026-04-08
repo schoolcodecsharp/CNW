@@ -1910,6 +1910,30 @@ BEGIN
 END
 GO
 
+-- GetByDaiLy: Lấy tồn kho theo MaDaiLy (join với Kho và LoNongSan)
+CREATE OR ALTER PROCEDURE sp_TonKho_GetByDaiLy
+    @MaDaiLy INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT 
+        TK.MaKho,
+        TK.MaLo,
+        TK.SoLuong,
+        TK.CapNhatCuoi,
+        K.TenKho,
+        K.MaDaiLy,
+        SP.TenSanPham,
+        SP.DonViTinh
+    FROM TonKho TK
+    INNER JOIN Kho K ON TK.MaKho = K.MaKho
+    INNER JOIN LoNongSan LNS ON TK.MaLo = LNS.MaLo
+    INNER JOIN SanPham SP ON LNS.MaSanPham = SP.MaSanPham
+    WHERE K.MaDaiLy = @MaDaiLy AND TK.SoLuong > 0
+    ORDER BY TK.CapNhatCuoi DESC;
+END;
+GO
+
 
 -- =====================================================
 -- STORED PROCEDURES FOR DONHANGDAILY TABLE
@@ -1970,21 +1994,32 @@ GO
 
 -- Create: Thêm mới đơn hàng đại lý
 CREATE OR ALTER PROCEDURE sp_DonHangDaiLy_Create
-    @MaDonHang INT,
     @MaDaiLy INT,
-    @MaNongDan INT
+    @MaNongDan INT,
+    @TongSoLuong DECIMAL(18,2),
+    @TongGiaTri DECIMAL(18,2),
+    @GhiChu NVARCHAR(255) = NULL,
+    @MaDonHang INT OUTPUT
 AS
 BEGIN
+    SET NOCOUNT ON;
     BEGIN TRY
-        INSERT INTO DonHangDaiLy (MaDonHang, MaDaiLy, MaNongDan)
-        VALUES (@MaDonHang, @MaDaiLy, @MaNongDan)
+        -- 1. Tạo DonHang trước
+        INSERT INTO DonHang (LoaiDon, NgayDat, TrangThai, TongSoLuong, TongGiaTri, GhiChu)
+        VALUES (N'daily_to_nongdan', GETDATE(), N'chua_nhan', @TongSoLuong, @TongGiaTri, @GhiChu);
         
-        SELECT 'Success' AS Status, 'Tạo đơn hàng đại lý thành công' AS Message
+        SET @MaDonHang = SCOPE_IDENTITY();
+        
+        -- 2. Tạo DonHangDaiLy
+        INSERT INTO DonHangDaiLy (MaDonHang, MaDaiLy, MaNongDan)
+        VALUES (@MaDonHang, @MaDaiLy, @MaNongDan);
+        
     END TRY
     BEGIN CATCH
-        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
-END
+END;
 GO
 
 -- Update: Cập nhật đơn hàng đại lý
@@ -2263,6 +2298,34 @@ BEGIN
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
     END CATCH
 END
+GO
+
+--- GetByDaiLy: Lấy đơn hàng siêu thị theo MaDaiLy với đầy đủ thông tin
+CREATE OR ALTER PROCEDURE sp_DonHangSieuThi_GetByDaiLy
+    @MaDaiLy INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT 
+        DH.MaDonHang,
+        DH.LoaiDon,
+        DH.NgayDat,
+        DH.NgayGiao,
+        DH.TongSoLuong,
+        DH.TongGiaTri,
+        DH.TrangThai,
+        DH.GhiChu,
+        DHST.MaSieuThi,
+        DHST.MaDaiLy,
+        ST.TenSieuThi,
+        DL.TenDaiLy
+    FROM DonHang DH
+    INNER JOIN DonHangSieuThi DHST ON DH.MaDonHang = DHST.MaDonHang
+    INNER JOIN SieuThi ST ON DHST.MaSieuThi = ST.MaSieuThi
+    INNER JOIN DaiLy DL ON DHST.MaDaiLy = DL.MaDaiLy
+    WHERE DHST.MaDaiLy = @MaDaiLy
+    ORDER BY DH.NgayDat DESC;
+END;
 GO
 
 -- =====================================================

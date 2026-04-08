@@ -566,6 +566,56 @@ namespace SieuThiService.Data
             }
         }
 
+        public List<DonHangSieuThiResponse> GetDonHangsByDaiLy(int maDaiLy)
+        {
+            try
+            {
+                // Lấy danh sách đơn hàng bằng stored procedure
+                var dailyParam = new SqlParameter("@MaDaiLy", maDaiLy);
+                var donHangList = _context.Database.SqlQueryRaw<DonHangInfo>(
+                    "EXEC sp_DonHangSieuThi_GetByDaiLy @MaDaiLy", dailyParam).ToList();
+
+                var result = new List<DonHangSieuThiResponse>();
+
+                foreach (var donHangInfo in donHangList)
+                {
+                    // Lấy chi tiết đơn hàng cho từng đơn hàng
+                    var chiTietParam = new SqlParameter("@MaDonHang", donHangInfo.MaDonHang);
+                    var chiTietList = _context.Database.SqlQueryRaw<ChiTietDonHangInfo>(
+                        "EXEC sp_GetChiTietDonHangByMaDonHang @MaDonHang", chiTietParam).ToList();
+
+                    result.Add(new DonHangSieuThiResponse
+                    {
+                        MaDonHang = donHangInfo.MaDonHang,
+                        MaSieuThi = donHangInfo.MaSieuThi,
+                        MaDaiLy = donHangInfo.MaDaiLy,
+                        LoaiDon = donHangInfo.LoaiDon,
+                        NgayDat = donHangInfo.NgayDat,
+                        NgayGiao = donHangInfo.NgayGiao,
+                        TrangThai = donHangInfo.TrangThai,
+                        TongSoLuong = donHangInfo.TongSoLuong,
+                        TongGiaTri = donHangInfo.TongGiaTri,
+                        GhiChu = donHangInfo.GhiChu,
+                        TenSieuThi = donHangInfo.TenSieuThi,
+                        TenDaiLy = donHangInfo.TenDaiLy,
+                        ChiTietDonHangs = chiTietList.Select(ct => new ChiTietDonHangResponse
+                        {
+                            MaLo = ct.MaLo,
+                            SoLuong = ct.SoLuong,
+                            DonGia = ct.DonGia,
+                            ThanhTien = ct.ThanhTien
+                        }).ToList()
+                    });
+                }
+
+                return result;
+            }
+            catch
+            {
+                return new List<DonHangSieuThiResponse>();
+            }
+        }
+
         public List<DonHangSieuThiResponse> GetAllDonHangSieuThi()
         {
             try

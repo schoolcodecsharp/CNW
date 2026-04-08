@@ -231,6 +231,32 @@ namespace SieuThiService.Controllers
             }
         }
 
+        // GET: api/DonHangSieuThi/dai-ly/{maDaiLy}
+        [HttpGet("dai-ly/{maDaiLy}")]
+        public ActionResult<List<DonHangSieuThiResponse>> GetDonHangsByDaiLy(int maDaiLy)
+        {
+            try
+            {
+                var donHangs = _sieuThiRepository.GetDonHangsByDaiLy(maDaiLy);
+                return Ok(new
+                {
+                    success = true,
+                    message = "Lấy danh sách đơn hàng thành công",
+                    data = donHangs,
+                    count = donHangs.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = $"Lỗi server: {ex.Message}",
+                    data = (object?)null
+                });
+            }
+        }
+
         // GET: api/DonHangSieuThi/get-all
         [HttpGet("get-all")]
         public ActionResult<List<DonHangSieuThiResponse>> GetAll()
