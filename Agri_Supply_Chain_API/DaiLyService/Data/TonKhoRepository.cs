@@ -89,7 +89,8 @@ namespace DaiLyService.Data
                 TenKho = reader.FieldExists("TenKho") && !reader.IsDBNull(reader.GetOrdinal("TenKho")) ? reader.GetString(reader.GetOrdinal("TenKho")) : null,
                 MaDaiLy = reader.FieldExists("MaDaiLy") && !reader.IsDBNull(reader.GetOrdinal("MaDaiLy")) ? reader.GetInt32(reader.GetOrdinal("MaDaiLy")) : null,
                 TenSanPham = reader.FieldExists("TenSanPham") && !reader.IsDBNull(reader.GetOrdinal("TenSanPham")) ? reader.GetString(reader.GetOrdinal("TenSanPham")) : null,
-                DonViTinh = reader.FieldExists("DonViTinh") && !reader.IsDBNull(reader.GetOrdinal("DonViTinh")) ? reader.GetString(reader.GetOrdinal("DonViTinh")) : null
+                DonViTinh = reader.FieldExists("DonViTinh") && !reader.IsDBNull(reader.GetOrdinal("DonViTinh")) ? reader.GetString(reader.GetOrdinal("DonViTinh")) : null,
+                MaQR = reader.FieldExists("MaQR") && !reader.IsDBNull(reader.GetOrdinal("MaQR")) ? reader.GetString(reader.GetOrdinal("MaQR")) : null
             };
         }
     }

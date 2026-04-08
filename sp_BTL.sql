@@ -1951,13 +1951,18 @@ AS
 BEGIN
     BEGIN TRY
         SELECT 
-            MaKho,
-            MaLo,
-            SoLuong,
-            CapNhatCuoi
-        FROM TonKho
-        WHERE MaKho = @MaKho
-        ORDER BY MaLo
+            tk.MaKho,
+            tk.MaLo,
+            tk.SoLuong,
+            tk.CapNhatCuoi,
+            sp.TenSanPham,
+            sp.DonViTinh,
+            lo.MaQR
+        FROM TonKho tk
+        INNER JOIN LoNongSan lo ON tk.MaLo = lo.MaLo
+        INNER JOIN SanPham sp ON lo.MaSanPham = sp.MaSanPham
+        WHERE tk.MaKho = @MaKho
+        ORDER BY tk.MaLo
         
         SELECT 'Success' AS Status, 'Tìm kiếm hoàn tất' AS Message
     END TRY

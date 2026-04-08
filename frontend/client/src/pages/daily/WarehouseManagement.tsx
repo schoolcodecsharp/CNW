@@ -363,6 +363,178 @@ function WarehouseManagement() {
       )}
 
       <style>{`
+        .warehouse-list {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          margin-top: 20px;
+        }
+
+        .warehouse-card {
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          overflow: hidden;
+          transition: all 0.3s ease;
+        }
+
+        .warehouse-card:hover {
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .warehouse-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 20px;
+          cursor: pointer;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          transition: background 0.3s ease;
+        }
+
+        .warehouse-header:hover {
+          background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+        }
+
+        .warehouse-info {
+          flex: 1;
+        }
+
+        .warehouse-title {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 10px;
+        }
+
+        .warehouse-title h3 {
+          margin: 0;
+          font-size: 20px;
+          font-weight: 600;
+        }
+
+        .warehouse-id {
+          background: rgba(255,255,255,0.2);
+          padding: 4px 12px;
+          border-radius: 12px;
+          font-size: 14px;
+          font-weight: 500;
+        }
+
+        .expand-icon {
+          font-size: 14px;
+          transition: transform 0.3s ease;
+        }
+
+        .warehouse-details {
+          display: flex;
+          gap: 20px;
+          flex-wrap: wrap;
+          font-size: 14px;
+          opacity: 0.95;
+        }
+
+        .detail-item {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .warehouse-actions {
+          display: flex;
+          gap: 10px;
+        }
+
+        .warehouse-inventory {
+          padding: 20px;
+          background: #f9fafb;
+          border-top: 2px solid #e5e7eb;
+        }
+
+        .warehouse-inventory h4 {
+          margin: 0 0 16px 0;
+          font-size: 18px;
+          color: #374151;
+        }
+
+        .loading-inventory {
+          text-align: center;
+          padding: 40px;
+          color: #6b7280;
+        }
+
+        .empty-inventory {
+          text-align: center;
+          padding: 40px;
+          background: white;
+          border-radius: 8px;
+          color: #6b7280;
+        }
+
+        .inventory-table-container {
+          background: white;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .inventory-table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        .inventory-table thead {
+          background: #f3f4f6;
+        }
+
+        .inventory-table th {
+          padding: 12px 16px;
+          text-align: left;
+          font-weight: 600;
+          color: #374151;
+          font-size: 14px;
+          border-bottom: 2px solid #e5e7eb;
+        }
+
+        .inventory-table td {
+          padding: 12px 16px;
+          border-bottom: 1px solid #e5e7eb;
+          color: #4b5563;
+        }
+
+        .inventory-table tbody tr:hover {
+          background: #f9fafb;
+        }
+
+        .inventory-table tbody tr:last-child td {
+          border-bottom: none;
+        }
+
+        .batch-id {
+          background: #dbeafe;
+          color: #1e40af;
+          padding: 4px 8px;
+          border-radius: 6px;
+          font-weight: 600;
+          font-size: 13px;
+        }
+
+        .qr-code {
+          background: #f3f4f6;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-family: 'Courier New', monospace;
+          font-size: 12px;
+          color: #374151;
+        }
+
+        .quantity {
+          font-weight: 600;
+          color: #059669;
+          font-size: 15px;
+        }
+
         .empty-state {
           text-align: center;
           padding: 60px 20px;
@@ -375,6 +547,26 @@ function WarehouseManagement() {
           font-size: 18px;
           color: #6b7280;
           margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+          .warehouse-header {
+            flex-direction: column;
+            gap: 16px;
+          }
+
+          .warehouse-details {
+            flex-direction: column;
+            gap: 8px;
+          }
+
+          .inventory-table-container {
+            overflow-x: auto;
+          }
+
+          .inventory-table {
+            min-width: 600px;
+          }
         }
       `}</style>
     </div>

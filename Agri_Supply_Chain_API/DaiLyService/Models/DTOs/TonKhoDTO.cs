@@ -10,5 +10,6 @@ namespace DaiLyService.Models.DTOs
         public int? MaDaiLy { get; set; }
         public string? TenSanPham { get; set; }
         public string? DonViTinh { get; set; }
+        public string? MaQR { get; set; }
     }
 }
