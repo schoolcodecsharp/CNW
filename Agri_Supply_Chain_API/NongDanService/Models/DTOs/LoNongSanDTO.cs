@@ -7,6 +7,8 @@ namespace NongDanService.Models.DTOs
         public int MaSanPham { get; set; }
         public decimal SoLuongBanDau { get; set; }
         public decimal SoLuongHienTai { get; set; }
+        public DateTime? NgayThuHoach { get; set; }
+        public DateTime? HanSuDung { get; set; }
         public string? SoChungNhanLo { get; set; }
         public string? MaQR { get; set; }
         public string? TrangThai { get; set; }
@@ -15,5 +17,6 @@ namespace NongDanService.Models.DTOs
         // Thông tin bổ sung
         public string? TenTrangTrai { get; set; }
         public string? TenSanPham { get; set; }
+        public string? DonViTinh { get; set; }
     }
 }

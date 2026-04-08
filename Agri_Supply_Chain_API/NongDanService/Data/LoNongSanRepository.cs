@@ -128,6 +128,8 @@ namespace NongDanService.Data
                 cmd.Parameters.Add("@MaTrangTrai", SqlDbType.Int).Value = dto.MaTrangTrai;
                 cmd.Parameters.Add("@MaSanPham", SqlDbType.Int).Value = dto.MaSanPham;
                 cmd.Parameters.Add("@SoLuongBanDau", SqlDbType.Decimal).Value = dto.SoLuongBanDau;
+                cmd.Parameters.Add("@NgayThuHoach", SqlDbType.Date).Value = (object?)dto.NgayThuHoach ?? DBNull.Value;
+                cmd.Parameters.Add("@HanSuDung", SqlDbType.Date).Value = (object?)dto.HanSuDung ?? DBNull.Value;
                 cmd.Parameters.Add("@SoChungNhanLo", SqlDbType.NVarChar, 50).Value = (object?)dto.SoChungNhanLo ?? DBNull.Value;
                 
                 var outputMaLo = cmd.Parameters.Add("@MaLo", SqlDbType.Int);
@@ -163,6 +165,8 @@ namespace NongDanService.Data
 
                 cmd.Parameters.Add("@MaLo", SqlDbType.Int).Value = id;
                 cmd.Parameters.Add("@SoLuongHienTai", SqlDbType.Decimal).Value = (object?)dto.SoLuongHienTai ?? DBNull.Value;
+                cmd.Parameters.Add("@NgayThuHoach", SqlDbType.Date).Value = (object?)dto.NgayThuHoach ?? DBNull.Value;
+                cmd.Parameters.Add("@HanSuDung", SqlDbType.Date).Value = (object?)dto.HanSuDung ?? DBNull.Value;
                 cmd.Parameters.Add("@SoChungNhanLo", SqlDbType.NVarChar, 50).Value = (object?)dto.SoChungNhanLo ?? DBNull.Value;
                 cmd.Parameters.Add("@TrangThai", SqlDbType.NVarChar, 30).Value = (object?)dto.TrangThai ?? DBNull.Value;
 
@@ -228,12 +232,15 @@ namespace NongDanService.Data
                 MaSanPham = reader.GetInt32("MaSanPham"),
                 SoLuongBanDau = reader.GetDecimal("SoLuongBanDau"),
                 SoLuongHienTai = reader.GetDecimal("SoLuongHienTai"),
+                NgayThuHoach = reader.IsDBNull("NgayThuHoach") ? null : reader.GetDateTime("NgayThuHoach"),
+                HanSuDung = reader.IsDBNull("HanSuDung") ? null : reader.GetDateTime("HanSuDung"),
                 SoChungNhanLo = reader.IsDBNull("SoChungNhanLo") ? null : reader.GetString("SoChungNhanLo"),
                 MaQR = reader.IsDBNull("MaQR") ? null : reader.GetString("MaQR"),
                 TrangThai = reader.IsDBNull("TrangThai") ? null : reader.GetString("TrangThai"),
                 NgayTao = reader.IsDBNull("NgayTao") ? null : reader.GetDateTime("NgayTao"),
                 TenTrangTrai = reader.IsDBNull("TenTrangTrai") ? null : reader.GetString("TenTrangTrai"),
-                TenSanPham = reader.IsDBNull("TenSanPham") ? null : reader.GetString("TenSanPham")
+                TenSanPham = reader.IsDBNull("TenSanPham") ? null : reader.GetString("TenSanPham"),
+                DonViTinh = reader.IsDBNull("DonViTinh") ? null : reader.GetString("DonViTinh")
             };
         }
     }

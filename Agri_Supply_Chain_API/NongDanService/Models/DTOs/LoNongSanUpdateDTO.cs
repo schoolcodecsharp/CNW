@@ -7,6 +7,10 @@ namespace NongDanService.Models.DTOs
         [Range(0, double.MaxValue, ErrorMessage = "Số lượng hiện tại không được âm")]
         public decimal? SoLuongHienTai { get; set; }
 
+        public DateTime? NgayThuHoach { get; set; }
+
+        public DateTime? HanSuDung { get; set; }
+
         [StringLength(50, ErrorMessage = "Số chứng nhận lô không được vượt quá 50 ký tự")]
         public string? SoChungNhanLo { get; set; }
 
