@@ -64,9 +64,29 @@ namespace DaiLyService.Data
             var list = new List<DonHangDaiLyDTO>();
 
             using var conn = new SqlConnection(_connectionString);
-            using var cmd = new SqlCommand("sp_DonHangDaiLy_GetByMaDaiLy", conn);
+            using var cmd = new SqlCommand("sp_DonHangDaiLy_GetByDaiLy", conn);
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.Parameters.AddWithValue("@MaDaiLy", maDaiLy);
+
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                list.Add(MapToDto(reader));
+            }
+
+            return list;
+        }
+
+        public List<DonHangDaiLyDTO> GetByMaNongDan(int maNongDan)
+        {
+            var list = new List<DonHangDaiLyDTO>();
+
+            using var conn = new SqlConnection(_connectionString);
+            using var cmd = new SqlCommand("sp_DonHangDaiLy_GetByNongDan", conn);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@MaNongDan", maNongDan);
 
             conn.Open();
             using var reader = cmd.ExecuteReader();

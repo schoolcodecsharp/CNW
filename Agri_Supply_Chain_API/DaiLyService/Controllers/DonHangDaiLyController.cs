@@ -52,10 +52,24 @@ namespace DaiLyService.Controllers
         }
 
         // GET: api/don-hang-dai-ly/dai-ly/5
-        [HttpGet("dai-ly/{maDaiLy}")]
+        [HttpGet("get-by-dai-ly/{maDaiLy}")]
         public IActionResult GetByMaDaiLy(int maDaiLy)
         {
             var data = _donHangService.GetByMaDaiLy(maDaiLy);
+            return Ok(new
+            {
+                success = true,
+                message = "Lấy danh sách đơn hàng thành công",
+                data = data,
+                count = data?.Count ?? 0
+            });
+        }
+
+        // GET: api/don-hang-dai-ly/get-by-nong-dan/5
+        [HttpGet("get-by-nong-dan/{maNongDan}")]
+        public IActionResult GetByMaNongDan(int maNongDan)
+        {
+            var data = _donHangService.GetByMaNongDan(maNongDan);
             return Ok(new
             {
                 success = true,

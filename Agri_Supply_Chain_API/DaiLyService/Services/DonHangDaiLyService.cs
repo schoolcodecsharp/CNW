@@ -18,6 +18,8 @@ namespace DaiLyService.Services
 
         public List<DonHangDaiLyDTO> GetByMaDaiLy(int maDaiLy) => _repo.GetByMaDaiLy(maDaiLy);
 
+        public List<DonHangDaiLyDTO> GetByMaNongDan(int maNongDan) => _repo.GetByMaNongDan(maNongDan);
+
         public int Create(DonHangDaiLyCreateDTO dto) => _repo.Create(dto);
 
         public bool UpdateTrangThai(int maDonHang, DonHangDaiLyUpdateDTO dto) 

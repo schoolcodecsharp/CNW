@@ -96,11 +96,14 @@ export const API_ENDPOINTS = {
   donHangDaiLy: {
     base: API_BASE_URLS.daily,
     getAll: `${API_BASE_URLS.daily}/don-hang-dai-ly/get-all`,
-    getById: (id: number) => `${API_BASE_URLS.daily}/don-hang-dai-ly/${id}`,
-    getByDaiLy: (id: number) => `${API_BASE_URLS.daily}/don-hang-dai-ly/dai-ly/${id}`,
-    getByNongDan: (id: number) => `${API_BASE_URLS.daily}/don-hang-dai-ly/nong-dan/${id}`,
+    getById: (id: number) => `${API_BASE_URLS.daily}/don-hang-dai-ly/get-by-id/${id}`,
+    getByDaiLy: (id: number) => `${API_BASE_URLS.daily}/don-hang-dai-ly/get-by-dai-ly/${id}`,
+    getByNongDan: (id: number) => `${API_BASE_URLS.daily}/don-hang-dai-ly/get-by-nong-dan/${id}`,
     create: `${API_BASE_URLS.daily}/don-hang-dai-ly/create`,
-    updateTrangThai: (id: number) => `${API_BASE_URLS.daily}/don-hang-dai-ly/update-trang-thai/${id}`,
+    updateTrangThai: (id: number) => `${API_BASE_URLS.daily}/don-hang-dai-ly/update/${id}`,
+    xacNhan: (id: number) => `${API_BASE_URLS.daily}/don-hang-dai-ly/xac-nhan/${id}`,
+    xuatDon: (id: number) => `${API_BASE_URLS.daily}/don-hang-dai-ly/xuat-don/${id}`,
+    huyDon: (id: number) => `${API_BASE_URLS.daily}/don-hang-dai-ly/huy-don/${id}`,
     delete: (id: number) => `${API_BASE_URLS.daily}/don-hang-dai-ly/delete/${id}`
   },
   

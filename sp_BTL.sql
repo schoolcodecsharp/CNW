@@ -2064,6 +2064,62 @@ BEGIN
 END
 GO
 
+--- GetByNongDan: Lấy đơn hàng đại lý theo MaNongDan
+CREATE OR ALTER PROCEDURE sp_DonHangDaiLy_GetByNongDan
+    @MaNongDan INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT 
+        DH.MaDonHang,
+        DH.LoaiDon,
+        DH.NgayDat,
+        DH.NgayGiao,
+        DH.TongSoLuong,
+        DH.TongGiaTri,
+        DH.TrangThai,
+        DH.GhiChu,
+        DHDL.MaDaiLy,
+        DHDL.MaNongDan,
+        DL.TenDaiLy,
+        ND.HoTen AS TenNongDan
+    FROM DonHang DH
+    INNER JOIN DonHangDaiLy DHDL ON DH.MaDonHang = DHDL.MaDonHang
+    INNER JOIN DaiLy DL ON DHDL.MaDaiLy = DL.MaDaiLy
+    INNER JOIN NongDan ND ON DHDL.MaNongDan = ND.MaNongDan
+    WHERE DHDL.MaNongDan = @MaNongDan
+    ORDER BY DH.NgayDat DESC;
+END;
+GO
+
+--- GetByDaiLy: Lấy đơn hàng đại lý theo MaDaiLy
+CREATE OR ALTER PROCEDURE sp_DonHangDaiLy_GetByDaiLy
+    @MaDaiLy INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT 
+        DH.MaDonHang,
+        DH.LoaiDon,
+        DH.NgayDat,
+        DH.NgayGiao,
+        DH.TongSoLuong,
+        DH.TongGiaTri,
+        DH.TrangThai,
+        DH.GhiChu,
+        DHDL.MaDaiLy,
+        DHDL.MaNongDan,
+        DL.TenDaiLy,
+        ND.HoTen AS TenNongDan
+    FROM DonHang DH
+    INNER JOIN DonHangDaiLy DHDL ON DH.MaDonHang = DHDL.MaDonHang
+    INNER JOIN DaiLy DL ON DHDL.MaDaiLy = DL.MaDaiLy
+    INNER JOIN NongDan ND ON DHDL.MaNongDan = ND.MaNongDan
+    WHERE DHDL.MaDaiLy = @MaDaiLy
+    ORDER BY DH.NgayDat DESC;
+END;
+GO
+
 
 -- =====================================================
 -- STORED PROCEDURES FOR DONHANGSIEUTHI TABLE
