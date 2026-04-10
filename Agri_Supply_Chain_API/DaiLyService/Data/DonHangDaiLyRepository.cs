@@ -169,7 +169,7 @@ namespace DaiLyService.Data
             return cmd.ExecuteNonQuery() > 0;
         }
 
-        public bool XacNhanDon(int maDonHang)
+        public bool XacNhanDon(int maDonHang, int maKho)
         {
             using var conn = new SqlConnection(_connectionString);
             conn.Open();
@@ -177,46 +177,20 @@ namespace DaiLyService.Data
 
             try
             {
-                // 1. Lấy thông tin đại lý từ đơn hàng
-                int maDaiLy;
-                using (var cmdGetDaiLy = new SqlCommand(@"
-                    SELECT MaDaiLy FROM DonHangDaiLy WHERE MaDonHang = @MaDonHang", conn, transaction))
+                // 1. Kiểm tra kho có tồn tại không
+                using (var cmdCheckKho = new SqlCommand(@"
+                    SELECT COUNT(*) FROM Kho WHERE MaKho = @MaKho", conn, transaction))
                 {
-                    cmdGetDaiLy.Parameters.AddWithValue("@MaDonHang", maDonHang);
-                    var result = cmdGetDaiLy.ExecuteScalar();
-                    if (result == null)
+                    cmdCheckKho.Parameters.AddWithValue("@MaKho", maKho);
+                    int count = (int)cmdCheckKho.ExecuteScalar()!;
+                    if (count == 0)
                     {
                         transaction.Rollback();
-                        return false;
-                    }
-                    maDaiLy = (int)result;
-                }
-
-                // 2. Lấy kho của đại lý (lấy kho đầu tiên nếu có nhiều kho)
-                int maKho;
-                using (var cmdGetKho = new SqlCommand(@"
-                    SELECT TOP 1 MaKho FROM Kho 
-                    WHERE MaDaiLy = @MaDaiLy AND LoaiKho = 'daily' AND TrangThai = N'hoat_dong'", conn, transaction))
-                {
-                    cmdGetKho.Parameters.AddWithValue("@MaDaiLy", maDaiLy);
-                    var result = cmdGetKho.ExecuteScalar();
-                    if (result == null)
-                    {
-                        // Nếu chưa có kho, tạo kho mới cho đại lý
-                        using var cmdCreateKho = new SqlCommand(@"
-                            INSERT INTO Kho (LoaiKho, MaDaiLy, TenKho, TrangThai)
-                            OUTPUT INSERTED.MaKho
-                            VALUES ('daily', @MaDaiLy, N'Kho đại lý', N'hoat_dong')", conn, transaction);
-                        cmdCreateKho.Parameters.AddWithValue("@MaDaiLy", maDaiLy);
-                        maKho = (int)cmdCreateKho.ExecuteScalar()!;
-                    }
-                    else
-                    {
-                        maKho = (int)result;
+                        throw new Exception("Kho không tồn tại");
                     }
                 }
 
-                // 3. Lấy chi tiết đơn hàng
+                // 2. Lấy chi tiết đơn hàng
                 var chiTietList = new List<(int MaLo, decimal SoLuong)>();
                 using (var cmdGetChiTiet = new SqlCommand(@"
                     SELECT MaLo, SoLuong FROM ChiTietDonHang WHERE MaDonHang = @MaDonHang", conn, transaction))
@@ -229,7 +203,7 @@ namespace DaiLyService.Data
                     }
                 }
 
-                // 4. Cập nhật tồn kho cho từng lô
+                // 3. Cập nhật tồn kho cho từng lô
                 foreach (var (maLo, soLuong) in chiTietList)
                 {
                     // Kiểm tra xem đã có tồn kho chưa
@@ -266,7 +240,7 @@ namespace DaiLyService.Data
                     }
                 }
 
-                // 5. Cập nhật trạng thái đơn hàng
+                // 4. Cập nhật trạng thái đơn hàng
                 using (var cmdUpdateDonHang = new SqlCommand(@"
                     UPDATE DonHang 
                     SET TrangThai = N'da_nhan'

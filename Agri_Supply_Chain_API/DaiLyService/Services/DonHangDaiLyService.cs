@@ -27,7 +27,7 @@ namespace DaiLyService.Services
 
         public bool Delete(int maDonHang) => _repo.Delete(maDonHang);
 
-        public bool XacNhanDon(int maDonHang) => _repo.XacNhanDon(maDonHang);
+        public bool XacNhanDon(int maDonHang, int maKho) => _repo.XacNhanDon(maDonHang, maKho);
 
         public bool HuyDon(int maDonHang) => _repo.HuyDon(maDonHang);
 

@@ -31,6 +31,14 @@
   color: #667eea;
 }
 
+.logo-text {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
+}
+
 .logo-icon {
   width: 50px;
   height: 50px;
@@ -43,6 +51,7 @@
 .logo:hover .logo-icon {
   transform: rotate(5deg) scale(1.1);
 }
+
 
 .nav-menu {
   display: flex;
@@ -689,4 +698,3 @@ html {
 .cta .btn-white:hover {
   animation: none;
 }
-

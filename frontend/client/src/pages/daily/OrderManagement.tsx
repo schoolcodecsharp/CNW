@@ -10,10 +10,13 @@ function OrderManagement() {
   const [nongdanList, setNongdanList] = useState([]);
   const [sieuThiList, setSieuThiList] = useState([]);
   const [batches, setBatches] = useState([]);
+  const [farmerBatches, setFarmerBatches] = useState<{[key: number]: any[]}>({});
+  const [loadingBatches, setLoadingBatches] = useState(false);
   const [tonKho, setTonKho] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModalFarmer, setShowModalFarmer] = useState(false);
   const [showModalSupermarket, setShowModalSupermarket] = useState(false);
+  const [warehouses, setWarehouses] = useState([]);
   const [maDaiLy, setMaDaiLy] = useState(null);
   const [formDataFarmer, setFormDataFarmer] = useState({
     maNongDan: '',
@@ -105,32 +108,6 @@ function OrderManagement() {
     }
   };
 
-  const handleAcceptOrder = async (orderId: number) => {
-    if (!window.confirm('Bạn có chắc muốn chấp nhận đơn hàng này?')) return;
-    
-    try {
-      await axios.put(API_ENDPOINTS.donHangDaiLy.xacNhan(orderId));
-      alert('✅ Đã chấp nhận đơn hàng!');
-      await loadData();
-    } catch (error: any) {
-      console.error('Error accepting order:', error);
-      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
-    }
-  };
-
-  const handleRejectOrder = async (orderId: number) => {
-    if (!window.confirm('Bạn có chắc muốn từ chối đơn hàng này?')) return;
-    
-    try {
-      await axios.put(API_ENDPOINTS.donHangDaiLy.huyDon(orderId));
-      alert('✅ Đã từ chối đơn hàng!');
-      await loadData();
-    } catch (error: any) {
-      console.error('Error rejecting order:', error);
-      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
-    }
-  };
-
   const handleSubmitFarmer = async (e: any) => {
     e.preventDefault();
     
@@ -200,7 +177,49 @@ function OrderManagement() {
 
   const getAvailableBatchesByFarmer = () => {
     if (!formDataFarmer.maNongDan) return [];
-    return batches.filter((b: any) => b.maNongDan === parseInt(formDataFarmer.maNongDan));
+    const maNongDan = parseInt(formDataFarmer.maNongDan);
+    return farmerBatches[maNongDan] || [];
+  };
+
+  const loadBatchesByFarmer = async (maNongDan: number) => {
+    // Nếu đã load rồi thì không load lại
+    if (farmerBatches[maNongDan]) return;
+
+    try {
+      setLoadingBatches(true);
+      const response = await axios.get(API_ENDPOINTS.loNongSan.getByNongDan(maNongDan));
+      if (response.data.success) {
+        const availableBatches = (response.data.data || []).filter((b: any) => 
+          b.trangThai === 'tai_trang_trai' && b.soLuongHienTai > 0
+        );
+        setFarmerBatches(prev => ({
+          ...prev,
+          [maNongDan]: availableBatches
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading batches for farmer:', error);
+    } finally {
+      setLoadingBatches(false);
+    }
+  };
+
+  const handleFarmerChange = async (maNongDan: string) => {
+    setFormDataFarmer({...formDataFarmer, maNongDan, maLo: ''});
+    if (maNongDan) {
+      await loadBatchesByFarmer(parseInt(maNongDan));
+    }
+  };
+
+  const handleOpenModalFarmer = () => {
+    setFormDataFarmer({
+      maNongDan: '',
+      maLo: '',
+      soLuong: '',
+      donGia: '',
+      ghiChu: ''
+    });
+    setShowModalFarmer(true);
   };
 
   const getStatusBadge = (status: string) => {
@@ -225,7 +244,7 @@ function OrderManagement() {
         <div className="header-actions">
           <button 
             className="btn btn-success" 
-            onClick={() => setShowModalFarmer(true)}
+            onClick={handleOpenModalFarmer}
             disabled={batches.length === 0}
           >
             ➕ Tạo đơn mua từ nông dân
@@ -282,22 +301,8 @@ function OrderManagement() {
                   <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.tongGiaTri)}</td>
                   <td>{getStatusBadge(order.trangThai)}</td>
                   <td>
-                    {order.loaiDon === 'Từ nông dân' && order.trangThai === 'chua_nhan' && (
-                      <div className="action-buttons">
-                        <button 
-                          className="btn-action btn-success"
-                          onClick={() => handleAcceptOrder(order.maDonHang)}
-                        >
-                          ✓
-                        </button>
-                        <button 
-                          className="btn-action btn-danger"
-                          onClick={() => handleRejectOrder(order.maDonHang)}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    )}
+                    {/* Đại lý chỉ xem đơn hàng, không có nút accept/reject */}
+                    -
                   </td>
                 </tr>
               ))
@@ -324,7 +329,7 @@ function OrderManagement() {
                   </label>
                   <select
                     value={formDataFarmer.maNongDan}
-                    onChange={(e) => setFormDataFarmer({...formDataFarmer, maNongDan: e.target.value, maLo: ''})}
+                    onChange={(e) => handleFarmerChange(e.target.value)}
                     required
                     className="form-control"
                   >
@@ -344,19 +349,29 @@ function OrderManagement() {
                         <span className="label-icon">📦</span>
                         Lô nông sản <span className="required">*</span>
                       </label>
-                      <select
-                        value={formDataFarmer.maLo}
-                        onChange={(e) => setFormDataFarmer({...formDataFarmer, maLo: e.target.value})}
-                        required
-                        className="form-control"
-                      >
-                        <option value="">-- Chọn lô nông sản --</option>
-                        {getAvailableBatchesByFarmer().map((batch: any) => (
-                          <option key={batch.maLo} value={batch.maLo}>
-                            {batch.tenSanPham} - {batch.tenTrangTrai} (Còn: {batch.soLuongHienTai} kg)
-                          </option>
-                        ))}
-                      </select>
+                      {loadingBatches ? (
+                        <div style={{padding: '10px', textAlign: 'center', color: '#6b7280'}}>
+                          Đang tải danh sách lô...
+                        </div>
+                      ) : (
+                        <select
+                          value={formDataFarmer.maLo}
+                          onChange={(e) => setFormDataFarmer({...formDataFarmer, maLo: e.target.value})}
+                          required
+                          className="form-control"
+                        >
+                          <option value="">-- Chọn lô nông sản --</option>
+                          {getAvailableBatchesByFarmer().length === 0 ? (
+                            <option value="" disabled>Nông dân này chưa có lô nào khả dụng</option>
+                          ) : (
+                            getAvailableBatchesByFarmer().map((batch: any) => (
+                              <option key={batch.maLo} value={batch.maLo}>
+                                {batch.tenSanPham} - {batch.tenTrangTrai} (Còn: {batch.soLuongHienTai} kg)
+                              </option>
+                            ))
+                          )}
+                        </select>
+                      )}
                     </div>
 
                     <div className="form-group">

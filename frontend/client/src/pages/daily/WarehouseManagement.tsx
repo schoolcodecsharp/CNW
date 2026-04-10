@@ -7,12 +7,12 @@ import '../../components/Common.css';
 function WarehouseManagement() {
   const { user } = useAuth();
   const [warehouses, setWarehouses] = useState([]);
+  const [allInventory, setAllInventory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingWarehouse, setEditingWarehouse] = useState(null);
   const [maDaiLy, setMaDaiLy] = useState<number | null>(null);
   const [expandedWarehouses, setExpandedWarehouses] = useState<Set<number>>(new Set());
-  const [warehouseInventory, setWarehouseInventory] = useState<{[key: number]: any[]}>({});
   const [formData, setFormData] = useState({
     tenKho: '',
     diaChi: ''
@@ -61,6 +61,13 @@ function WarehouseManagement() {
         setWarehouses(warehousesRes.data.data || []);
       }
 
+      // Load all inventory for this daily
+      const inventoryRes = await axios.get(API_ENDPOINTS.tonKho.getByDaiLy(maDaiLyValue));
+      
+      if (inventoryRes.data.success) {
+        setAllInventory(inventoryRes.data.data || []);
+      }
+
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -68,30 +75,16 @@ function WarehouseManagement() {
     }
   };
 
-  const loadWarehouseInventory = async (maKho: number) => {
-    try {
-      const response = await axios.get(API_ENDPOINTS.tonKho.getByKho(maKho));
-      if (response.data.success) {
-        setWarehouseInventory(prev => ({
-          ...prev,
-          [maKho]: response.data.data || []
-        }));
-      }
-    } catch (error) {
-      console.error('Error loading warehouse inventory:', error);
-    }
+  const getWarehouseInventory = (maKho: number) => {
+    return allInventory.filter(item => item.maKho === maKho);
   };
 
-  const toggleWarehouse = async (maKho: number) => {
+  const toggleWarehouse = (maKho: number) => {
     const newExpanded = new Set(expandedWarehouses);
     if (newExpanded.has(maKho)) {
       newExpanded.delete(maKho);
     } else {
       newExpanded.add(maKho);
-      // Load inventory if not loaded yet
-      if (!warehouseInventory[maKho]) {
-        await loadWarehouseInventory(maKho);
-      }
     }
     setExpandedWarehouses(newExpanded);
   };
@@ -208,104 +201,106 @@ function WarehouseManagement() {
           </button>
         </div>
       ) : (
-        <div className="warehouse-list">
-          {warehouses.map((warehouse: any) => (
-            <div key={warehouse.maKho} className="warehouse-card">
-              <div className="warehouse-header" onClick={() => toggleWarehouse(warehouse.maKho)}>
-                <div className="warehouse-info">
-                  <div className="warehouse-title">
-                    <span className="expand-icon">
-                      {expandedWarehouses.has(warehouse.maKho) ? '▼' : '▶'}
-                    </span>
-                    <h3>🏭 {warehouse.tenKho}</h3>
-                    <span className="warehouse-id">#{warehouse.maKho}</span>
-                  </div>
-                  <div className="warehouse-details">
-                    <span className="detail-item">
-                      📍 {warehouse.diaChi || 'Chưa có địa chỉ'}
-                    </span>
-                    <span className="detail-item">
-                      {warehouse.trangThai === 'hoat_dong' ? (
-                        <span className="badge badge-success">✅ Hoạt động</span>
-                      ) : (
-                        <span className="badge badge-secondary">⏸️ Ngừng hoạt động</span>
-                      )}
-                    </span>
-                    <span className="detail-item">
-                      📅 {warehouse.ngayTao ? new Date(warehouse.ngayTao).toLocaleDateString('vi-VN') : '-'}
-                    </span>
-                  </div>
-                </div>
-                <div className="warehouse-actions" onClick={(e) => e.stopPropagation()}>
-                  <button 
-                    className="btn-action btn-edit"
-                    onClick={() => handleOpenModal(warehouse)}
-                    title="Chỉnh sửa kho"
-                  >
-                    ✏️
-                  </button>
-                  <button 
-                    className="btn-action btn-delete"
-                    onClick={() => handleDelete(warehouse.maKho)}
-                    title="Xóa kho"
-                  >
-                    🗑️
-                  </button>
-                </div>
-              </div>
-
-              {expandedWarehouses.has(warehouse.maKho) && (
-                <div className="warehouse-inventory">
-                  <h4>📦 Tồn kho</h4>
-                  {!warehouseInventory[warehouse.maKho] ? (
-                    <div className="loading-inventory">Đang tải...</div>
-                  ) : warehouseInventory[warehouse.maKho].length === 0 ? (
-                    <div className="empty-inventory">
-                      <p>Kho này chưa có hàng</p>
-                    </div>
-                  ) : (
-                    <div className="inventory-table-container">
-                      <table className="inventory-table">
-                        <thead>
-                          <tr>
-                            <th>Mã lô</th>
-                            <th>Sản phẩm</th>
-                            <th>Mã QR</th>
-                            <th>Số lượng tồn</th>
-                            <th>Cập nhật cuối</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {warehouseInventory[warehouse.maKho].map((item: any) => (
-                            <tr key={item.maLo}>
-                              <td>
-                                <span className="batch-id">#{item.maLo}</span>
-                              </td>
-                              <td>
-                                <strong>{item.tenSanPham || 'N/A'}</strong>
-                              </td>
-                              <td>
-                                <code className="qr-code">{item.maQR || 'N/A'}</code>
-                              </td>
-                              <td>
-                                <span className="quantity">{item.soLuong} kg</span>
-                              </td>
-                              <td>
-                                {item.capNhatCuoi 
-                                  ? new Date(item.capNhatCuoi).toLocaleString('vi-VN')
-                                  : '-'
-                                }
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
+        <div className="table-container">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Mã kho</th>
+                <th>Tên kho</th>
+                <th>Địa chỉ</th>
+                <th>Trạng thái</th>
+                <th>Ngày tạo</th>
+                <th>Tồn kho</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              {warehouses.map((warehouse: any) => {
+                const inventory = getWarehouseInventory(warehouse.maKho);
+                const isExpanded = expandedWarehouses.has(warehouse.maKho);
+                
+                return (
+                  <React.Fragment key={warehouse.maKho}>
+                    <tr>
+                      <td>{warehouse.maKho}</td>
+                      <td>{warehouse.tenKho}</td>
+                      <td>{warehouse.diaChi || '-'}</td>
+                      <td>
+                        {warehouse.trangThai === 'hoat_dong' ? (
+                          <span className="badge badge-success">✅ Hoạt động</span>
+                        ) : (
+                          <span className="badge badge-secondary">⏸️ Ngừng hoạt động</span>
+                        )}
+                      </td>
+                      <td>{warehouse.ngayTao ? new Date(warehouse.ngayTao).toLocaleDateString('vi-VN') : '-'}</td>
+                      <td>
+                        <button 
+                          className="btn-view-inventory"
+                          onClick={() => toggleWarehouse(warehouse.maKho)}
+                        >
+                          {isExpanded ? '▼ Ẩn' : '▶ Xem'} ({inventory.length} lô)
+                        </button>
+                      </td>
+                      <td>
+                        <div className="action-buttons">
+                          <button 
+                            className="btn-action btn-edit"
+                            onClick={() => handleOpenModal(warehouse)}
+                            title="Chỉnh sửa"
+                          >
+                            ✏️
+                          </button>
+                          <button 
+                            className="btn-action btn-delete"
+                            onClick={() => handleDelete(warehouse.maKho)}
+                            title="Xóa"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    {isExpanded && inventory.length > 0 && (
+                      <tr className="inventory-row">
+                        <td colSpan={7}>
+                          <div className="inventory-details">
+                            <h4>📦 Tồn kho</h4>
+                            <table className="inventory-table">
+                              <thead>
+                                <tr>
+                                  <th>Mã lô</th>
+                                  <th>Sản phẩm</th>
+                                  <th>Mã QR</th>
+                                  <th>Số lượng</th>
+                                  <th>Cập nhật cuối</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {inventory.map((item: any) => (
+                                  <tr key={item.maLo}>
+                                    <td>#{item.maLo}</td>
+                                    <td>{item.tenSanPham || 'N/A'}</td>
+                                    <td><code>{item.maQR || 'N/A'}</code></td>
+                                    <td>{item.soLuong} {item.donViTinh || 'kg'}</td>
+                                    <td>
+                                      {item.capNhatCuoi 
+                                        ? new Date(item.capNhatCuoi).toLocaleString('vi-VN')
+                                        : '-'
+                                      }
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -363,125 +358,41 @@ function WarehouseManagement() {
       )}
 
       <style>{`
-        .warehouse-list {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-          margin-top: 20px;
-        }
-
-        .warehouse-card {
-          background: white;
-          border-radius: 12px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-          overflow: hidden;
-          transition: all 0.3s ease;
-        }
-
-        .warehouse-card:hover {
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        .warehouse-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 20px;
-          cursor: pointer;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .btn-view-inventory {
+          background: #3b82f6;
           color: white;
-          transition: background 0.3s ease;
+          border: none;
+          padding: 6px 12px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 13px;
+          transition: all 0.2s;
         }
 
-        .warehouse-header:hover {
-          background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+        .btn-view-inventory:hover {
+          background: #2563eb;
         }
 
-        .warehouse-info {
-          flex: 1;
-        }
-
-        .warehouse-title {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-bottom: 10px;
-        }
-
-        .warehouse-title h3 {
-          margin: 0;
-          font-size: 20px;
-          font-weight: 600;
-        }
-
-        .warehouse-id {
-          background: rgba(255,255,255,0.2);
-          padding: 4px 12px;
-          border-radius: 12px;
-          font-size: 14px;
-          font-weight: 500;
-        }
-
-        .expand-icon {
-          font-size: 14px;
-          transition: transform 0.3s ease;
-        }
-
-        .warehouse-details {
-          display: flex;
-          gap: 20px;
-          flex-wrap: wrap;
-          font-size: 14px;
-          opacity: 0.95;
-        }
-
-        .detail-item {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-
-        .warehouse-actions {
-          display: flex;
-          gap: 10px;
-        }
-
-        .warehouse-inventory {
-          padding: 20px;
+        .inventory-row {
           background: #f9fafb;
-          border-top: 2px solid #e5e7eb;
         }
 
-        .warehouse-inventory h4 {
+        .inventory-details {
+          padding: 20px;
+        }
+
+        .inventory-details h4 {
           margin: 0 0 16px 0;
-          font-size: 18px;
           color: #374151;
-        }
-
-        .loading-inventory {
-          text-align: center;
-          padding: 40px;
-          color: #6b7280;
-        }
-
-        .empty-inventory {
-          text-align: center;
-          padding: 40px;
-          background: white;
-          border-radius: 8px;
-          color: #6b7280;
-        }
-
-        .inventory-table-container {
-          background: white;
-          border-radius: 8px;
-          overflow: hidden;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          font-size: 16px;
         }
 
         .inventory-table {
           width: 100%;
-          border-collapse: collapse;
+          background: white;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         .inventory-table thead {
@@ -489,50 +400,25 @@ function WarehouseManagement() {
         }
 
         .inventory-table th {
-          padding: 12px 16px;
+          padding: 12px;
           text-align: left;
           font-weight: 600;
           color: #374151;
-          font-size: 14px;
-          border-bottom: 2px solid #e5e7eb;
-        }
-
-        .inventory-table td {
-          padding: 12px 16px;
-          border-bottom: 1px solid #e5e7eb;
-          color: #4b5563;
-        }
-
-        .inventory-table tbody tr:hover {
-          background: #f9fafb;
-        }
-
-        .inventory-table tbody tr:last-child td {
-          border-bottom: none;
-        }
-
-        .batch-id {
-          background: #dbeafe;
-          color: #1e40af;
-          padding: 4px 8px;
-          border-radius: 6px;
-          font-weight: 600;
           font-size: 13px;
         }
 
-        .qr-code {
+        .inventory-table td {
+          padding: 12px;
+          border-top: 1px solid #e5e7eb;
+          font-size: 14px;
+        }
+
+        .inventory-table code {
           background: #f3f4f6;
           padding: 4px 8px;
           border-radius: 4px;
           font-family: 'Courier New', monospace;
           font-size: 12px;
-          color: #374151;
-        }
-
-        .quantity {
-          font-weight: 600;
-          color: #059669;
-          font-size: 15px;
         }
 
         .empty-state {
@@ -547,26 +433,6 @@ function WarehouseManagement() {
           font-size: 18px;
           color: #6b7280;
           margin-bottom: 20px;
-        }
-
-        @media (max-width: 768px) {
-          .warehouse-header {
-            flex-direction: column;
-            gap: 16px;
-          }
-
-          .warehouse-details {
-            flex-direction: column;
-            gap: 8px;
-          }
-
-          .inventory-table-container {
-            overflow-x: auto;
-          }
-
-          .inventory-table {
-            min-width: 600px;
-          }
         }
       `}</style>
     </div>

@@ -138,17 +138,19 @@ namespace DaiLyService.Controllers
 
         // PUT: api/don-hang-dai-ly/xac-nhan/5
         [HttpPut("xac-nhan/{id}")]
-        public IActionResult XacNhanDon(int id)
+        public IActionResult XacNhanDon(int id, [FromBody] XacNhanDonRequest request)
         {
             try
             {
                 if (id <= 0) return BadRequest(new { success = false, message = "ID đơn hàng không hợp lệ" });
+                if (request == null || request.MaKho <= 0) 
+                    return BadRequest(new { success = false, message = "Mã kho không hợp lệ" });
 
-                bool result = _donHangService.XacNhanDon(id);
+                bool result = _donHangService.XacNhanDon(id, request.MaKho);
 
                 if (!result) return NotFound(new { success = false, message = "Không tìm thấy đơn hàng để xác nhận" });
 
-                return Ok(new { success = true, message = "Đã chấp nhận đơn hàng thành công" });
+                return Ok(new { success = true, message = "Đã chấp nhận đơn hàng và thêm vào kho thành công" });
             }
             catch (Exception ex)
             {

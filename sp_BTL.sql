@@ -1986,7 +1986,8 @@ BEGIN
         K.TenKho,
         K.MaDaiLy,
         SP.TenSanPham,
-        SP.DonViTinh
+        SP.DonViTinh,
+        LNS.MaQR
     FROM TonKho TK
     INNER JOIN Kho K ON TK.MaKho = K.MaKho
     INNER JOIN LoNongSan LNS ON TK.MaLo = LNS.MaLo

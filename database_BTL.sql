@@ -136,9 +136,11 @@ CREATE TABLE DonHangDaiLy (
     MaDonHang INT PRIMARY KEY,
     MaDaiLy INT NOT NULL,
     MaNongDan INT NOT NULL,
+    MaKho INT NULL,
     FOREIGN KEY (MaDonHang) REFERENCES DonHang(MaDonHang),
     FOREIGN KEY (MaDaiLy) REFERENCES DaiLy(MaDaiLy),
-    FOREIGN KEY (MaNongDan) REFERENCES NongDan(MaNongDan)
+    FOREIGN KEY (MaNongDan) REFERENCES NongDan(MaNongDan),
+    FOREIGN KEY (MaKho) REFERENCES Kho(MaKho)
 );
 
 -- 13. DON HANG SIEU THI -> DAI LY
