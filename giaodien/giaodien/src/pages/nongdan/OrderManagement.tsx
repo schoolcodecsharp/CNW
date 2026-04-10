@@ -9,8 +9,13 @@ function OrderManagement() {
   const [allOrders, setAllOrders] = useState([]);
   const [batches, setBatches] = useState([]);
   const [dailyList, setDailyList] = useState([]);
+  const [warehouses, setWarehouses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const [selectedWarehouse, setSelectedWarehouse] = useState('');
+  const [selectedDaiLyId, setSelectedDaiLyId] = useState<number | null>(null);
   const [maNongDan, setMaNongDan] = useState(null);
   const [formData, setFormData] = useState({
     maDaiLy: '',
@@ -102,6 +107,58 @@ function OrderManagement() {
     }
   };
 
+  const handleAcceptOrder = async (orderId: number, maDaiLy: number) => {
+    // Load warehouses của đại lý
+    try {
+      const warehousesRes = await axios.get(API_ENDPOINTS.kho.getByDaiLy(maDaiLy));
+      if (warehousesRes.data.success && warehousesRes.data.data.length > 0) {
+        setWarehouses(warehousesRes.data.data);
+        setSelectedOrderId(orderId);
+        setSelectedDaiLyId(maDaiLy);
+        setSelectedWarehouse('');
+        setShowAcceptModal(true);
+      } else {
+        alert('❌ Đại lý chưa có kho nào!');
+      }
+    } catch (error: any) {
+      console.error('Error loading warehouses:', error);
+      alert('❌ Không thể tải danh sách kho');
+    }
+  };
+
+  const confirmAcceptOrder = async () => {
+    if (!selectedWarehouse) {
+      alert('❌ Vui lòng chọn kho!');
+      return;
+    }
+
+    try {
+      await axios.put(
+        API_ENDPOINTS.donHangDaiLy.xacNhan(selectedOrderId!),
+        { MaKho: parseInt(selectedWarehouse) }
+      );
+      alert('✅ Đã chấp nhận đơn hàng! Hàng đã được thêm vào kho của đại lý.');
+      setShowAcceptModal(false);
+      await loadData();
+    } catch (error: any) {
+      console.error('Error accepting order:', error);
+      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
+    }
+  };
+
+  const handleRejectOrder = async (orderId: number) => {
+    if (!window.confirm('Bạn có chắc muốn từ chối đơn hàng này?')) return;
+    
+    try {
+      await axios.put(API_ENDPOINTS.donHangDaiLy.huyDon(orderId));
+      alert('✅ Đã từ chối đơn hàng!');
+      await loadData();
+    } catch (error: any) {
+      console.error('Error rejecting order:', error);
+      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const badges: any = {
       'chua_nhan': <span className="badge badge-warning">⏳ Chờ xác nhận</span>,
@@ -149,12 +206,13 @@ function OrderManagement() {
               <th>Tổng giá trị</th>
               <th>Trạng thái</th>
               <th>Ghi chú</th>
+              <th>Hành động</th>
             </tr>
           </thead>
           <tbody>
             {allOrders.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center">Chưa có đơn hàng nào</td>
+                <td colSpan={8} className="text-center">Chưa có đơn hàng nào</td>
               </tr>
             ) : (
               allOrders.map((order: any) => (
@@ -166,6 +224,26 @@ function OrderManagement() {
                   <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.tongGiaTri)}</td>
                   <td>{getStatusBadge(order.trangThai)}</td>
                   <td>{order.ghiChu || '-'}</td>
+                  <td>
+                    {order.trangThai === 'chua_nhan' && (
+                      <div className="action-buttons">
+                        <button 
+                          className="btn-action btn-success"
+                          onClick={() => handleAcceptOrder(order.maDonHang, order.maDaiLy)}
+                          title="Chấp nhận đơn hàng"
+                        >
+                          ✓
+                        </button>
+                        <button 
+                          className="btn-action btn-danger"
+                          onClick={() => handleRejectOrder(order.maDonHang)}
+                          title="Từ chối đơn hàng"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
+                  </td>
                 </tr>
               ))
             )}
@@ -294,6 +372,53 @@ function OrderManagement() {
         </div>
       )}
 
+      {/* Modal chọn kho khi chấp nhận đơn hàng */}
+      {showAcceptModal && (
+        <div className="modal-overlay" onClick={() => setShowAcceptModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>✅ Chấp nhận đơn hàng</h2>
+              <button className="btn-close" onClick={() => setShowAcceptModal(false)}>✕</button>
+            </div>
+            
+            <div className="modal-body">
+              <p style={{marginBottom: '20px', color: '#6b7280'}}>
+                Chọn kho của đại lý để nhập hàng:
+              </p>
+              
+              <div className="form-group">
+                <label>
+                  <span className="label-icon">🏭</span>
+                  Kho <span className="required">*</span>
+                </label>
+                <select
+                  value={selectedWarehouse}
+                  onChange={(e) => setSelectedWarehouse(e.target.value)}
+                  required
+                  className="form-control"
+                >
+                  <option value="">-- Chọn kho --</option>
+                  {warehouses.map((warehouse: any) => (
+                    <option key={warehouse.maKho} value={warehouse.maKho}>
+                      {warehouse.tenKho} {warehouse.diaChi ? `(${warehouse.diaChi})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={() => setShowAcceptModal(false)}>
+                <span>✕</span> Hủy
+              </button>
+              <button type="button" className="btn btn-primary" onClick={confirmAcceptOrder}>
+                <span>✅</span> Xác nhận
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         .total-value {
           font-size: 24px;
@@ -312,6 +437,40 @@ function OrderManagement() {
           padding: 12px;
           border-radius: 8px;
           margin-bottom: 16px;
+        }
+
+        .action-buttons {
+          display: flex;
+          gap: 8px;
+          justify-content: center;
+        }
+
+        .btn-action {
+          padding: 6px 12px;
+          border-radius: 6px;
+          border: none;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+          transition: all 0.2s;
+        }
+
+        .btn-action.btn-success {
+          background: #10b981;
+          color: white;
+        }
+
+        .btn-action.btn-success:hover {
+          background: #059669;
+        }
+
+        .btn-action.btn-danger {
+          background: #ef4444;
+          color: white;
+        }
+
+        .btn-action.btn-danger:hover {
+          background: #dc2626;
         }
       `}</style>
     </div>
