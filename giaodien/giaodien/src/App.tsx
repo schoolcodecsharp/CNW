@@ -10,6 +10,7 @@ import NongDanDashboard from './pages/nongdan/NongDanDashboard';
 import DaiLyDashboard from './pages/daily/DaiLyDashboard';
 import SieuThiDashboard from './pages/sieuthi/SieuThiDashboard';
 import TestApiPage from './pages/TestApiPage';
+import ApiDemo from './components/ApiDemo';
 import './App.css';
 
 // Protected Route Component
@@ -71,6 +72,7 @@ function AppRoutes() {
       <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
       <Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
       <Route path="/test-api" element={<TestApiPage />} />
+      <Route path="/api-demo" element={<ApiDemo />} />
 
       {/* Protected Routes */}
       <Route path="/admin/*" element={
