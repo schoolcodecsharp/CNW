@@ -1,10 +1,11 @@
 // API Configuration - Kết nối trực tiếp đến các services
+// Sử dụng environment variables hoặc fallback về port mặc định
 export const API_BASE_URLS = {
-  auth: 'http://localhost:5297',
-  admin: 'http://localhost:5000',
-  nongdan: 'http://localhost:5251',
-  daily: 'http://localhost:5002',
-  sieuthi: 'http://localhost:5291'
+  auth: import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:5297',
+  admin: import.meta.env.VITE_ADMIN_SERVICE_URL || 'http://localhost:5000',
+  nongdan: import.meta.env.VITE_NONGDAN_SERVICE_URL || 'http://localhost:5251',
+  daily: import.meta.env.VITE_DAILY_SERVICE_URL || 'http://localhost:5002',
+  sieuthi: import.meta.env.VITE_SIEUTHI_SERVICE_URL || 'http://localhost:5291'
 };
 
 export const API_ENDPOINTS = {
