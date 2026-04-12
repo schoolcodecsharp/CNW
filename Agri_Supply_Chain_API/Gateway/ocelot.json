@@ -1,24 +1,24 @@
 {
   "GlobalConfiguration": {
-    "BaseUrl": "http://localhost:5041"
+    "BaseUrl": "https://localhost:7217"
   },
   "Routes": [
     {
-      "UpstreamPathTemplate": "/api-auth/{everything}",
+      "UpstreamPathTemplate": "/api/Auth/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
-      "DownstreamPathTemplate": "/api/{everything}",
-      "DownstreamScheme": "http",
+      "DownstreamPathTemplate": "/api/Auth/{everything}",
+      "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 5297
+          "Port": 7183
         }
       ]
     },
     {
-      "UpstreamPathTemplate": "/api-admin/{everything}",
+      "UpstreamPathTemplate": "/api/Admin/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
-      "DownstreamPathTemplate": "/api/{everything}",
+      "DownstreamPathTemplate": "/api/Admin/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -28,38 +28,134 @@
       ]
     },
     {
-      "UpstreamPathTemplate": "/api-nongdan/{everything}",
+      "UpstreamPathTemplate": "/api/nong-dan/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
-      "DownstreamPathTemplate": "/api/{everything}",
-      "DownstreamScheme": "http",
+      "DownstreamPathTemplate": "/api/nong-dan/{everything}",
+      "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 5251
+          "Port": 7090
         }
       ]
     },
     {
-      "UpstreamPathTemplate": "/api-daily/{everything}",
+      "UpstreamPathTemplate": "/api/trang-trai/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
-      "DownstreamPathTemplate": "/api/{everything}",
-      "DownstreamScheme": "http",
+      "DownstreamPathTemplate": "/api/trang-trai/{everything}",
+      "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 5002
+          "Port": 7090
         }
       ]
     },
     {
-      "UpstreamPathTemplate": "/api-sieuthi/{everything}",
+      "UpstreamPathTemplate": "/api/lo-nong-san/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
-      "DownstreamPathTemplate": "/api/{everything}",
-      "DownstreamScheme": "http",
+      "DownstreamPathTemplate": "/api/lo-nong-san/{everything}",
+      "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 5291
+          "Port": 7090
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/san-pham/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/api/san-pham/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7090
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/dai-ly/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/api/dai-ly/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7002
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/kho/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/api/kho/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7002
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/kiem-dinh/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/api/kiem-dinh/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7002
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/don-hang-dai-ly/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/api/don-hang-dai-ly/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7002
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/ton-kho/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/api/ton-kho/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7002
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/sieu-thi/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/api/sieu-thi/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7087
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/DonHangSieuThi/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/api/DonHangSieuThi/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7087
         }
       ]
     }

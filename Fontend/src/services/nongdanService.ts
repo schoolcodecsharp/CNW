@@ -1,9 +1,7 @@
 import axios from 'axios';
 import { API_ENDPOINTS } from './apiConfig';
 
-// Nông Dân Service
 export const nongdanService = {
-  // Nông dân
   getAllNongDan: async () => {
     const response = await axios.get(API_ENDPOINTS.nongDan.getAll);
     return response.data;
@@ -29,7 +27,6 @@ export const nongdanService = {
     return response.data;
   },
 
-  // Trang trại
   getAllTrangTrai: async () => {
     const response = await axios.get(API_ENDPOINTS.trangTrai.getAll);
     return response.data;
@@ -60,7 +57,6 @@ export const nongdanService = {
     return response.data;
   },
 
-  // Lô nông sản
   getAllLoNongSan: async () => {
     const response = await axios.get(API_ENDPOINTS.loNongSan.getAll);
     return response.data;
@@ -96,7 +92,6 @@ export const nongdanService = {
     return response.data;
   },
 
-  // Sản phẩm
   getAllSanPham: async () => {
     const response = await axios.get(API_ENDPOINTS.sanPham.getAll);
     return response.data;

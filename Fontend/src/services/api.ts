@@ -1,45 +1,36 @@
 import axios from 'axios';
+import type { AxiosError, AxiosResponse } from 'axios';
 
-const API_BASE_URL = 'http://localhost:6000';
+const API_BASE_URL = import.meta.env.VITE_GATEWAY_URL || 'https://localhost:7217';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  headers: { 'Content-Type': 'application/json' },
+  timeout: 30000,
+  withCredentials: false
 });
 
-// API Services
-export const apiService = {
-  // Tính tổng từ 1 đến n
-  tinhTong: async (n) => {
-    const response = await api.get(`/TinhTong/${n}`);
-    return response.data;
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    
+    console.log('🚀', config.method?.toUpperCase(), config.url);
+    return config;
   },
+  (error) => Promise.reject(error)
+);
 
-  // Tính tổng hai số
-  tinhTongHaiSo: async (a, b) => {
-    const response = await api.post('/TinhTongHaiSo', { a, b });
-    return response.data;
+api.interceptors.response.use(
+  (response: AxiosResponse) => {
+    console.log('✅', response.status, response.config.url);
+    return response;
   },
-
-  // Lấy danh sách nông dân
-  getNongDan: async () => {
-    const response = await api.get('/api/nongdan');
-    return response.data;
-  },
-
-  // Lấy danh sách trang trại
-  getTrangTrai: async () => {
-    const response = await api.get('/api/trangtrai');
-    return response.data;
-  },
-
-  // Lấy danh sách lô nông sản
-  getLoNongSan: async () => {
-    const response = await api.get('/api/lonongsan');
-    return response.data;
+  (error: AxiosError) => {
+    console.error('❌', error.response?.status || 'Network Error', error.config?.url);
+    return Promise.reject(error);
   }
-};
+);
 
-export default apiService;
+export { api };
+export default api;

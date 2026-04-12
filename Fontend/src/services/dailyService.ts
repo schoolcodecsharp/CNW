@@ -1,9 +1,7 @@
 import axios from 'axios';
 import { API_ENDPOINTS } from './apiConfig';
 
-// Đại Lý Service
 export const dailyService = {
-  // Đại lý
   getAllDaiLy: async () => {
     const response = await axios.get(API_ENDPOINTS.daiLy.getAll);
     return response.data;
@@ -29,7 +27,6 @@ export const dailyService = {
     return response.data;
   },
 
-  // Kho
   getAllKho: async () => {
     const response = await axios.get(API_ENDPOINTS.kho.getAll);
     return response.data;
@@ -65,7 +62,6 @@ export const dailyService = {
     return response.data;
   },
 
-  // Kiểm định
   getAllKiemDinh: async () => {
     const response = await axios.get(API_ENDPOINTS.kiemDinh.getAll);
     return response.data;
@@ -96,7 +92,6 @@ export const dailyService = {
     return response.data;
   },
 
-  // Đơn hàng đại lý
   getAllDonHangDaiLy: async () => {
     const response = await axios.get(API_ENDPOINTS.donHangDaiLy.getAll);
     return response.data;
@@ -127,13 +122,13 @@ export const dailyService = {
     return response.data;
   },
 
-  xacNhanDonHang: async (id: number) => {
-    const response = await axios.put(API_ENDPOINTS.donHangDaiLy.xacNhan(id));
+  xacNhanDonHang: async (id: number, data: any) => {
+    const response = await axios.put(API_ENDPOINTS.donHangDaiLy.xacNhan(id), data);
     return response.data;
   },
 
-  xuatDonHang: async (id: number) => {
-    const response = await axios.put(API_ENDPOINTS.donHangDaiLy.xuatDon(id));
+  xuatDonHang: async (id: number, data: any) => {
+    const response = await axios.put(API_ENDPOINTS.donHangDaiLy.xuatDon(id), data);
     return response.data;
   },
 
@@ -147,7 +142,6 @@ export const dailyService = {
     return response.data;
   },
 
-  // Tồn kho
   getAllTonKho: async () => {
     const response = await axios.get(API_ENDPOINTS.tonKho.getAll);
     return response.data;
