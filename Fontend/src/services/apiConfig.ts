@@ -1,11 +1,24 @@
 // API Configuration - Kết nối trực tiếp đến các services
-// Sử dụng environment variables hoặc fallback về port mặc định
+// Tự động detect HTTP hoặc HTTPS
+const isHttps = window.location.protocol === 'https:';
+const defaultProtocol = isHttps ? 'https' : 'http';
+
+// Thử kết nối HTTP trước, nếu không được thì HTTPS
 export const API_BASE_URLS = {
   auth: import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:5297',
   admin: import.meta.env.VITE_ADMIN_SERVICE_URL || 'http://localhost:5000',
   nongdan: import.meta.env.VITE_NONGDAN_SERVICE_URL || 'http://localhost:5251',
   daily: import.meta.env.VITE_DAILY_SERVICE_URL || 'http://localhost:5002',
   sieuthi: import.meta.env.VITE_SIEUTHI_SERVICE_URL || 'http://localhost:5291'
+};
+
+// Fallback HTTPS ports nếu HTTP không hoạt động
+export const API_BASE_URLS_HTTPS = {
+  auth: 'https://localhost:7183',
+  admin: 'https://localhost:7000',
+  nongdan: 'https://localhost:7251',
+  daily: 'https://localhost:7002',
+  sieuthi: 'https://localhost:7291'
 };
 
 export const API_ENDPOINTS = {
