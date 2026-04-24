@@ -8,25 +8,18 @@ function OrderManagement() {
   const { user } = useAuth();
   const [allOrders, setAllOrders] = useState([]);
   const [nongdanList, setNongdanList] = useState([]);
-  const [sieuThiList, setSieuThiList] = useState([]);
   const [batches, setBatches] = useState([]);
   const [farmerBatches, setFarmerBatches] = useState<{[key: number]: any[]}>({});
   const [loadingBatches, setLoadingBatches] = useState(false);
-  const [tonKho, setTonKho] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModalFarmer, setShowModalFarmer] = useState(false);
-  const [showModalSupermarket, setShowModalSupermarket] = useState(false);
+  const [showModalAccept, setShowModalAccept] = useState(false);
   const [warehouses, setWarehouses] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [selectedWarehouse, setSelectedWarehouse] = useState('');
   const [maDaiLy, setMaDaiLy] = useState(null);
   const [formDataFarmer, setFormDataFarmer] = useState({
     maNongDan: '',
-    maLo: '',
-    soLuong: '',
-    donGia: '',
-    ghiChu: ''
-  });
-  const [formDataSupermarket, setFormDataSupermarket] = useState({
-    maSieuThi: '',
     maLo: '',
     soLuong: '',
     donGia: '',
@@ -91,15 +84,9 @@ function OrderManagement() {
       console.log('[OrderManagement] Available batches:', availableBatches.length);
       setBatches(availableBatches);
 
-      // Tải danh sách tồn kho
-      const tonKhoRes = await axios.get(API_ENDPOINTS.tonKho.getByDaiLy(currentDaily.maDaiLy));
-      const availableTonKho = (tonKhoRes.data.data || []).filter((tk: any) => tk.soLuong > 0);
-      console.log('[OrderManagement] Available ton kho:', availableTonKho.length);
-      setTonKho(availableTonKho);
-
-      // Tải danh sách siêu thị
-      const sieuThiRes = await axios.get(API_ENDPOINTS.sieuThi.getAll);
-      setSieuThiList(sieuThiRes.data.data || []);
+      // Tải danh sách kho của đại lý
+      const warehousesRes = await axios.get(API_ENDPOINTS.kho.getByDaiLy(currentDaily.maDaiLy));
+      setWarehouses(warehousesRes.data.data || []);
 
     } catch (error) {
       console.error('Error loading data:', error);
@@ -144,35 +131,49 @@ function OrderManagement() {
     }
   };
 
-  const handleSubmitSupermarket = async (e: any) => {
-    e.preventDefault();
-    
-    try {
-      const selectedTonKho = tonKho.find((tk: any) => tk.maLo === parseInt(formDataSupermarket.maLo));
-      if (!selectedTonKho) {
-        alert('❌ Vui lòng chọn lô hàng từ kho!');
-        return;
-      }
-      if (parseFloat(formDataSupermarket.soLuong) > selectedTonKho.soLuong) {
-        alert('❌ Số lượng vượt quá số lượng tồn kho!');
-        return;
-      }
+  const handleAcceptOrder = async () => {
+    if (!selectedWarehouse) {
+      alert('❌ Vui lòng chọn kho để nhận hàng!');
+      return;
+    }
 
+    try {
       const payload = {
-        MaSieuThi: parseInt(formDataSupermarket.maSieuThi),
-        MaDaiLy: maDaiLy,
-        GhiChu: formDataSupermarket.ghiChu || null
+        MaKho: parseInt(selectedWarehouse)
       };
 
-      await axios.post(API_ENDPOINTS.donHangSieuThi.create, payload);
-      alert('✅ Tạo đơn bán hàng thành công!');
+      await axios.put(API_ENDPOINTS.donHangSieuThi.updateTrangThai(selectedOrder.maDonHang), payload);
+      alert('✅ Chấp nhận đơn hàng thành công!');
       
-      setShowModalSupermarket(false);
+      setShowModalAccept(false);
+      setSelectedOrder(null);
+      setSelectedWarehouse('');
       await loadData();
     } catch (error: any) {
-      console.error('Error creating order:', error);
+      console.error('Error accepting order:', error);
       alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
     }
+  };
+
+  const handleRejectOrder = async (order: any) => {
+    if (!confirm(`Bạn có chắc muốn từ chối đơn hàng #${order.maDonHang}?`)) {
+      return;
+    }
+
+    try {
+      await axios.put(API_ENDPOINTS.donHangSieuThi.delete(order.maDonHang));
+      alert('✅ Từ chối đơn hàng thành công!');
+      await loadData();
+    } catch (error: any) {
+      console.error('Error rejecting order:', error);
+      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
+    }
+  };
+
+  const handleOpenAcceptModal = (order: any) => {
+    setSelectedOrder(order);
+    setSelectedWarehouse('');
+    setShowModalAccept(true);
   };
 
   const getAvailableBatchesByFarmer = () => {
@@ -249,25 +250,12 @@ function OrderManagement() {
           >
             ➕ Tạo đơn mua từ nông dân
           </button>
-          <button 
-            className="btn btn-primary" 
-            onClick={() => setShowModalSupermarket(true)}
-            disabled={tonKho.length === 0}
-          >
-            ➕ Tạo đơn bán cho siêu thị
-          </button>
         </div>
       </div>
 
       {batches.length === 0 && (
         <div className="alert alert-warning">
           ⚠️ Chưa có lô nông sản khả dụng từ nông dân
-        </div>
-      )}
-
-      {tonKho.length === 0 && (
-        <div className="alert alert-warning">
-          ⚠️ Chưa có hàng tồn kho để bán cho siêu thị
         </div>
       )}
 
@@ -301,8 +289,26 @@ function OrderManagement() {
                   <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.tongGiaTri)}</td>
                   <td>{getStatusBadge(order.trangThai)}</td>
                   <td>
-                    {/* Đại lý chỉ xem đơn hàng, không có nút accept/reject */}
-                    -
+                    {order.loaiDon === 'Bán cho siêu thị' && order.trangThai === 'chua_nhan' ? (
+                      <div style={{display: 'flex', gap: '8px'}}>
+                        <button 
+                          className="btn-action btn-success"
+                          onClick={() => handleOpenAcceptModal(order)}
+                          title="Chấp nhận đơn hàng"
+                        >
+                          ✓ Chấp nhận
+                        </button>
+                        <button 
+                          className="btn-action btn-danger"
+                          onClick={() => handleRejectOrder(order)}
+                          title="Từ chối đơn hàng"
+                        >
+                          ✕ Từ chối
+                        </button>
+                      </div>
+                    ) : (
+                      '-'
+                    )}
                   </td>
                 </tr>
               ))
@@ -447,124 +453,52 @@ function OrderManagement() {
         </div>
       )}
 
-      {/* Modal: Tạo đơn bán cho siêu thị */}
-      {showModalSupermarket && (
-        <div className="modal-overlay" onClick={() => setShowModalSupermarket(false)}>
+      {/* Modal: Chấp nhận đơn hàng từ siêu thị */}
+      {showModalAccept && selectedOrder && (
+        <div className="modal-overlay" onClick={() => setShowModalAccept(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>➕ Tạo đơn bán cho siêu thị</h2>
-              <button className="btn-close" onClick={() => setShowModalSupermarket(false)}>✕</button>
+              <h2>✓ Chấp nhận đơn hàng #{selectedOrder.maDonHang}</h2>
+              <button className="btn-close" onClick={() => setShowModalAccept(false)}>✕</button>
             </div>
             
-            <form onSubmit={handleSubmitSupermarket}>
-              <div className="modal-body">
-                <div className="form-group">
-                  <label>
-                    <span className="label-icon">🏪</span>
-                    Siêu thị <span className="required">*</span>
-                  </label>
-                  <select
-                    value={formDataSupermarket.maSieuThi}
-                    onChange={(e) => setFormDataSupermarket({...formDataSupermarket, maSieuThi: e.target.value})}
-                    required
-                    className="form-control"
-                  >
-                    <option value="">-- Chọn siêu thị --</option>
-                    {sieuThiList.map((st: any) => (
-                      <option key={st.maSieuThi} value={st.maSieuThi}>
-                        {st.tenSieuThi}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>
-                    <span className="label-icon">📦</span>
-                    Lô hàng từ kho <span className="required">*</span>
-                  </label>
-                  <select
-                    value={formDataSupermarket.maLo}
-                    onChange={(e) => setFormDataSupermarket({...formDataSupermarket, maLo: e.target.value})}
-                    required
-                    className="form-control"
-                  >
-                    <option value="">-- Chọn lô hàng --</option>
-                    {tonKho.map((tk: any) => (
-                      <option key={tk.maLo} value={tk.maLo}>
-                        {tk.tenSanPham} - Kho {tk.tenKho} (Tồn: {tk.soLuong} kg)
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>
-                    <span className="label-icon">⚖️</span>
-                    Số lượng (kg) <span className="required">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={formDataSupermarket.soLuong}
-                    onChange={(e) => setFormDataSupermarket({...formDataSupermarket, soLuong: e.target.value})}
-                    required
-                    placeholder="Nhập số lượng"
-                    className="form-control"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>
-                    <span className="label-icon">💰</span>
-                    Đơn giá (VNĐ/kg) <span className="required">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    step="1000"
-                    value={formDataSupermarket.donGia}
-                    onChange={(e) => setFormDataSupermarket({...formDataSupermarket, donGia: e.target.value})}
-                    required
-                    placeholder="Nhập đơn giá"
-                    className="form-control"
-                  />
-                </div>
-
-                {formDataSupermarket.soLuong && formDataSupermarket.donGia && (
-                  <div className="form-group">
-                    <label>💵 Tổng giá trị</label>
-                    <div className="total-value">
-                      {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
-                        parseFloat(formDataSupermarket.soLuong) * parseFloat(formDataSupermarket.donGia)
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                <div className="form-group">
-                  <label>
-                    <span className="label-icon">📝</span>
-                    Ghi chú
-                  </label>
-                  <textarea
-                    value={formDataSupermarket.ghiChu}
-                    onChange={(e) => setFormDataSupermarket({...formDataSupermarket, ghiChu: e.target.value})}
-                    placeholder="Nhập ghi chú (nếu có)"
-                    rows={3}
-                    className="form-control"
-                  />
-                </div>
+            <div className="modal-body">
+              <div className="order-info">
+                <p><strong>Siêu thị:</strong> {selectedOrder.tenSieuThi}</p>
+                <p><strong>Ngày đặt:</strong> {new Date(selectedOrder.ngayDat).toLocaleDateString('vi-VN')}</p>
+                <p><strong>Tổng số lượng:</strong> {selectedOrder.tongSoLuong} kg</p>
+                <p><strong>Tổng giá trị:</strong> {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedOrder.tongGiaTri)}</p>
               </div>
-              
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModalSupermarket(false)}>
-                  <span>✕</span> Hủy
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  <span>➕</span> Tạo đơn hàng
-                </button>
+
+              <div className="form-group">
+                <label>
+                  <span className="label-icon">🏪</span>
+                  Chọn kho để nhận hàng <span className="required">*</span>
+                </label>
+                <select
+                  value={selectedWarehouse}
+                  onChange={(e) => setSelectedWarehouse(e.target.value)}
+                  required
+                  className="form-control"
+                >
+                  <option value="">-- Chọn kho --</option>
+                  {warehouses.map((kho: any) => (
+                    <option key={kho.maKho} value={kho.maKho}>
+                      {kho.tenKho} - {kho.diaChi}
+                    </option>
+                  ))}
+                </select>
               </div>
-            </form>
+            </div>
+            
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={() => setShowModalAccept(false)}>
+                <span>✕</span> Hủy
+              </button>
+              <button type="button" className="btn btn-success" onClick={handleAcceptOrder}>
+                <span>✓</span> Xác nhận chấp nhận
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -619,22 +553,48 @@ function OrderManagement() {
           cursor: not-allowed;
         }
 
-        .btn-action.btn-success {
+        .btn-action {
           padding: 6px 12px;
+          border-radius: 6px;
+          border: none;
+          cursor: pointer;
+          font-size: 13px;
+          font-weight: 500;
+        }
+
+        .btn-action.btn-success {
+          background: #10b981;
+          color: white;
+        }
+
+        .btn-action.btn-success:hover {
+          background: #059669;
         }
 
         .btn-action.btn-danger {
           background: #ef4444;
           color: white;
-          padding: 6px 12px;
-          border-radius: 6px;
-          border: none;
-          cursor: pointer;
-          font-size: 14px;
         }
 
         .btn-action.btn-danger:hover {
           background: #dc2626;
+        }
+
+        .order-info {
+          background: #f9fafb;
+          padding: 16px;
+          border-radius: 8px;
+          margin-bottom: 16px;
+        }
+
+        .order-info p {
+          margin: 8px 0;
+          font-size: 14px;
+        }
+
+        .order-info strong {
+          color: #374151;
+          margin-right: 8px;
         }
       `}</style>
     </div>
