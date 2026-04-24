@@ -9,7 +9,7 @@ function NongDanOverview() {
     totalFarms: 0,
     totalBatches: 0,
     totalOrders: 0,
-    pendingOrders: 0
+    totalRevenue: 0
   });
   const [recentBatches, setRecentBatches] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
@@ -23,7 +23,7 @@ function NongDanOverview() {
     try {
       setLoading(true);
       
-      // Get farmer ID from user
+      // Lấy ID nông dân từ user
       const nongdanRes = await axios.get(API_ENDPOINTS.nongDan.getAll);
       const currentFarmer = nongdanRes.data.data?.find(
         nd => nd.maTaiKhoan === user?.maTaiKhoan
@@ -36,26 +36,31 @@ function NongDanOverview() {
 
       const maNongDan = currentFarmer.maNongDan;
 
-      // Load farms
-      const farmsRes = await axios.get(`${API_ENDPOINTS.nongDan.base}/trang-trai/get-by-nong-dan/${maNongDan}`)
+      // Tải danh sách trang trại
+      const farmsRes = await axios.get(API_ENDPOINTS.trangTrai.getByNongDan(maNongDan))
         .catch(() => ({ data: { data: [] } }));
       const farms = farmsRes.data.data || [];
 
-      // Load batches
-      const batchesRes = await axios.get(`${API_ENDPOINTS.nongDan.base}/lo-nong-san/get-by-nong-dan/${maNongDan}`)
+      // Tải danh sách lô nông sản
+      const batchesRes = await axios.get(API_ENDPOINTS.loNongSan.getByNongDan(maNongDan))
         .catch(() => ({ data: { data: [] } }));
       const batches = batchesRes.data.data || [];
 
-      // Load orders
-      const ordersRes = await axios.get(`${API_ENDPOINTS.nongDan.base}/don-hang-dai-ly/get-by-nong-dan/${maNongDan}`)
+      // Tải danh sách đơn hàng
+      const ordersRes = await axios.get(API_ENDPOINTS.donHangDaiLy.getByNongDan(maNongDan))
         .catch(() => ({ data: { data: [] } }));
       const orders = ordersRes.data.data || [];
+
+      // Tính tổng doanh thu từ các đơn hàng đã hoàn thành
+      const totalRevenue = orders
+        .filter(o => o.trangThai === 'hoan_thanh' || o.trangThai === 'da_nhan')
+        .reduce((sum, o) => sum + (o.tongGiaTri || 0), 0);
 
       setStats({
         totalFarms: farms.length,
         totalBatches: batches.length,
         totalOrders: orders.length,
-        pendingOrders: orders.filter(o => o.trangThai === 'cho_xu_ly').length
+        totalRevenue: totalRevenue
       });
 
       setRecentBatches(batches.slice(0, 5));
@@ -112,11 +117,16 @@ function NongDanOverview() {
 
         <div className="kpi-card">
           <div className="kpi-header">
-            <span className="kpi-title">Chờ xử lý</span>
-            <span className="kpi-icon">⏳</span>
+            <span className="kpi-title">Doanh thu</span>
+            <span className="kpi-icon">💰</span>
           </div>
-          <div className="kpi-value">{stats.pendingOrders}</div>
-          <div className="kpi-change">Đơn hàng cần xử lý</div>
+          <div className="kpi-value">
+            {new Intl.NumberFormat('vi-VN', { 
+              notation: 'compact',
+              maximumFractionDigits: 1
+            }).format(stats.totalRevenue)}đ
+          </div>
+          <div className="kpi-change">Tổng doanh thu từ đơn hàng</div>
         </div>
       </div>
 
@@ -199,9 +209,11 @@ function NongDanOverview() {
                     <td><strong>{order.tongGiaTri?.toLocaleString('vi-VN')} đ</strong></td>
                     <td>
                       <span className={`badge badge-${order.trangThai}`}>
-                        {order.trangThai === 'cho_xu_ly' ? '⏳ Chờ xử lý' :
+                        {order.trangThai === 'chua_nhan' ? '⏳ Chờ xác nhận' :
+                         order.trangThai === 'da_nhan' ? '✅ Đã nhận' :
                          order.trangThai === 'dang_xu_ly' ? '🔄 Đang xử lý' :
-                         order.trangThai === 'hoan_thanh' ? '✅ Hoàn thành' : order.trangThai}
+                         order.trangThai === 'hoan_thanh' ? '✅ Hoàn thành' :
+                         order.trangThai === 'da_huy' ? '❌ Đã hủy' : order.trangThai}
                       </span>
                     </td>
                   </tr>

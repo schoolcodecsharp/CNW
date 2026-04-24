@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
 import { useAuth } from '../../context/AuthContext';
@@ -7,10 +7,12 @@ import '../../components/Common.css';
 function WarehouseManagement() {
   const { user } = useAuth();
   const [warehouses, setWarehouses] = useState([]);
+  const [allInventory, setAllInventory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingWarehouse, setEditingWarehouse] = useState(null);
   const [maSieuThi, setMaSieuThi] = useState<number | null>(null);
+  const [expandedWarehouses, setExpandedWarehouses] = useState<Set<number>>(new Set());
   const [formData, setFormData] = useState({
     tenKho: '',
     diaChi: ''
@@ -30,7 +32,7 @@ function WarehouseManagement() {
         return;
       }
 
-      // Get sieuthi ID by MaTaiKhoan
+      // Lấy ID siêu thị bằng MaTaiKhoan
       const sieuThiRes = await axios.get(API_ENDPOINTS.sieuThi.getAll);
       
       if (!sieuThiRes.data.success || !sieuThiRes.data.data) {
@@ -52,18 +54,35 @@ function WarehouseManagement() {
       console.log('Found sieuthi:', currentSieuThi);
       setMaSieuThi(currentSieuThi.maSieuThi);
 
-      // Load warehouses for this sieuthi
+      // Tải danh sách kho của siêu thị này
       const warehousesRes = await axios.get(API_ENDPOINTS.kho.getBySieuThi(currentSieuThi.maSieuThi));
       
       if (warehousesRes.data.success) {
         setWarehouses(warehousesRes.data.data || []);
       }
 
+      // Siêu thị không có API tồn kho riêng, để trống
+      setAllInventory([]);
+
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const getWarehouseInventory = (maKho: number) => {
+    return allInventory.filter(item => item.maKho === maKho);
+  };
+
+  const toggleWarehouse = (maKho: number) => {
+    const newExpanded = new Set(expandedWarehouses);
+    if (newExpanded.has(maKho)) {
+      newExpanded.delete(maKho);
+    } else {
+      newExpanded.add(maKho);
+    }
+    setExpandedWarehouses(newExpanded);
   };
 
   const handleOpenModal = (warehouse: any = null) => {
@@ -93,7 +112,7 @@ function WarehouseManagement() {
     
     try {
       if (editingWarehouse) {
-        // Update
+        // Cập nhật kho
         await axios.put(
           API_ENDPOINTS.kho.update(editingWarehouse.maKho),
           {
@@ -104,7 +123,7 @@ function WarehouseManagement() {
         );
         alert('✅ Cập nhật kho thành công!');
       } else {
-        // Create - Sử dụng PascalCase để khớp với backend DTO
+        // Tạo mới - Sử dụng PascalCase để khớp với backend DTO
         console.log('Creating warehouse with MaSieuThi:', maSieuThi);
         const response = await axios.post(
           API_ENDPOINTS.kho.create,
@@ -187,41 +206,99 @@ function WarehouseManagement() {
                 <th>Địa chỉ</th>
                 <th>Trạng thái</th>
                 <th>Ngày tạo</th>
+                <th>Tồn kho</th>
                 <th>Hành động</th>
               </tr>
             </thead>
             <tbody>
-              {warehouses.map((warehouse: any) => (
-                <tr key={warehouse.maKho}>
-                  <td>{warehouse.maKho}</td>
-                  <td>{warehouse.tenKho}</td>
-                  <td>{warehouse.diaChi || '-'}</td>
-                  <td>
-                    {warehouse.trangThai === 'hoat_dong' ? (
-                      <span className="badge badge-success">✅ Hoạt động</span>
-                    ) : (
-                      <span className="badge badge-secondary">⏸️ Ngừng hoạt động</span>
+              {warehouses.map((warehouse: any) => {
+                const inventory = getWarehouseInventory(warehouse.maKho);
+                const isExpanded = expandedWarehouses.has(warehouse.maKho);
+                
+                return (
+                  <>
+                    <tr key={warehouse.maKho}>
+                      <td>{warehouse.maKho}</td>
+                      <td>{warehouse.tenKho}</td>
+                      <td>{warehouse.diaChi || '-'}</td>
+                      <td>
+                        {warehouse.trangThai === 'hoat_dong' ? (
+                          <span className="badge badge-success">✅ Hoạt động</span>
+                        ) : (
+                          <span className="badge badge-secondary">⏸️ Ngừng hoạt động</span>
+                        )}
+                      </td>
+                      <td>{warehouse.ngayTao ? new Date(warehouse.ngayTao).toLocaleDateString('vi-VN') : '-'}</td>
+                      <td>
+                        {inventory.length > 0 ? (
+                          <button 
+                            className="btn-view-inventory"
+                            onClick={() => toggleWarehouse(warehouse.maKho)}
+                          >
+                            {isExpanded ? '▼ Ẩn' : '▶ Xem'} ({inventory.length} lô)
+                          </button>
+                        ) : (
+                          <span style={{ color: '#9ca3af' }}>Trống</span>
+                        )}
+                      </td>
+                      <td>
+                        <div className="action-buttons">
+                          <button 
+                            className="btn-action btn-edit"
+                            onClick={() => handleOpenModal(warehouse)}
+                            title="Chỉnh sửa"
+                          >
+                            ✏️
+                          </button>
+                          <button 
+                            className="btn-action btn-delete"
+                            onClick={() => handleDelete(warehouse.maKho)}
+                            title="Xóa"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    {isExpanded && inventory.length > 0 && (
+                      <tr className="inventory-row">
+                        <td colSpan={7}>
+                          <div className="inventory-details">
+                            <h4>📦 Tồn kho</h4>
+                            <table className="inventory-table">
+                              <thead>
+                                <tr>
+                                  <th>Mã lô</th>
+                                  <th>Sản phẩm</th>
+                                  <th>Số lượng</th>
+                                  <th>Đơn vị</th>
+                                  <th>Cập nhật cuối</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {inventory.map((item: any) => (
+                                  <tr key={item.maLo}>
+                                    <td>#{item.maLo}</td>
+                                    <td>{item.tenSanPham || 'N/A'}</td>
+                                    <td><strong style={{ color: '#8b5cf6' }}>{item.soLuong}</strong></td>
+                                    <td>{item.donViTinh || 'kg'}</td>
+                                    <td>
+                                      {item.capNhatCuoi 
+                                        ? new Date(item.capNhatCuoi).toLocaleString('vi-VN')
+                                        : '-'
+                                      }
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </td>
+                      </tr>
                     )}
-                  </td>
-                  <td>{warehouse.ngayTao ? new Date(warehouse.ngayTao).toLocaleDateString('vi-VN') : '-'}</td>
-                  <td>
-                    <div className="action-buttons">
-                      <button 
-                        className="btn-action btn-edit"
-                        onClick={() => handleOpenModal(warehouse)}
-                      >
-                        ✏️
-                      </button>
-                      <button 
-                        className="btn-action btn-delete"
-                        onClick={() => handleDelete(warehouse.maKho)}
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                  </>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -281,6 +358,61 @@ function WarehouseManagement() {
       )}
 
       <style>{`
+        .btn-view-inventory {
+          background: #8b5cf6;
+          color: white;
+          border: none;
+          padding: 6px 12px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 13px;
+          transition: all 0.2s;
+        }
+
+        .btn-view-inventory:hover {
+          background: #7c3aed;
+        }
+
+        .inventory-row {
+          background: #f9fafb;
+        }
+
+        .inventory-details {
+          padding: 20px;
+        }
+
+        .inventory-details h4 {
+          margin: 0 0 16px 0;
+          color: #374151;
+          font-size: 16px;
+        }
+
+        .inventory-table {
+          width: 100%;
+          background: white;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .inventory-table thead {
+          background: #f3f4f6;
+        }
+
+        .inventory-table th {
+          padding: 12px;
+          text-align: left;
+          font-weight: 600;
+          color: #374151;
+          font-size: 13px;
+        }
+
+        .inventory-table td {
+          padding: 12px;
+          border-top: 1px solid #e5e7eb;
+          font-size: 14px;
+        }
+
         .empty-state {
           text-align: center;
           padding: 60px 20px;

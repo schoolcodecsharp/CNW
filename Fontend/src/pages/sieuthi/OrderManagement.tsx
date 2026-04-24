@@ -64,45 +64,87 @@ function OrderManagement() {
       const payload = {
         MaSieuThi: maSieuThi,
         MaDaiLy: parseInt(formData.maDaiLy),
+        NgayGiao: null,
         GhiChu: formData.ghiChu || null
       };
 
-      await axios.post(API_ENDPOINTS.donHangSieuThi.create, payload);
+      console.log('Creating order with payload:', payload);
+      
+      // API endpoint: POST /api/DonHangSieuThi/tao-don-hang
+      const response = await axios.post(API_ENDPOINTS.donHangSieuThi.create, payload);
+      
+      console.log('Create order response:', response.data);
       alert('✅ Tạo đơn hàng thành công!');
       
       setShowModal(false);
       await loadData();
     } catch (error: any) {
       console.error('Error creating order:', error);
-      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
+      console.error('Error response:', error.response?.data);
+      alert('❌ ' + (error.response?.data?.message || error.response?.data || 'Có lỗi xảy ra'));
     }
   };
 
-  const handleAcceptOrder = async (orderId: number) => {
-    if (!window.confirm('Bạn có chắc muốn chấp nhận đơn hàng này?')) return;
-    
+  const handleAcceptOrder = async (orderId: number, maDaiLy: number) => {
+    // Cần chọn kho để nhận hàng
     try {
-      await axios.put(API_ENDPOINTS.donHangSieuThi.updateTrangThai(orderId), {
-        TrangThai: 'da_nhan'
+      // Tải danh sách kho của siêu thị
+      const warehousesRes = await axios.get(API_ENDPOINTS.kho.getBySieuThi(maSieuThi!));
+      
+      if (!warehousesRes.data.success || !warehousesRes.data.data || warehousesRes.data.data.length === 0) {
+        alert('❌ Bạn chưa có kho nào! Vui lòng tạo kho trước khi nhận hàng.');
+        return;
+      }
+
+      const warehouses = warehousesRes.data.data;
+      
+      // Nếu chỉ có 1 kho, tự động chọn
+      let selectedWarehouse = warehouses[0].maKho;
+      
+      // Nếu có nhiều kho, cho người dùng chọn
+      if (warehouses.length > 1) {
+        const warehouseOptions = warehouses.map((w: any) => 
+          `${w.maKho}. ${w.tenKho} (${w.diaChi || 'Không có địa chỉ'})`
+        ).join('\n');
+        
+        const choice = prompt(`Chọn kho để nhận hàng:\n${warehouseOptions}\n\nNhập mã kho:`);
+        
+        if (!choice) return; // User cancelled
+        
+        selectedWarehouse = parseInt(choice);
+        
+        if (!warehouses.find((w: any) => w.maKho === selectedWarehouse)) {
+          alert('❌ Mã kho không hợp lệ!');
+          return;
+        }
+      }
+
+      if (!window.confirm(`Xác nhận nhận hàng vào kho #${selectedWarehouse}?`)) return;
+      
+      // API endpoint: PUT /api/DonHangSieuThi/nhan-hang/{id}
+      await axios.put(`${API_ENDPOINTS.donHangSieuThi.base}/nhan-hang/${orderId}`, {
+        MaKho: selectedWarehouse
       });
-      alert('✅ Đã chấp nhận đơn hàng!');
+      
+      alert('✅ Đã nhận hàng thành công!');
       await loadData();
     } catch (error: any) {
       console.error('Error accepting order:', error);
-      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
+      alert('❌ ' + (error.response?.data?.message || error.response?.data || 'Có lỗi xảy ra'));
     }
   };
 
   const handleRejectOrder = async (orderId: number) => {
-    if (!window.confirm('Bạn có chắc muốn từ chối đơn hàng này?')) return;
+    if (!window.confirm('Bạn có chắc muốn hủy đơn hàng này?')) return;
     
     try {
-      await axios.delete(API_ENDPOINTS.donHangSieuThi.delete(orderId));
-      alert('✅ Đã từ chối đơn hàng!');
+      // API endpoint: PUT /api/DonHangSieuThi/huy-don-hang/{id}
+      await axios.put(`${API_ENDPOINTS.donHangSieuThi.base}/huy-don-hang/${orderId}`);
+      alert('✅ Đã hủy đơn hàng!');
       await loadData();
     } catch (error: any) {
       console.error('Error rejecting order:', error);
-      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
+      alert('❌ ' + (error.response?.data?.message || error.response?.data || 'Có lỗi xảy ra'));
     }
   };
 
@@ -169,13 +211,15 @@ function OrderManagement() {
                       <div className="action-buttons">
                         <button 
                           className="btn-action btn-success"
-                          onClick={() => handleAcceptOrder(order.maDonHang)}
+                          onClick={() => handleAcceptOrder(order.maDonHang, order.maDaiLy)}
+                          title="Nhận hàng"
                         >
                           ✓
                         </button>
                         <button 
                           className="btn-action btn-danger"
                           onClick={() => handleRejectOrder(order.maDonHang)}
+                          title="Hủy đơn"
                         >
                           ✕
                         </button>
@@ -232,6 +276,11 @@ function OrderManagement() {
                     className="form-control"
                   />
                 </div>
+
+                <div className="alert alert-info" style={{ marginTop: '15px' }}>
+                  <strong>ℹ️ Lưu ý:</strong> Đơn hàng sẽ được tạo và gửi đến đại lý. 
+                  Đại lý sẽ xử lý và giao hàng cho bạn.
+                </div>
               </div>
               
               <div className="modal-footer">
@@ -248,32 +297,47 @@ function OrderManagement() {
       )}
 
       <style>{`
-        .btn-success {
-          background: #10b981;
-          color: white;
+        .action-buttons {
+          display: flex;
+          gap: 8px;
+          justify-content: center;
+        }
+
+        .btn-action {
           padding: 6px 12px;
           border-radius: 6px;
           border: none;
           cursor: pointer;
           font-size: 14px;
+          font-weight: 500;
+          transition: all 0.2s;
         }
 
-        .btn-success:hover {
+        .btn-action.btn-success {
+          background: #10b981;
+          color: white;
+        }
+
+        .btn-action.btn-success:hover {
           background: #059669;
         }
 
-        .btn-danger {
+        .btn-action.btn-danger {
           background: #ef4444;
           color: white;
-          padding: 6px 12px;
-          border-radius: 6px;
-          border: none;
-          cursor: pointer;
-          font-size: 14px;
         }
 
-        .btn-danger:hover {
+        .btn-action.btn-danger:hover {
           background: #dc2626;
+        }
+
+        .alert-info {
+          background: #dbeafe;
+          border: 1px solid #3b82f6;
+          color: #1e40af;
+          padding: 12px;
+          border-radius: 8px;
+          font-size: 14px;
         }
       `}</style>
     </div>
