@@ -1,5 +1,5 @@
 {
-  "ConnectionStrings": {
+  "$scnectionStrings": {
     "DefaultConnection": "Server=NVT;Database=BTL_HDV1;Trusted_Connection=True;TrustServerCertificate=True;"
   },
   "Logging": {

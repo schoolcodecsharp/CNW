@@ -23,7 +23,7 @@ function DaiLyOverview() {
     try {
       setLoading(true);
       
-      // Get daily ID
+      // Lấy ID đại lý
       const dailyRes = await axios.get(API_ENDPOINTS.daiLy.getAll);
       const currentDaily = dailyRes.data.data?.find(
         dl => dl.maTaiKhoan === user?.maTaiKhoan
@@ -36,17 +36,17 @@ function DaiLyOverview() {
 
       const maDaiLy = currentDaily.maDaiLy;
 
-      // Load orders
+      // Tải danh sách đơn hàng
       const ordersRes = await axios.get(API_ENDPOINTS.donHangDaiLy.getByDaiLy(maDaiLy))
         .catch(() => ({ data: { data: [] } }));
       const orders = ordersRes.data.data || [];
       
-      // Load warehouses
+      // Tải danh sách kho
       const warehousesRes = await axios.get(API_ENDPOINTS.kho.getByDaiLy(maDaiLy))
         .catch(() => ({ data: { data: [] } }));
       const warehouses = warehousesRes.data.data || [];
 
-      // Load inventory
+      // Tải danh sách tồn kho
       const inventoryRes = await axios.get(API_ENDPOINTS.tonKho.getByDaiLy(maDaiLy))
         .catch(() => ({ data: { data: [] } }));
       const inventory = inventoryRes.data.data || [];

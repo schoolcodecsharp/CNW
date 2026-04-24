@@ -6,7 +6,7 @@ function SieuThiManagement() {
   const [sieuThiList, setSieuThiList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState('view');
+  const [modalMode, setModalMode] = useState('view'); // 'view': xem, 'add': thêm, 'edit': sửa
   const [selectedSieuThi, setSelectedSieuThi] = useState(null);
   const [formData, setFormData] = useState({
     tenSieuThi: '',
@@ -56,7 +56,7 @@ function SieuThiManagement() {
       soDienThoai: sieuThi.soDienThoai || '',
       email: sieuThi.email || '',
       diaChi: sieuThi.diaChi || '',
-      tenDangNhap: '', // Không cho sửa tài khoản
+      tenDangNhap: '', // Không cho phép sửa tài khoản
       matKhau: ''
     });
     setShowModal(true);
@@ -76,7 +76,7 @@ function SieuThiManagement() {
     try {
       const response = await axios.delete(API_ENDPOINTS.sieuThi.delete(sieuThi.maSieuThi));
       
-      // Reload danh sách ngay lập tức
+      // Tải lại danh sách ngay lập tức
       await loadSieuThi();
       
       // Hiển thị thông báo thành công
@@ -84,7 +84,7 @@ function SieuThiManagement() {
     } catch (error) {
       console.error('Error deleting sieu thi:', error);
       
-      // Nếu lỗi 404 hoặc không tìm thấy nhưng thực tế đã xóa, vẫn reload
+      // Nếu lỗi 404 hoặc không tìm thấy nhưng thực tế đã xóa, vẫn tải lại
       if (error.response?.status === 404 || error.response?.data?.message?.includes('Không tìm thấy')) {
         await loadSieuThi();
         alert('✅ Xóa siêu thị thành công!');
@@ -99,7 +99,7 @@ function SieuThiManagement() {
 
     try {
       if (modalMode === 'add') {
-        // Khi thêm mới, gửi cả thông tin tài khoản với PascalCase
+        // Khi thêm mới, gửi dữ liệu với PascalCase
         const payload = {
           TenDangNhap: formData.tenDangNhap,
           MatKhau: formData.matKhau,
@@ -111,7 +111,7 @@ function SieuThiManagement() {
         await axios.post(API_ENDPOINTS.sieuThi.create, payload);
         alert('✅ Thêm siêu thị thành công!');
       } else if (modalMode === 'edit') {
-        // Khi sửa, chỉ gửi thông tin siêu thị (không sửa tài khoản) với PascalCase
+        // Khi sửa, gửi dữ liệu với PascalCase (không sửa tài khoản)
         const payload = {
           TenSieuThi: formData.tenSieuThi,
           SoDienThoai: formData.soDienThoai,

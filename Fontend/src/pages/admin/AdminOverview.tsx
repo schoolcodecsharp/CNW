@@ -28,7 +28,7 @@ function AdminOverview() {
     try {
       setLoading(true);
       
-      // Load statistics - Lấy tất cả người dùng
+      // Tải thống kê - Lấy tất cả người dùng
       const [nongdanRes, dailyRes, sieuthiRes, trangtraiRes, loRes, donhangDaiLyRes, donhangSieuThiRes] = await Promise.all([
         axios.get(API_ENDPOINTS.nongDan.getAll).catch(() => ({ data: { data: [] } })),
         axios.get(API_ENDPOINTS.daiLy.getAll).catch(() => ({ data: { data: [] } })),

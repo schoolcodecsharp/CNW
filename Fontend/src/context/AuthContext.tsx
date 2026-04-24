@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { createContext, useState, useContext, useEffect } from 'react';
+import type { ReactNode } from 'react';
 
 interface User {
   maTaiKhoan: number;
@@ -27,7 +28,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in
+    // Kiểm tra xem người dùng đã đăng nhập chưa
     const storedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('token');
     

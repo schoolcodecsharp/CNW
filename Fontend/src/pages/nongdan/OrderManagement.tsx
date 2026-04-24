@@ -108,7 +108,7 @@ function OrderManagement() {
   };
 
   const handleAcceptOrder = async (orderId: number, maDaiLy: number) => {
-    // Load warehouses của đại lý
+    // Tải danh sách kho của đại lý
     try {
       const warehousesRes = await axios.get(API_ENDPOINTS.kho.getByDaiLy(maDaiLy));
       if (warehousesRes.data.success && warehousesRes.data.data.length > 0) {

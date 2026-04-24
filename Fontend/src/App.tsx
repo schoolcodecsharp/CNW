@@ -11,7 +11,7 @@ import DaiLyDashboard from './pages/daily/DaiLyDashboard';
 import SieuThiDashboard from './pages/sieuthi/SieuThiDashboard';
 import './App.css';
 
-// Protected Route Component
+// Component Route được bảo vệ
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: string[];
@@ -35,7 +35,7 @@ function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   return <>{children}</>;
 }
 
-// Public Route Component (redirect if logged in)
+// Component Route công khai (chuyển hướng nếu đã đăng nhập)
 interface PublicRouteProps {
   children: React.ReactNode;
 }
@@ -48,7 +48,7 @@ function PublicRoute({ children }: PublicRouteProps) {
   }
 
   if (user) {
-    // Redirect based on user role
+    // Chuyển hướng dựa trên vai trò người dùng
     const redirectMap: Record<string, string> = {
       'admin': '/admin',
       'nongdan': '/nongdan',
@@ -64,13 +64,13 @@ function PublicRoute({ children }: PublicRouteProps) {
 function AppRoutes() {
   return (
     <Routes>
-      {/* Public Routes */}
+      {/* Route công khai */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
       <Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
 
-      {/* Protected Routes */}
+      {/* Route được bảo vệ */}
       <Route path="/admin/*" element={
         <ProtectedRoute allowedRoles={['admin']}>
           <AdminDashboard />
@@ -95,7 +95,7 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
-      {/* 404 */}
+      {/* Trang 404 */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

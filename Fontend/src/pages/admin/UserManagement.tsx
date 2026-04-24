@@ -6,7 +6,7 @@ function UserManagement() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState('view'); // 'view', 'add', 'edit'
+  const [modalMode, setModalMode] = useState('view'); // 'view': xem, 'add': thêm, 'edit': sửa
   const [selectedUser, setSelectedUser] = useState(null);
   const [filterRole, setFilterRole] = useState('all');
   const [formData, setFormData] = useState({
@@ -28,14 +28,14 @@ function UserManagement() {
     try {
       setLoading(true);
       
-      // Load all users from different services
+      // Load tất cả người dùng từ các service khác nhau
       const [nongdanRes, dailyRes, sieuthiRes] = await Promise.all([
         axios.get(API_ENDPOINTS.nongDan.getAll).catch(() => ({ data: { data: [] } })),
         axios.get(API_ENDPOINTS.daiLy.getAll).catch(() => ({ data: { data: [] } })),
         axios.get(API_ENDPOINTS.sieuThi.getAll).catch(() => ({ data: { data: [] } }))
       ]);
 
-      // Combine and format users
+      // Gộp và format danh sách người dùng
       const allUsers = [
         ...(nongdanRes.data.data || []).map(u => ({
           ...u,
@@ -133,7 +133,7 @@ function UserManagement() {
 
       await axios.delete(endpoint);
       
-      // Reload danh sách ngay lập tức
+      // Tải lại danh sách ngay lập tức
       await loadUsers();
       
       // Hiển thị thông báo thành công
@@ -141,7 +141,7 @@ function UserManagement() {
     } catch (error) {
       console.error('Error deleting user:', error);
       
-      // Nếu lỗi 404 hoặc không tìm thấy nhưng thực tế đã xóa, vẫn reload
+      // Nếu lỗi 404 hoặc không tìm thấy nhưng thực tế đã xóa, vẫn tải lại
       if (error.response?.status === 404 || error.response?.data?.message?.includes('Không tìm thấy')) {
         await loadUsers();
         alert('✅ Xóa người dùng thành công!');
@@ -161,7 +161,7 @@ function UserManagement() {
         let endpoint;
         if (formData.roleType === 'nong_dan') {
           endpoint = API_ENDPOINTS.nongDan.create;
-          // Gửi với PascalCase
+          // Gửi dữ liệu với PascalCase
           payload = {
             TenDangNhap: formData.tenDangNhap,
             MatKhau: formData.matKhau,
@@ -172,7 +172,7 @@ function UserManagement() {
           };
         } else if (formData.roleType === 'dai_ly') {
           endpoint = API_ENDPOINTS.daiLy.create;
-          // Gửi với PascalCase
+          // Gửi dữ liệu với PascalCase
           payload = {
             TenDangNhap: formData.tenDangNhap,
             MatKhau: formData.matKhau,
@@ -183,7 +183,7 @@ function UserManagement() {
           };
         } else if (formData.roleType === 'sieu_thi') {
           endpoint = API_ENDPOINTS.sieuThi.create;
-          // Gửi với PascalCase
+          // Gửi dữ liệu với PascalCase
           payload = {
             TenDangNhap: formData.tenDangNhap,
             MatKhau: formData.matKhau,
@@ -197,7 +197,7 @@ function UserManagement() {
         await axios.post(endpoint, payload);
         alert('✅ Thêm người dùng thành công!');
       } else if (modalMode === 'edit') {
-        // Khi sửa, gửi với PascalCase
+        // Khi sửa, gửi dữ liệu với PascalCase
         let endpoint;
         if (selectedUser.roleType === 'nong_dan') {
           endpoint = API_ENDPOINTS.nongDan.update(selectedUser.id);

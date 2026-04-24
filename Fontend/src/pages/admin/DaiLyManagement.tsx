@@ -6,7 +6,7 @@ function DaiLyManagement() {
   const [dailyList, setDailyList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState('view');
+  const [modalMode, setModalMode] = useState('view'); // 'view': xem, 'add': thêm, 'edit': sửa
   const [selectedDaily, setSelectedDaily] = useState(null);
   const [formData, setFormData] = useState({
     tenDaiLy: '',
@@ -56,7 +56,7 @@ function DaiLyManagement() {
       soDienThoai: daily.soDienThoai || '',
       email: daily.email || '',
       diaChi: daily.diaChi || '',
-      tenDangNhap: '', // Không cho sửa tài khoản
+      tenDangNhap: '', // Không cho phép sửa tài khoản
       matKhau: ''
     });
     setShowModal(true);
@@ -76,7 +76,7 @@ function DaiLyManagement() {
     try {
       const response = await axios.delete(API_ENDPOINTS.daiLy.delete(daily.maDaiLy));
       
-      // Reload danh sách ngay lập tức
+      // Tải lại danh sách ngay lập tức
       await loadDaiLy();
       
       // Hiển thị thông báo thành công
@@ -84,7 +84,7 @@ function DaiLyManagement() {
     } catch (error) {
       console.error('Error deleting dai ly:', error);
       
-      // Nếu lỗi 404 hoặc không tìm thấy nhưng thực tế đã xóa, vẫn reload
+      // Nếu lỗi 404 hoặc không tìm thấy nhưng thực tế đã xóa, vẫn tải lại
       if (error.response?.status === 404 || error.response?.data?.message?.includes('Không tìm thấy')) {
         await loadDaiLy();
         alert('✅ Xóa đại lý thành công!');
@@ -99,7 +99,7 @@ function DaiLyManagement() {
 
     try {
       if (modalMode === 'add') {
-        // Khi thêm mới, gửi cả thông tin tài khoản với PascalCase
+        // Khi thêm mới, gửi dữ liệu với PascalCase
         const payload = {
           TenDangNhap: formData.tenDangNhap,
           MatKhau: formData.matKhau,
@@ -111,7 +111,7 @@ function DaiLyManagement() {
         await axios.post(API_ENDPOINTS.daiLy.create, payload);
         alert('✅ Thêm đại lý thành công!');
       } else if (modalMode === 'edit') {
-        // Khi sửa, chỉ gửi thông tin đại lý (không sửa tài khoản) với PascalCase
+        // Khi sửa, gửi dữ liệu với PascalCase (không sửa tài khoản)
         const payload = {
           TenDaiLy: formData.tenDaiLy,
           SoDienThoai: formData.soDienThoai,

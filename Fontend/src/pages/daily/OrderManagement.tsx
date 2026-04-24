@@ -62,28 +62,28 @@ function OrderManagement() {
       setMaDaiLy(currentDaily.maDaiLy);
       console.log('[OrderManagement] MaDaiLy:', currentDaily.maDaiLy);
 
-      // Load orders from farmers
+      // Tải đơn hàng từ nông dân
       console.log('[OrderManagement] Loading orders from farmers...');
       const farmersRes = await axios.get(API_ENDPOINTS.donHangDaiLy.getByDaiLy(currentDaily.maDaiLy));
       console.log('[OrderManagement] Farmers orders response:', farmersRes.data);
       const ordersFromFarmers = (farmersRes.data.data || []).map((o: any) => ({...o, loaiDon: 'Từ nông dân'}));
 
-      // Load orders to supermarkets
+      // Tải đơn hàng bán cho siêu thị
       console.log('[OrderManagement] Loading orders to supermarkets...');
       const supermarketsRes = await axios.get(API_ENDPOINTS.donHangSieuThi.getByDaiLy(currentDaily.maDaiLy));
       console.log('[OrderManagement] Supermarkets orders response:', supermarketsRes.data);
       const ordersToSupermarkets = (supermarketsRes.data.data || []).map((o: any) => ({...o, loaiDon: 'Bán cho siêu thị'}));
 
-      // Combine all orders
+      // Gộp tất cả đơn hàng
       const combinedOrders = [...ordersFromFarmers, ...ordersToSupermarkets];
       console.log('[OrderManagement] Combined orders:', combinedOrders);
       setAllOrders(combinedOrders);
 
-      // Load nongdan list
+      // Tải danh sách nông dân
       const nongdanRes = await axios.get(API_ENDPOINTS.nongDan.getAll);
       setNongdanList(nongdanRes.data.data || []);
 
-      // Load available batches from all farmers
+      // Tải danh sách lô nông sản khả dụng từ tất cả nông dân
       const allBatchesRes = await axios.get(API_ENDPOINTS.loNongSan.getAll);
       const availableBatches = (allBatchesRes.data.data || []).filter((b: any) => 
         b.trangThai === 'tai_trang_trai' && b.soLuongHienTai > 0
@@ -91,13 +91,13 @@ function OrderManagement() {
       console.log('[OrderManagement] Available batches:', availableBatches.length);
       setBatches(availableBatches);
 
-      // Load ton kho
+      // Tải danh sách tồn kho
       const tonKhoRes = await axios.get(API_ENDPOINTS.tonKho.getByDaiLy(currentDaily.maDaiLy));
       const availableTonKho = (tonKhoRes.data.data || []).filter((tk: any) => tk.soLuong > 0);
       console.log('[OrderManagement] Available ton kho:', availableTonKho.length);
       setTonKho(availableTonKho);
 
-      // Load sieuthi list
+      // Tải danh sách siêu thị
       const sieuThiRes = await axios.get(API_ENDPOINTS.sieuThi.getAll);
       setSieuThiList(sieuThiRes.data.data || []);
 
@@ -182,7 +182,7 @@ function OrderManagement() {
   };
 
   const loadBatchesByFarmer = async (maNongDan: number) => {
-    // Nếu đã load rồi thì không load lại
+    // Nếu đã tải rồi thì không tải lại
     if (farmerBatches[maNongDan]) return;
 
     try {

@@ -6,7 +6,7 @@ function NongDanManagement() {
   const [nongDanList, setNongDanList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState('view');
+  const [modalMode, setModalMode] = useState('view'); // 'view': xem, 'add': thêm, 'edit': sửa
   const [selectedNongDan, setSelectedNongDan] = useState(null);
   const [formData, setFormData] = useState({
     hoTen: '',
@@ -56,7 +56,7 @@ function NongDanManagement() {
       soDienThoai: nongDan.soDienThoai || '',
       email: nongDan.email || '',
       diaChi: nongDan.diaChi || '',
-      tenDangNhap: '', // Không cho sửa tài khoản
+      tenDangNhap: '', // Không cho phép sửa tài khoản
       matKhau: ''
     });
     setShowModal(true);
@@ -76,7 +76,7 @@ function NongDanManagement() {
     try {
       const response = await axios.delete(API_ENDPOINTS.nongDan.delete(nongDan.maNongDan));
       
-      // Reload danh sách ngay lập tức
+      // Tải lại danh sách ngay lập tức
       await loadNongDan();
       
       // Hiển thị thông báo thành công
@@ -84,7 +84,7 @@ function NongDanManagement() {
     } catch (error) {
       console.error('Error deleting nong dan:', error);
       
-      // Nếu lỗi 404 hoặc không tìm thấy nhưng thực tế đã xóa, vẫn reload
+      // Nếu lỗi 404 hoặc không tìm thấy nhưng thực tế đã xóa, vẫn tải lại
       if (error.response?.status === 404 || error.response?.data?.message?.includes('Không tìm thấy')) {
         await loadNongDan();
         alert('✅ Xóa nông dân thành công!');
@@ -99,7 +99,7 @@ function NongDanManagement() {
 
     try {
       if (modalMode === 'add') {
-        // Khi thêm mới, gửi cả thông tin tài khoản với PascalCase
+        // Khi thêm mới, gửi dữ liệu với PascalCase
         const payload = {
           TenDangNhap: formData.tenDangNhap,
           MatKhau: formData.matKhau,
@@ -111,7 +111,7 @@ function NongDanManagement() {
         await axios.post(API_ENDPOINTS.nongDan.create, payload);
         alert('✅ Thêm nông dân thành công!');
       } else if (modalMode === 'edit') {
-        // Khi sửa, chỉ gửi thông tin nông dân (không sửa tài khoản) với PascalCase
+        // Khi sửa, gửi dữ liệu với PascalCase (không sửa tài khoản)
         const payload = {
           HoTen: formData.hoTen,
           SoDienThoai: formData.soDienThoai,
