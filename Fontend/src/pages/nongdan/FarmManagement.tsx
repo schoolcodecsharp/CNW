@@ -31,7 +31,7 @@ function FarmManagement() {
         return;
       }
 
-      // Get farmer ID by MaTaiKhoan
+      // Lấy ID nông dân bằng MaTaiKhoan
       const nongdanRes = await axios.get(API_ENDPOINTS.nongDan.getAll);
       
       if (!nongdanRes.data.success || !nongdanRes.data.data) {
@@ -53,7 +53,7 @@ function FarmManagement() {
       console.log('Found farmer:', currentFarmer);
       setMaNongDan(currentFarmer.maNongDan);
 
-      // Load farms for this farmer
+      // Tải danh sách trang trại của nông dân này
       const farmsRes = await axios.get(API_ENDPOINTS.trangTrai.getByNongDan(currentFarmer.maNongDan));
       
       if (farmsRes.data.success) {
@@ -106,7 +106,7 @@ function FarmManagement() {
     
     try {
       if (editingFarm) {
-        // Update
+        // Cập nhật trang trại
         await axios.put(
           API_ENDPOINTS.trangTrai.update(editingFarm.maTrangTrai),
           {
@@ -117,7 +117,7 @@ function FarmManagement() {
         );
         alert('Cập nhật trang trại thành công!');
       } else {
-        // Create - Sử dụng PascalCase để khớp với backend DTO
+        // Tạo mới - Sử dụng PascalCase để khớp với backend DTO
         console.log('Creating farm with MaNongDan:', maNongDan);
         const response = await axios.post(
           API_ENDPOINTS.trangTrai.create,
