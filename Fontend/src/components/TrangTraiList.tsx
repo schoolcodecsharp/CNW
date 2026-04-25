@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { apiService } from '../services/api';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { API_ENDPOINTS } from '../services/apiConfig';
 import './Common.css';
 
 function TrangTraiList() {
@@ -14,8 +15,8 @@ function TrangTraiList() {
   const loadTrangTrai = async () => {
     try {
       setLoading(true);
-      const response = await apiService.getTrangTrai();
-      setTrangtraiList(response.data || []);
+      const response = await axios.get(API_ENDPOINTS.trangTrai.getAll);
+      setTrangtraiList(response.data.data || []);
       setError('');
     } catch (err) {
       console.error('Error loading trang trai:', err);

@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { apiService } from '../services/api';
+import { useState } from 'react';
 import './Common.css';
 
 function Calculator() {
@@ -11,8 +10,18 @@ function Calculator() {
     
     setSumN({ ...sumN, loading: true });
     try {
-      const response = await apiService.tinhTong(sumN.input);
-      setSumN({ ...sumN, result: response, loading: false });
+      // TODO: Implement API call if needed
+      const n = parseInt(sumN.input);
+      const result = (n * (n + 1)) / 2;
+      setSumN({ 
+        ...sumN, 
+        result: {
+          message: `Tổng từ 1 đến ${n}`,
+          input: n,
+          result: result
+        }, 
+        loading: false 
+      });
     } catch (err) {
       console.error('Error:', err);
       setSumN({ ...sumN, loading: false });
@@ -24,8 +33,20 @@ function Calculator() {
     
     setSumTwo({ ...sumTwo, loading: true });
     try {
-      const response = await apiService.tinhTongHaiSo(sumTwo.a, sumTwo.b);
-      setSumTwo({ ...sumTwo, result: response, loading: false });
+      // TODO: Implement API call if needed
+      const a = parseFloat(sumTwo.a);
+      const b = parseFloat(sumTwo.b);
+      const result = a + b;
+      setSumTwo({ 
+        ...sumTwo, 
+        result: {
+          message: `Tổng của ${a} và ${b}`,
+          a: a,
+          b: b,
+          result: result
+        }, 
+        loading: false 
+      });
     } catch (err) {
       console.error('Error:', err);
       setSumTwo({ ...sumTwo, loading: false });

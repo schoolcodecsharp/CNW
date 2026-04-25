@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { apiService } from '../services/api';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { API_ENDPOINTS } from '../services/apiConfig';
 import './Common.css';
 
 function Overview() {
@@ -18,15 +19,15 @@ function Overview() {
     try {
       setLoading(true);
       const [nongdan, trangtrai, lonongsan] = await Promise.all([
-        apiService.getNongDan(),
-        apiService.getTrangTrai(),
-        apiService.getLoNongSan()
+        axios.get(API_ENDPOINTS.nongDan.getAll),
+        axios.get(API_ENDPOINTS.trangTrai.getAll),
+        axios.get(API_ENDPOINTS.loNongSan.getAll)
       ]);
 
       setStats({
-        totalNongDan: nongdan.data?.length || 0,
-        totalTrangTrai: trangtrai.data?.length || 0,
-        totalLoNongSan: lonongsan.data?.length || 0
+        totalNongDan: nongdan.data.data?.length || 0,
+        totalTrangTrai: trangtrai.data.data?.length || 0,
+        totalLoNongSan: lonongsan.data.data?.length || 0
       });
     } catch (err) {
       console.error('Error loading stats:', err);

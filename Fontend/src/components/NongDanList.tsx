@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { apiService } from '../services/api';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { API_ENDPOINTS } from '../services/apiConfig';
 import './Common.css';
 
 function NongDanList() {
@@ -14,8 +15,8 @@ function NongDanList() {
   const loadNongDan = async () => {
     try {
       setLoading(true);
-      const response = await apiService.getNongDan();
-      setNongdanList(response.data || []);
+      const response = await axios.get(API_ENDPOINTS.nongDan.getAll);
+      setNongdanList(response.data.data || []);
       setError('');
     } catch (err) {
       console.error('Error loading nong dan:', err);
