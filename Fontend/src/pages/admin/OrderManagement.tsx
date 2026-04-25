@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
+import TablePagination from '../../components/TablePagination';
+import usePagination from '../../hooks/usePagination';
 
 function OrderManagement() {
   const [orders, setOrders] = useState([]);
@@ -146,6 +148,17 @@ function OrderManagement() {
     return true;
   });
 
+  // Sử dụng hook phân trang
+  const {
+    currentPage,
+    pageSize,
+    paginatedData: paginatedOrders,
+    startIndex,
+    endIndex,
+    totalItems,
+    handlePageChange
+  } = usePagination({ data: filteredOrders, initialPageSize: 10 });
+
   if (loading) {
     return <div className="loading">Đang tải danh sách đơn hàng...</div>;
   }
@@ -209,12 +222,12 @@ function OrderManagement() {
             </tr>
           </thead>
           <tbody>
-            {filteredOrders.length === 0 ? (
+            {paginatedOrders.length === 0 ? (
               <tr>
                 <td colSpan={8} className="text-center">Không có dữ liệu</td>
               </tr>
             ) : (
-              filteredOrders.map((order) => (
+              paginatedOrders.map((order) => (
                 <tr key={`${order.orderTypeCode}-${order.orderId}`}>
                   <td>{order.orderId}</td>
                   <td>{order.customerName}</td>
@@ -253,6 +266,14 @@ function OrderManagement() {
           </tbody>
         </table>
       </div>
+
+      {/* Phân trang */}
+      <TablePagination
+        current={currentPage}
+        total={totalItems}
+        pageSize={pageSize}
+        onChange={handlePageChange}
+      />
 
       {/* Modal */}
       {showModal && selectedOrder && (

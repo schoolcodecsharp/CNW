@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
+import TablePagination from '../../components/TablePagination';
+import usePagination from '../../hooks/usePagination';
 
 function NongDanManagement() {
   const [nongDanList, setNongDanList] = useState([]);
@@ -138,6 +140,17 @@ function NongDanManagement() {
     }));
   };
 
+  // Sử dụng hook phân trang
+  const {
+    currentPage,
+    pageSize,
+    paginatedData: paginatedNongDan,
+    startIndex,
+    endIndex,
+    totalItems,
+    handlePageChange
+  } = usePagination({ data: nongDanList, initialPageSize: 10 });
+
   if (loading) {
     return <div className="loading">Đang tải danh sách nông dân...</div>;
   }
@@ -167,12 +180,12 @@ function NongDanManagement() {
             </tr>
           </thead>
           <tbody>
-            {nongDanList.length === 0 ? (
+            {paginatedNongDan.length === 0 ? (
               <tr>
                 <td colSpan={7} className="text-center">Không có dữ liệu</td>
               </tr>
             ) : (
-              nongDanList.map((nongDan) => (
+              paginatedNongDan.map((nongDan) => (
                 <tr key={nongDan.maNongDan}>
                   <td>{nongDan.maNongDan}</td>
                   <td>{nongDan.hoTen}</td>
@@ -213,6 +226,14 @@ function NongDanManagement() {
           </tbody>
         </table>
       </div>
+
+      {/* Phân trang */}
+      <TablePagination
+        current={currentPage}
+        total={totalItems}
+        pageSize={pageSize}
+        onChange={handlePageChange}
+      />
 
       {/* Modal */}
       {showModal && (

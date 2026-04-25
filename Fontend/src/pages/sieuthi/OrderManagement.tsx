@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
 import { useAuth } from '../../context/AuthContext';
+import TablePagination from '../../components/TablePagination';
+import usePagination from '../../hooks/usePagination';
 import '../../components/Common.css';
 
 function OrderManagement() {
@@ -159,6 +161,17 @@ function OrderManagement() {
     return badges[status] || <span className="badge">{status}</span>;
   };
 
+  // Sử dụng hook phân trang
+  const {
+    currentPage,
+    pageSize,
+    paginatedData: paginatedOrders,
+    startIndex,
+    endIndex,
+    totalItems,
+    handlePageChange
+  } = usePagination({ data: allOrders, initialPageSize: 10 });
+
   if (loading) {
     return <div className="loading">Đang tải danh sách đơn hàng...</div>;
   }
@@ -191,14 +204,14 @@ function OrderManagement() {
             </tr>
           </thead>
           <tbody>
-            {allOrders.length === 0 ? (
+            {paginatedOrders.length === 0 ? (
               <tr>
                 <td colSpan={7} className="text-center">
                   Chưa có đơn hàng nào
                 </td>
               </tr>
             ) : (
-              allOrders.map((order: any) => (
+              paginatedOrders.map((order: any) => (
                 <tr key={order.maDonHang}>
                   <td>{order.maDonHang}</td>
                   <td>{order.tenDaiLy}</td>
@@ -232,6 +245,14 @@ function OrderManagement() {
           </tbody>
         </table>
       </div>
+
+      {/* Phân trang */}
+      <TablePagination
+        current={currentPage}
+        total={totalItems}
+        pageSize={pageSize}
+        onChange={handlePageChange}
+      />
 
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>

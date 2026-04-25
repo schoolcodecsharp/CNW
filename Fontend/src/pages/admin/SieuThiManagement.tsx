@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
+import TablePagination from '../../components/TablePagination';
+import usePagination from '../../hooks/usePagination';
 
 function SieuThiManagement() {
   const [sieuThiList, setSieuThiList] = useState([]);
@@ -138,6 +140,17 @@ function SieuThiManagement() {
     }));
   };
 
+  // Sử dụng hook phân trang
+  const {
+    currentPage,
+    pageSize,
+    paginatedData: paginatedSieuThi,
+    startIndex,
+    endIndex,
+    totalItems,
+    handlePageChange
+  } = usePagination({ data: sieuThiList, initialPageSize: 10 });
+
   if (loading) {
     return <div className="loading">Đang tải danh sách siêu thị...</div>;
   }
@@ -167,12 +180,12 @@ function SieuThiManagement() {
             </tr>
           </thead>
           <tbody>
-            {sieuThiList.length === 0 ? (
+            {paginatedSieuThi.length === 0 ? (
               <tr>
                 <td colSpan={7} className="text-center">Không có dữ liệu</td>
               </tr>
             ) : (
-              sieuThiList.map((sieuThi) => (
+              paginatedSieuThi.map((sieuThi) => (
                 <tr key={sieuThi.maSieuThi}>
                   <td>{sieuThi.maSieuThi}</td>
                   <td>{sieuThi.tenSieuThi}</td>
@@ -213,6 +226,14 @@ function SieuThiManagement() {
           </tbody>
         </table>
       </div>
+
+      {/* Phân trang */}
+      <TablePagination
+        current={currentPage}
+        total={totalItems}
+        pageSize={pageSize}
+        onChange={handlePageChange}
+      />
 
       {/* Modal */}
       {showModal && (

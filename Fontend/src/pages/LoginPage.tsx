@@ -48,9 +48,9 @@ function LoginPage() {
         // Redirect based on account type
         const redirectMap = {
           'admin': '/admin',
-          'nongdan': '/nongdan',
-          'daily': '/daily',
-          'sieuthi': '/sieuthi'
+          'nong_dan': '/nongdan',
+          'dai_ly': '/daily',
+          'sieu_thi': '/sieuthi'
         };
         
         navigate(redirectMap[formData.loaiTaiKhoan] || '/');
@@ -92,9 +92,9 @@ function LoginPage() {
             >
               <option value="">-- Chọn loại tài khoản --</option>
               <option value="admin">Admin</option>
-              <option value="nongdan">Nông dân</option>
-              <option value="daily">Đại lý</option>
-              <option value="sieuthi">Siêu thị</option>
+              <option value="nong_dan">Nông dân</option>
+              <option value="dai_ly">Đại lý</option>
+              <option value="sieu_thi">Siêu thị</option>
             </select>
           </div>
 

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
+import TablePagination from '../../components/TablePagination';
+import usePagination from '../../hooks/usePagination';
 
 function UserManagement() {
   const [users, setUsers] = useState([]);
@@ -9,6 +11,7 @@ function UserManagement() {
   const [modalMode, setModalMode] = useState('view'); // 'view': xem, 'add': thêm, 'edit': sửa
   const [selectedUser, setSelectedUser] = useState(null);
   const [filterRole, setFilterRole] = useState('all');
+  
   const [formData, setFormData] = useState({
     hoTen: '',
     soDienThoai: '',
@@ -249,6 +252,17 @@ function UserManagement() {
     ? users 
     : users.filter(u => u.roleType === filterRole);
 
+  // Sử dụng hook phân trang
+  const {
+    currentPage,
+    pageSize,
+    paginatedData: paginatedUsers,
+    startIndex,
+    endIndex,
+    totalItems,
+    handlePageChange
+  } = usePagination({ data: filteredUsers, initialPageSize: 10 });
+
   if (loading) {
     return <div className="loading">Đang tải danh sách người dùng...</div>;
   }
@@ -293,12 +307,12 @@ function UserManagement() {
             </tr>
           </thead>
           <tbody>
-            {filteredUsers.length === 0 ? (
+            {paginatedUsers.length === 0 ? (
               <tr>
                 <td colSpan={8} className="text-center">Không có dữ liệu</td>
               </tr>
             ) : (
-              filteredUsers.map((user) => (
+              paginatedUsers.map((user) => (
                 <tr key={`${user.roleType}-${user.id}`}>
                   <td>{user.id}</td>
                   <td>{user.name}</td>
@@ -344,6 +358,14 @@ function UserManagement() {
           </tbody>
         </table>
       </div>
+
+      {/* Phân trang */}
+      <TablePagination
+        current={currentPage}
+        total={totalItems}
+        pageSize={pageSize}
+        onChange={handlePageChange}
+      />
 
       {/* Modal - Improved Design */}
       {showModal && (

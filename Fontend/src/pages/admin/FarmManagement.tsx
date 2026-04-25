@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
+import TablePagination from '../../components/TablePagination';
+import usePagination from '../../hooks/usePagination';
 
 function FarmManagement() {
   const [farms, setFarms] = useState([]);
@@ -119,6 +121,17 @@ function FarmManagement() {
     }));
   };
 
+  // Sử dụng hook phân trang
+  const {
+    currentPage,
+    pageSize,
+    paginatedData: paginatedFarms,
+    startIndex,
+    endIndex,
+    totalItems,
+    handlePageChange
+  } = usePagination({ data: farms, initialPageSize: 10 });
+
   if (loading) {
     return <div className="loading">Đang tải danh sách trang trại...</div>;
   }
@@ -148,12 +161,12 @@ function FarmManagement() {
             </tr>
           </thead>
           <tbody>
-            {farms.length === 0 ? (
+            {paginatedFarms.length === 0 ? (
               <tr>
                 <td colSpan={7} className="text-center">Không có dữ liệu</td>
               </tr>
             ) : (
-              farms.map((farm) => (
+              paginatedFarms.map((farm) => (
                 <tr key={farm.maTrangTrai}>
                   <td>{farm.maTrangTrai}</td>
                   <td>{farm.tenTrangTrai}</td>
@@ -194,6 +207,14 @@ function FarmManagement() {
           </tbody>
         </table>
       </div>
+
+      {/* Phân trang */}
+      <TablePagination
+        current={currentPage}
+        total={totalItems}
+        pageSize={pageSize}
+        onChange={handlePageChange}
+      />
 
       {/* Modal */}
       {showModal && (

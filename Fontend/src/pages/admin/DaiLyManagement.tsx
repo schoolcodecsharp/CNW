@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
+import TablePagination from '../../components/TablePagination';
+import usePagination from '../../hooks/usePagination';
 
 function DaiLyManagement() {
   const [dailyList, setDailyList] = useState([]);
@@ -138,6 +140,17 @@ function DaiLyManagement() {
     }));
   };
 
+  // Sử dụng hook phân trang
+  const {
+    currentPage,
+    pageSize,
+    paginatedData: paginatedDaiLy,
+    startIndex,
+    endIndex,
+    totalItems,
+    handlePageChange
+  } = usePagination({ data: dailyList, initialPageSize: 10 });
+
   if (loading) {
     return <div className="loading">Đang tải danh sách đại lý...</div>;
   }
@@ -167,12 +180,12 @@ function DaiLyManagement() {
             </tr>
           </thead>
           <tbody>
-            {dailyList.length === 0 ? (
+            {paginatedDaiLy.length === 0 ? (
               <tr>
                 <td colSpan={7} className="text-center">Không có dữ liệu</td>
               </tr>
             ) : (
-              dailyList.map((daily) => (
+              paginatedDaiLy.map((daily) => (
                 <tr key={daily.maDaiLy}>
                   <td>{daily.maDaiLy}</td>
                   <td>{daily.tenDaiLy}</td>
@@ -213,6 +226,14 @@ function DaiLyManagement() {
           </tbody>
         </table>
       </div>
+
+      {/* Phân trang */}
+      <TablePagination
+        current={currentPage}
+        total={totalItems}
+        pageSize={pageSize}
+        onChange={handlePageChange}
+      />
 
       {/* Modal */}
       {showModal && (

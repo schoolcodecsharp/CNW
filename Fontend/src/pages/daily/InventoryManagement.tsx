@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
 import { useAuth } from '../../context/AuthContext';
+import TablePagination from '../../components/TablePagination';
+import usePagination from '../../hooks/usePagination';
 
 function InventoryManagement() {
   const { user } = useAuth();
@@ -50,6 +52,17 @@ function InventoryManagement() {
     }
   };
 
+  // Sử dụng hook phân trang
+  const {
+    currentPage,
+    pageSize,
+    paginatedData: paginatedInventory,
+    startIndex,
+    endIndex,
+    totalItems,
+    handlePageChange
+  } = usePagination({ data: inventory, initialPageSize: 10 });
+
   if (loading) {
     return <div className="loading">Đang tải dữ liệu tồn kho...</div>;
   }
@@ -86,7 +99,7 @@ function InventoryManagement() {
               </tr>
             </thead>
             <tbody>
-              {inventory.map((item: any, index) => (
+              {paginatedInventory.map((item: any, index) => (
                 <tr key={index}>
                   <td><strong>#{item.maKho}</strong></td>
                   <td>{item.tenKho}</td>
@@ -99,6 +112,14 @@ function InventoryManagement() {
               ))}
             </tbody>
           </table>
+
+          {/* Phân trang */}
+          <TablePagination
+            current={currentPage}
+            total={totalItems}
+            pageSize={pageSize}
+            onChange={handlePageChange}
+          />
         </div>
       )}
     </div>

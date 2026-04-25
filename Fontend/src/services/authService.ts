@@ -71,17 +71,63 @@ const authService = {
   },
 
   register: async (userData: any): Promise<RegisterResponse> => {
-    // TODO: Implement register API when backend is ready
     try {
-      // Mock implementation
-      return {
-        success: true,
-        message: 'Đăng ký thành công! Vui lòng đăng nhập.'
+      console.log('Register attempt:', userData);
+      
+      // Chuẩn bị payload theo loại tài khoản
+      let endpoint = '';
+      let payload: any = {
+        TenDangNhap: userData.tenDangNhap,
+        MatKhau: userData.matKhau,
+        HoTen: userData.hoTen,
+        SoDienThoai: userData.soDienThoai,
+        Email: userData.email,
+        DiaChi: userData.diaChi
       };
-    } catch (error: any) {
+
+      // Xác định endpoint dựa trên loại tài khoản
+      switch (userData.loaiTaiKhoan) {
+        case 'nong_dan':
+          endpoint = API_ENDPOINTS.nongDan.create;
+          break;
+        case 'dai_ly':
+          endpoint = API_ENDPOINTS.daiLy.create;
+          payload.TenDaiLy = userData.hoTen; // Tên đại lý = họ tên
+          break;
+        case 'sieu_thi':
+          endpoint = API_ENDPOINTS.sieuThi.create;
+          payload.TenSieuThi = userData.hoTen; // Tên siêu thị = họ tên
+          break;
+        default:
+          return {
+            success: false,
+            message: 'Loại tài khoản không hợp lệ'
+          };
+      }
+
+      console.log('Register endpoint:', endpoint);
+      console.log('Register payload:', payload);
+
+      const response = await axios.post(endpoint, payload);
+
+      console.log('Register response:', response.data);
+
+      if (response.data.success) {
+        return {
+          success: true,
+          message: 'Đăng ký thành công! Vui lòng đăng nhập.'
+        };
+      }
+
       return {
         success: false,
-        message: error.message || 'Đăng ký thất bại'
+        message: response.data.message || 'Đăng ký thất bại'
+      };
+    } catch (error: any) {
+      console.error('Register error:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || error.message || 'Đăng ký thất bại'
       };
     }
   },

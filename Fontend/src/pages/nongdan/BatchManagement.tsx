@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
 import { useAuth } from '../../context/AuthContext';
+import TablePagination from '../../components/TablePagination';
+import usePagination from '../../hooks/usePagination';
 import '../../components/Common.css';
 
 function BatchManagement() {
@@ -158,6 +160,17 @@ function BatchManagement() {
     }
   };
 
+  // Sử dụng hook phân trang
+  const {
+    currentPage,
+    pageSize,
+    paginatedData: paginatedBatches,
+    startIndex,
+    endIndex,
+    totalItems,
+    handlePageChange
+  } = usePagination({ data: batches, initialPageSize: 10 });
+
   if (loading) {
     return <div className="loading">Đang tải danh sách lô nông sản...</div>;
   }
@@ -200,12 +213,12 @@ function BatchManagement() {
             </tr>
           </thead>
           <tbody>
-            {batches.length === 0 ? (
+            {paginatedBatches.length === 0 ? (
               <tr>
                 <td colSpan={9} className="text-center">Chưa có lô nông sản nào</td>
               </tr>
             ) : (
-              batches.map((batch) => (
+              paginatedBatches.map((batch) => (
                 <tr key={batch.maLo}>
                   <td>{batch.maLo}</td>
                   <td>{batch.tenTrangTrai}</td>
@@ -245,6 +258,14 @@ function BatchManagement() {
           </tbody>
         </table>
       </div>
+
+      {/* Phân trang */}
+      <TablePagination
+        current={currentPage}
+        total={totalItems}
+        pageSize={pageSize}
+        onChange={handlePageChange}
+      />
 
       {/* Modal */}
       {showModal && (

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
 import { useAuth } from '../../context/AuthContext';
+import TablePagination from '../../components/TablePagination';
+import usePagination from '../../hooks/usePagination';
 import '../../components/Common.css';
 
 function WarehouseManagement() {
@@ -161,6 +163,17 @@ function WarehouseManagement() {
     }
   };
 
+  // Sử dụng hook phân trang
+  const {
+    currentPage,
+    pageSize,
+    paginatedData: paginatedWarehouses,
+    startIndex,
+    endIndex,
+    totalItems,
+    handlePageChange
+  } = usePagination({ data: warehouses, initialPageSize: 10 });
+
   if (loading) {
     return <div className="loading">Đang tải danh sách kho...</div>;
   }
@@ -211,7 +224,7 @@ function WarehouseManagement() {
               </tr>
             </thead>
             <tbody>
-              {warehouses.map((warehouse: any) => {
+              {paginatedWarehouses.map((warehouse: any) => {
                 const inventory = getWarehouseInventory(warehouse.maKho);
                 const isExpanded = expandedWarehouses.has(warehouse.maKho);
                 
@@ -301,6 +314,14 @@ function WarehouseManagement() {
               })}
             </tbody>
           </table>
+
+          {/* Phân trang */}
+          <TablePagination
+            current={currentPage}
+            total={totalItems}
+            pageSize={pageSize}
+            onChange={handlePageChange}
+          />
         </div>
       )}
 
