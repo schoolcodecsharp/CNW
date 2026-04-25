@@ -64,7 +64,7 @@
 /* Stats Grid */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 25px;
   margin-bottom: 30px;
 }
@@ -75,8 +75,10 @@
   border-radius: 15px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 20px;
+  text-align: center;
+  gap: 10px;
   border-left: 4px solid #667eea;
   transition: transform 0.3s;
 }
@@ -84,6 +86,20 @@
 .stat-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.12);
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 36px;
+  font-weight: bold;
+  color: #333;
 }
 
 .stat-icon {
@@ -613,6 +629,28 @@ select.form-control {
   text-align: center;
 }
 
+/* Header Stats (for OrderManagement) */
+.header-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.header-stats .stat-card {
+  padding: 15px 20px;
+  border-left: none;
+  border-top: 3px solid #667eea;
+}
+
+.header-stats .stat-label {
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+.header-stats .stat-value {
+  font-size: 24px;
+}
+
 /* Alert Variants */
 .alert-warning {
   background: #fef3c7;
@@ -641,6 +679,11 @@ select.form-control {
   }
 
   .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+
+  .header-stats {
     grid-template-columns: 1fr;
   }
 
@@ -655,5 +698,11 @@ select.form-control {
 
   .table-container {
     overflow-x: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
   }
 }
