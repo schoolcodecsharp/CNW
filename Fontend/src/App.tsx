@@ -51,9 +51,9 @@ function PublicRoute({ children }: PublicRouteProps) {
     // Chuyển hướng dựa trên vai trò người dùng
     const redirectMap: Record<string, string> = {
       'admin': '/admin',
-      'nongdan': '/nongdan',
-      'daily': '/daily',
-      'sieuthi': '/sieuthi'
+      'nong_dan': '/nongdan',
+      'dai_ly': '/daily',
+      'sieu_thi': '/sieuthi'
     };
     return <Navigate to={redirectMap[user.loaiTaiKhoan] || '/'} />;
   }
@@ -78,19 +78,19 @@ function AppRoutes() {
       } />
       
       <Route path="/nongdan/*" element={
-        <ProtectedRoute allowedRoles={['nongdan']}>
+        <ProtectedRoute allowedRoles={['nong_dan']}>
           <NongDanDashboard />
         </ProtectedRoute>
       } />
       
       <Route path="/daily/*" element={
-        <ProtectedRoute allowedRoles={['daily']}>
+        <ProtectedRoute allowedRoles={['dai_ly']}>
           <DaiLyDashboard />
         </ProtectedRoute>
       } />
       
       <Route path="/sieuthi/*" element={
-        <ProtectedRoute allowedRoles={['sieuthi']}>
+        <ProtectedRoute allowedRoles={['sieu_thi']}>
           <SieuThiDashboard />
         </ProtectedRoute>
       } />
