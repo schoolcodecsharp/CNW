@@ -8,6 +8,7 @@ import WarehouseManagement from './WarehouseManagement';
 import InventoryManagement from './InventoryManagement';
 import TraceabilityManagement from './TraceabilityManagement';
 import OrderManagement from './OrderManagement';
+import KiemDinhManagement from './KiemDinhManagement';
 import './SieuThiDashboard.css';
 
 function SieuThiDashboard() {
@@ -48,6 +49,7 @@ function SieuThiDashboard() {
     { id: 'orders', icon: 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=80&h=80&fit=crop', label: 'Đơn hàng', path: '/sieuthi/orders' },
     { id: 'warehouse', icon: 'https://images.unsplash.com/photo-1553413077-190dd305871c?w=80&h=80&fit=crop', label: 'Quản lý kho', path: '/sieuthi/warehouse' },
     { id: 'inventory', icon: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=80&h=80&fit=crop', label: 'Tồn kho', path: '/sieuthi/inventory' },
+    { id: 'kiemdinh', icon: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop', label: 'Kiểm định', path: '/sieuthi/kiemdinh' },
     { id: 'traceability', icon: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=80&h=80&fit=crop', label: 'Truy xuất nguồn gốc', path: '/sieuthi/traceability' }
   ];
 
@@ -98,6 +100,7 @@ function SieuThiDashboard() {
           <Route path="/orders" element={<OrderManagement />} />
           <Route path="/warehouse" element={<WarehouseManagement />} />
           <Route path="/inventory" element={<InventoryManagement />} />
+          <Route path="/kiemdinh" element={<KiemDinhManagement />} />
           <Route path="/traceability" element={<TraceabilityManagement />} />
         </Routes>
       </main>

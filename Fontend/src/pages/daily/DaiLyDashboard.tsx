@@ -7,6 +7,7 @@ import DaiLyOverview from './DaiLyOverview';
 import WarehouseManagement from './WarehouseManagement';
 import InventoryManagement from './InventoryManagement';
 import OrderManagement from './OrderManagement';
+import KiemDinhManagement from './KiemDinhManagement';
 import TestKho from './TestKho';
 import './DaiLyDashboard.css';
 
@@ -47,6 +48,7 @@ function DaiLyDashboard() {
     { id: 'dashboard', icon: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=80&h=80&fit=crop', label: 'Tổng quan', path: '/daily' },
     { id: 'warehouse', icon: 'https://images.unsplash.com/photo-1553413077-190dd305871c?w=80&h=80&fit=crop', label: 'Quản lý kho', path: '/daily/warehouse' },
     { id: 'inventory', icon: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=80&h=80&fit=crop', label: 'Tồn kho', path: '/daily/inventory' },
+    { id: 'kiemdinh', icon: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop', label: 'Kiểm định', path: '/daily/kiemdinh' },
     { id: 'orders', icon: 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=80&h=80&fit=crop', label: 'Đơn hàng', path: '/daily/orders' }
   ];
 
@@ -96,6 +98,7 @@ function DaiLyDashboard() {
           <Route path="/" element={<DaiLyOverview />} />
           <Route path="/warehouse" element={<WarehouseManagement />} />
           <Route path="/inventory" element={<InventoryManagement />} />
+          <Route path="/kiemdinh" element={<KiemDinhManagement />} />
           <Route path="/orders" element={<OrderManagement />} />
           <Route path="/test-kho" element={<TestKho />} />
         </Routes>

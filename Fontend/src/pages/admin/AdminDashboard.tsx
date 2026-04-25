@@ -9,6 +9,7 @@ import SieuThiManagement from './SieuThiManagement';
 import FarmManagement from './FarmManagement';
 import BatchManagement from './BatchManagement';
 import OrderManagement from './OrderManagement';
+import KiemDinhManagement from './KiemDinhManagement';
 import './AdminDashboard.css';
 
 function AdminDashboard() {
@@ -29,6 +30,7 @@ function AdminDashboard() {
     { id: 'sieuthi', icon: '🏬', label: 'Quản lý siêu thị', path: '/admin/sieuthi' },
     { id: 'farms', icon: '🌾', label: 'Quản lý trang trại', path: '/admin/farms' },
     { id: 'batches', icon: '📦', label: 'Quản lý lô hàng', path: '/admin/batches' },
+    { id: 'kiemdinh', icon: '✅', label: 'Quản lý kiểm định', path: '/admin/kiemdinh' },
     { id: 'orders', icon: '🛒', label: 'Quản lý đơn hàng', path: '/admin/orders' }
   ];
 
@@ -82,6 +84,7 @@ function AdminDashboard() {
           <Route path="/sieuthi" element={<SieuThiManagement />} />
           <Route path="/farms" element={<FarmManagement />} />
           <Route path="/batches" element={<BatchManagement />} />
+          <Route path="/kiemdinh" element={<KiemDinhManagement />} />
           <Route path="/orders" element={<OrderManagement />} />
         </Routes>
       </main>

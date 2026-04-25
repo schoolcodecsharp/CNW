@@ -12,6 +12,7 @@ interface UsePaginationReturn<T> {
   startIndex: number;
   endIndex: number;
   totalItems: number;
+  totalPages: number;
   handlePageChange: (page: number, size: number) => void;
   resetPagination: () => void;
 }
@@ -30,6 +31,8 @@ function usePagination<T>({
     return data.slice(startIndex, endIndex);
   }, [data, startIndex, endIndex]);
 
+  const totalPages = Math.ceil(data.length / pageSize);
+
   const handlePageChange = (page: number, size: number) => {
     setCurrentPage(page);
     setPageSize(size);
@@ -46,6 +49,7 @@ function usePagination<T>({
     startIndex,
     endIndex,
     totalItems: data.length,
+    totalPages,
     handlePageChange,
     resetPagination
   };
