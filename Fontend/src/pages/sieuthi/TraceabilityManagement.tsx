@@ -18,45 +18,100 @@ function TraceabilityManagement() {
 
     try {
       setLoading(true);
-      // Cần API endpoint để truy xuất
-      // const response = await axios.get(API_ENDPOINTS.truyXuat.getByCode(searchCode));
-      // setTraceData(response.data.data);
+      console.log('Tìm kiếm với mã:', searchCode);
       
-      // Mock data for demo
+      // Tìm kiếm lô nông sản theo mã QR hoặc mã lô
+      const loNongSanRes = await axios.get(API_ENDPOINTS.loNongSan.getAll);
+      console.log('Danh sách lô nông sản:', loNongSanRes.data);
+      
+      const allBatches = loNongSanRes.data.data || [];
+      
+      // Tìm lô theo mã QR hoặc mã lô
+      const foundBatch = allBatches.find((batch: any) => 
+        batch.maQR === searchCode || 
+        batch.maLo?.toString() === searchCode
+      );
+      
+      console.log('Lô tìm thấy:', foundBatch);
+      
+      if (!foundBatch) {
+        alert('❌ Không tìm thấy thông tin cho mã: ' + searchCode);
+        setTraceData(null);
+        setLoading(false);
+        return;
+      }
+
+      // Lấy thông tin trang trại
+      let trangTraiInfo = null;
+      if (foundBatch.maTrangTrai) {
+        try {
+          const trangTraiRes = await axios.get(API_ENDPOINTS.trangTrai.getAll);
+          trangTraiInfo = trangTraiRes.data.data?.find((tt: any) => tt.maTrangTrai === foundBatch.maTrangTrai);
+        } catch (err) {
+          console.error('Error loading trang trai:', err);
+        }
+      }
+
+      // Lấy thông tin nông dân
+      let nongDanInfo = null;
+      if (trangTraiInfo?.maNongDan) {
+        try {
+          const nongDanRes = await axios.get(API_ENDPOINTS.nongDan.getAll);
+          nongDanInfo = nongDanRes.data.data?.find((nd: any) => nd.maNongDan === trangTraiInfo.maNongDan);
+        } catch (err) {
+          console.error('Error loading nong dan:', err);
+        }
+      }
+
+      // Tạo dữ liệu truy xuất
       setTraceData({
-        maLo: searchCode,
-        tenSanPham: 'Cà chua',
-        soLuong: 500,
+        maLo: foundBatch.maLo,
+        maQR: foundBatch.maQR,
+        tenSanPham: foundBatch.tenSanPham || 'N/A',
+        soLuong: foundBatch.soLuongHienTai || foundBatch.soLuongBanDau || 0,
         donViTinh: 'kg',
-        trangThai: 'tai_sieu_thi',
-        nongDan: {
-          hoTen: 'Nguyễn Văn A',
-          sdt: '0123456789',
-          diaChi: 'Hà Nội'
+        trangThai: foundBatch.trangThai || 'tai_trang_trai',
+        nongDan: nongDanInfo ? {
+          hoTen: nongDanInfo.hoTen || 'N/A',
+          sdt: nongDanInfo.soDienThoai || 'N/A',
+          diaChi: nongDanInfo.diaChi || 'N/A'
+        } : {
+          hoTen: 'N/A',
+          sdt: 'N/A',
+          diaChi: 'N/A'
         },
-        trangTrai: {
-          tenTrangTrai: 'Trang trại hữu cơ ABC',
-          diaChi: 'Đông Anh, Hà Nội',
-          dienTich: 5
+        trangTrai: trangTraiInfo ? {
+          tenTrangTrai: trangTraiInfo.tenTrangTrai || 'N/A',
+          diaChi: trangTraiInfo.diaChi || 'N/A',
+          dienTich: trangTraiInfo.dienTich || 0
+        } : {
+          tenTrangTrai: 'N/A',
+          diaChi: 'N/A',
+          dienTich: 0
         },
-        ngayThuHoach: '2025-01-01',
-        hanSuDung: '2025-01-15',
+        ngayThuHoach: foundBatch.ngayThuHoach || foundBatch.ngayTao,
+        hanSuDung: foundBatch.hanSuDung || null,
         daiLy: {
-          tenDaiLy: 'Đại lý XYZ',
-          diaChi: 'Long Biên, Hà Nội'
+          tenDaiLy: 'N/A',
+          diaChi: 'N/A'
         },
         lichSuVanChuyen: [
-          { ngay: '2025-01-01', trangThai: 'Thu hoạch tại trang trại', nguoiThucHien: 'Nông dân' },
-          { ngay: '2025-01-02', trangThai: 'Vận chuyển đến đại lý', nguoiThucHien: 'Đại lý XYZ' },
-          { ngay: '2025-01-03', trangThai: 'Kiểm định chất lượng', nguoiThucHien: 'Đại lý XYZ' },
-          { ngay: '2025-01-04', trangThai: 'Vận chuyển đến siêu thị', nguoiThucHien: 'Siêu thị' },
-          { ngay: '2025-01-04', trangThai: 'Nhập kho siêu thị', nguoiThucHien: 'Siêu thị' }
+          { 
+            ngay: foundBatch.ngayTao || new Date().toISOString(), 
+            trangThai: 'Thu hoạch tại trang trại', 
+            nguoiThucHien: nongDanInfo?.hoTen || 'Nông dân' 
+          },
+          { 
+            ngay: foundBatch.ngayTao || new Date().toISOString(), 
+            trangThai: 'Đang tại trang trại', 
+            nguoiThucHien: trangTraiInfo?.tenTrangTrai || 'Trang trại' 
+          }
         ]
       });
       
     } catch (error: any) {
       console.error('Error searching:', error);
-      alert('❌ ' + (error.response?.data?.message || 'Không tìm thấy thông tin'));
+      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra khi tìm kiếm'));
       setTraceData(null);
     } finally {
       setLoading(false);

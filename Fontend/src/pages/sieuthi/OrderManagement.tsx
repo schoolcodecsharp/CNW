@@ -27,21 +27,28 @@ function OrderManagement() {
       setLoading(true);
       
       const sieuThiRes = await axios.get(API_ENDPOINTS.sieuThi.getAll);
+      console.log('Siêu thị response:', sieuThiRes.data);
+      
       const currentSieuThi = sieuThiRes.data.data?.find(
         (st: any) => st.maTaiKhoan === user?.maTaiKhoan
       );
       
       if (!currentSieuThi) {
+        console.error('Không tìm thấy siêu thị cho user:', user);
         setLoading(false);
         return;
       }
 
+      console.log('Current siêu thị:', currentSieuThi);
       setMaSieuThi(currentSieuThi.maSieuThi);
 
       const ordersRes = await axios.get(API_ENDPOINTS.donHangSieuThi.getBySieuThi(currentSieuThi.maSieuThi));
+      console.log('Orders response:', ordersRes.data);
       setAllOrders(ordersRes.data.data || []);
 
       const dailyRes = await axios.get(API_ENDPOINTS.daiLy.getAll);
+      console.log('Đại lý response:', dailyRes.data);
+      console.log('Số lượng đại lý:', dailyRes.data.data?.length || 0);
       setDailyList(dailyRes.data.data || []);
 
     } catch (error) {
