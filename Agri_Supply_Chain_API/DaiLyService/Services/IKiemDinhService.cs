@@ -7,6 +7,7 @@ namespace DaiLyService.Services
         List<KiemDinhDTO> GetAll();
         KiemDinhDTO? GetById(int maKiemDinh);
         List<KiemDinhDTO> GetByMaDaiLy(int maDaiLy);
+        List<KiemDinhDTO> GetByMaLo(int maLo);
         int Create(KiemDinhCreateDTO dto);
         bool Update(int maKiemDinh, KiemDinhUpdateDTO dto);
         bool Delete(int maKiemDinh);

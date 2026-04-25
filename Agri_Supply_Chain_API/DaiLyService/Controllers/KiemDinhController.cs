@@ -43,6 +43,14 @@ namespace DaiLyService.Controllers
             return Ok(data);
         }
 
+        // GET: api/kiem-dinh/lo/{maLo}
+        [HttpGet("lo/{maLo}")]
+        public IActionResult GetByMaLo(int maLo)
+        {
+            var data = _kiemDinhService.GetByMaLo(maLo);
+            return Ok(new { success = true, data });
+        }
+
         // POST: api/kiem-dinh/create
         [HttpPost("create")]
         public IActionResult Create(KiemDinhCreateDTO dto)

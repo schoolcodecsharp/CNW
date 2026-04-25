@@ -13,5 +13,7 @@ namespace DaiLyService.Models.DTOs
         public string? BienBan { get; set; }
         public string? ChuKySo { get; set; }
         public string? GhiChu { get; set; }
+        public string? SoChungNhanLo { get; set; }
+        public string? TenSanPham { get; set; }
     }
 }

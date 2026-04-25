@@ -67,6 +67,29 @@ namespace DaiLyService.Data
             return list;
         }
 
+        public List<KiemDinhDTO> GetByMaLo(int maLo)
+        {
+            var list = new List<KiemDinhDTO>();
+
+            using var conn = new SqlConnection(_connectionString);
+            using var cmd = new SqlCommand("sp_KiemDinh_Search", conn);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@MaLo", maLo);
+            cmd.Parameters.AddWithValue("@KetQua", DBNull.Value);
+            cmd.Parameters.AddWithValue("@TrangThai", DBNull.Value);
+            cmd.Parameters.AddWithValue("@NguoiKiemDinh", DBNull.Value);
+
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                list.Add(MapToDto(reader));
+            }
+
+            return list;
+        }
+
         public int Create(KiemDinhCreateDTO dto)
         {
             using var conn = new SqlConnection(_connectionString);
@@ -137,7 +160,9 @@ namespace DaiLyService.Data
                 TrangThai = reader["TrangThai"] as string,
                 BienBan = reader["BienBan"] as string,
                 ChuKySo = reader["ChuKySo"] as string,
-                GhiChu = reader["GhiChu"] as string
+                GhiChu = reader["GhiChu"] as string,
+                SoChungNhanLo = reader["SoChungNhanLo"] as string,
+                TenSanPham = reader["TenSanPham"] as string
             };
         }
     }
