@@ -63,6 +63,17 @@ function TraceabilityManagement() {
         }
       }
 
+      // Lấy lịch sử kiểm định
+      let kiemDinhList = [];
+      try {
+        const kiemDinhRes = await axios.get(API_ENDPOINTS.kiemDinh.getByMaLo(foundBatch.maLo));
+        if (kiemDinhRes.data.success) {
+          kiemDinhList = kiemDinhRes.data.data || [];
+        }
+      } catch (err) {
+        console.error('Error loading kiem dinh:', err);
+      }
+
       // Tạo dữ liệu truy xuất
       setTraceData({
         maLo: foundBatch.maLo,
@@ -95,6 +106,7 @@ function TraceabilityManagement() {
           tenDaiLy: 'N/A',
           diaChi: 'N/A'
         },
+        kiemDinhList: kiemDinhList,
         lichSuVanChuyen: [
           { 
             ngay: foundBatch.ngayTao || new Date().toISOString(), 
@@ -249,6 +261,42 @@ function TraceabilityManagement() {
               ))}
             </div>
           </div>
+
+          {traceData.kiemDinhList && traceData.kiemDinhList.length > 0 && (
+            <div className="timeline-section">
+              <h3>✅ Lịch sử kiểm định chất lượng</h3>
+              <div className="kiem-dinh-list">
+                {traceData.kiemDinhList.map((kd: any, index: number) => (
+                  <div key={index} className="kiem-dinh-card">
+                    <div className="kiem-dinh-header">
+                      <span className={`badge ${kd.ketQua === 'dat' || kd.ketQua === 'A' ? 'badge-success' : kd.ketQua === 'khong_dat' ? 'badge-danger' : 'badge-warning'}`}>
+                        {kd.ketQua === 'dat' ? '✅ Đạt' : kd.ketQua === 'khong_dat' ? '❌ Không đạt' : `Loại ${kd.ketQua}`}
+                      </span>
+                      <span className="kiem-dinh-date">{new Date(kd.ngayKiemDinh).toLocaleDateString('vi-VN')}</span>
+                    </div>
+                    <div className="kiem-dinh-body">
+                      <div className="kiem-dinh-row">
+                        <span className="label">Người kiểm định:</span>
+                        <span className="value">{kd.nguoiKiemDinh}</span>
+                      </div>
+                      {kd.bienBan && (
+                        <div className="kiem-dinh-row">
+                          <span className="label">Biên bản:</span>
+                          <span className="value">{kd.bienBan}</span>
+                        </div>
+                      )}
+                      {kd.ghiChu && (
+                        <div className="kiem-dinh-row">
+                          <span className="label">Ghi chú:</span>
+                          <span className="value">{kd.ghiChu}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -410,6 +458,57 @@ function TraceabilityManagement() {
         .timeline-desc {
           color: #6b7280;
           font-size: 14px;
+        }
+
+        .kiem-dinh-list {
+          display: grid;
+          gap: 15px;
+        }
+
+        .kiem-dinh-card {
+          background: #f9fafb;
+          border-radius: 8px;
+          border: 1px solid #e5e7eb;
+          overflow: hidden;
+        }
+
+        .kiem-dinh-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 15px;
+          background: white;
+          border-bottom: 1px solid #e5e7eb;
+        }
+
+        .kiem-dinh-date {
+          color: #6b7280;
+          font-size: 14px;
+        }
+
+        .kiem-dinh-body {
+          padding: 15px;
+        }
+
+        .kiem-dinh-row {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 10px;
+        }
+
+        .kiem-dinh-row:last-child {
+          margin-bottom: 0;
+        }
+
+        .kiem-dinh-row .label {
+          color: #6b7280;
+          font-weight: 500;
+          min-width: 120px;
+        }
+
+        .kiem-dinh-row .value {
+          color: #374151;
+          flex: 1;
         }
 
         .empty-state {
