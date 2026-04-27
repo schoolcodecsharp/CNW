@@ -316,6 +316,28 @@ namespace NongDanService.Data
             }
         }
 
+        public bool XacNhanDon(int id, int maKho)
+        {
+            try
+            {
+                using var conn = new SqlConnection(_connectionString);
+                using var cmd = new SqlCommand("sp_DonHangDaiLy_XacNhan", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                cmd.Parameters.Add("@MaDonHang", SqlDbType.Int).Value = id;
+                cmd.Parameters.Add("@MaKho", SqlDbType.Int).Value = maKho;
+
+                conn.Open();
+                cmd.ExecuteNonQuery();
+                return true;
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "SQL error confirming order");
+                throw;
+            }
+        }
+
         public bool Delete(int id)
         {
             using var conn = new SqlConnection(_connectionString);

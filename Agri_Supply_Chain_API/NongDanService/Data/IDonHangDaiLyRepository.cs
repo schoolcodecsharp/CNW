@@ -12,6 +12,7 @@ namespace NongDanService.Data
         int Create(DonHangDaiLyCreateDTO dto);
         bool Update(int id, DonHangDaiLyUpdateDTO dto);
         bool UpdateTrangThai(int id, string trangThai);
+        bool XacNhanDon(int id, int maKho);
         bool Delete(int id);
         
         // Chi tiết đơn hàng

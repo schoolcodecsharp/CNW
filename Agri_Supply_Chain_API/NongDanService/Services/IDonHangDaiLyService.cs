@@ -11,7 +11,7 @@ namespace NongDanService.Services
         List<DonHangDaiLyDTO> GetByDaiLyId(int maDaiLy);
         int Create(DonHangDaiLyCreateDTO dto);
         bool Update(int id, DonHangDaiLyUpdateDTO dto);
-        bool XacNhanDon(int id);
+        bool XacNhanDon(int id, int maKho);
         bool XuatDon(int id);
         bool HuyDon(int id);
         bool Delete(int id);

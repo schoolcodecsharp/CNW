@@ -119,16 +119,17 @@ namespace NongDanService.Controllers
         }
 
         [HttpPut("xac-nhan/{id}")]
-        public IActionResult XacNhanDon(int id)
+        public IActionResult XacNhanDon(int id, [FromBody] XacNhanDonDTO dto)
         {
             try
             {
                 if (id <= 0) return BadRequest(new { success = false, message = "ID đơn hàng không hợp lệ" });
+                if (dto == null || dto.MaKho <= 0) return BadRequest(new { success = false, message = "Mã kho không hợp lệ" });
 
-                bool result = _donHangService.XacNhanDon(id);
+                bool result = _donHangService.XacNhanDon(id, dto.MaKho);
                 if (!result) return NotFound(new { success = false, message = "Không tìm thấy đơn hàng để xác nhận" });
 
-                return Ok(new { success = true, message = "Xác nhận đơn hàng thành công" });
+                return Ok(new { success = true, message = "Xác nhận đơn hàng thành công. Lô đã chuyển sang trạng thái chờ kiểm định." });
             }
             catch (Exception ex)
             {
