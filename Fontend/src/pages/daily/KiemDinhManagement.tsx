@@ -12,6 +12,9 @@ interface LoNongSan {
   tenSanPham: string;
   soLuongHienTai: number;
   ngayThuHoach: string;
+  trangThai: string;
+  maDonHang: number;
+  ngayDat: string;
 }
 
 interface KiemDinh {
@@ -69,12 +72,13 @@ const KiemDinhManagement = () => {
 
   const loadLoNongSan = async () => {
     try {
-      const response = await axios.get(API_ENDPOINTS.loNongSan.getAll);
+      // Load only lots waiting for inspection for this DaiLy
+      const response = await axios.get(API_ENDPOINTS.kiemDinh.getLoChoKiemDinh(user?.userId));
       if (response.data.success) {
         setLoNongSanList(response.data.data || []);
       }
     } catch (error) {
-      console.error('Lỗi khi tải danh sách lô nông sản:', error);
+      console.error('Lỗi khi tải danh sách lô chờ kiểm định:', error);
     }
   };
 
@@ -98,7 +102,13 @@ const KiemDinhManagement = () => {
       };
 
       await axios.post(API_ENDPOINTS.kiemDinh.create, payload);
-      alert('Tạo phiếu kiểm định thành công');
+      
+      if (formData.ketQua === 'dat') {
+        alert('✅ Kiểm định đạt! Lô đã sẵn sàng để nhập kho.');
+      } else {
+        alert('❌ Kiểm định không đạt! Lô đã được trả về nông dân và đơn hàng đã bị hủy.');
+      }
+      
       setShowCreateModal(false);
       setFormData({
         maLo: 0,
@@ -108,6 +118,7 @@ const KiemDinhManagement = () => {
         ghiChu: ''
       });
       loadData();
+      loadLoNongSan(); // Reload to remove inspected lot from list
     } catch (error) {
       console.error('Lỗi khi tạo phiếu kiểm định:', error);
       alert('Lỗi khi tạo phiếu kiểm định');
@@ -215,10 +226,15 @@ const KiemDinhManagement = () => {
                   <option value={0}>-- Chọn lô --</option>
                   {loNongSanList.map(lo => (
                     <option key={lo.maLo} value={lo.maLo}>
-                      {lo.soChungNhanLo} - {lo.tenSanPham} ({lo.soLuongHienTai} kg)
+                      {lo.soChungNhanLo} - {lo.tenSanPham} ({lo.soLuongHienTai} kg) - Đơn #{lo.maDonHang}
                     </option>
                   ))}
                 </select>
+                {loNongSanList.length === 0 && (
+                  <p style={{color: '#6b7280', fontSize: '14px', marginTop: '8px'}}>
+                    Không có lô nào chờ kiểm định
+                  </p>
+                )}
               </div>
 
               <div className="form-group">
@@ -241,9 +257,6 @@ const KiemDinhManagement = () => {
                 >
                   <option value="dat">Đạt</option>
                   <option value="khong_dat">Không đạt</option>
-                  <option value="A">Loại A</option>
-                  <option value="B">Loại B</option>
-                  <option value="C">Loại C</option>
                 </select>
               </div>
 

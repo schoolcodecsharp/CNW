@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
+import { useAuth } from '../../context/AuthContext';
 import '../../components/Common.css';
 
 function TraceabilityManagement() {
+  const { user } = useAuth();
   const [searchCode, setSearchCode] = useState('');
   const [traceData, setTraceData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -19,6 +21,36 @@ function TraceabilityManagement() {
     try {
       setLoading(true);
       console.log('Tìm kiếm với mã:', searchCode);
+      
+      // Lấy thông tin siêu thị hiện tại
+      const sieuThiRes = await axios.get(API_ENDPOINTS.sieuThi.getAll);
+      const currentSieuThi = sieuThiRes.data.data?.find(
+        (st: any) => st.maTaiKhoan === user?.maTaiKhoan
+      );
+      
+      if (!currentSieuThi) {
+        alert('❌ Không tìm thấy thông tin siêu thị!');
+        setLoading(false);
+        return;
+      }
+
+      // Lấy danh sách kho của siêu thị
+      const khoRes = await axios.get(API_ENDPOINTS.kho.getBySieuThi(currentSieuThi.maSieuThi));
+      const khoList = khoRes.data.data || [];
+      
+      if (khoList.length === 0) {
+        alert('❌ Siêu thị chưa có kho nào!');
+        setLoading(false);
+        return;
+      }
+
+      // Lấy tồn kho của siêu thị
+      const tonKhoRes = await axios.get(API_ENDPOINTS.tonKho.getAll);
+      const allTonKho = tonKhoRes.data.data || [];
+      
+      // Lọc tồn kho thuộc các kho của siêu thị
+      const maKhoList = khoList.map((k: any) => k.maKho);
+      const tonKhoSieuThi = allTonKho.filter((tk: any) => maKhoList.includes(tk.maKho));
       
       // Tìm kiếm lô nông sản theo mã QR hoặc mã lô
       const loNongSanRes = await axios.get(API_ENDPOINTS.loNongSan.getAll);
@@ -36,6 +68,16 @@ function TraceabilityManagement() {
       
       if (!foundBatch) {
         alert('❌ Không tìm thấy thông tin cho mã: ' + searchCode);
+        setTraceData(null);
+        setLoading(false);
+        return;
+      }
+
+      // Kiểm tra xem lô có trong kho của siêu thị không
+      const loTrongKho = tonKhoSieuThi.find((tk: any) => tk.maLo === foundBatch.maLo);
+      
+      if (!loTrongKho) {
+        alert('❌ Lô này không có trong kho của siêu thị bạn!');
         setTraceData(null);
         setLoading(false);
         return;
