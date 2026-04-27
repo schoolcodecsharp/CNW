@@ -20,6 +20,8 @@ namespace DaiLyService.Services
 
         public List<KiemDinhDTO> GetByMaLo(int maLo) => _repo.GetByMaLo(maLo);
 
+        public List<LoChoKiemDinhDTO> GetLoChoKiemDinh(int maDaiLy) => _repo.GetLoChoKiemDinh(maDaiLy);
+
         public int Create(KiemDinhCreateDTO dto) => _repo.Create(dto);
 
         public bool Update(int maKiemDinh, KiemDinhUpdateDTO dto) => _repo.Update(maKiemDinh, dto);

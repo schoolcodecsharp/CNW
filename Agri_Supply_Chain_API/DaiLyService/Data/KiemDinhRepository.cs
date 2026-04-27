@@ -90,6 +90,36 @@ namespace DaiLyService.Data
             return list;
         }
 
+        public List<LoChoKiemDinhDTO> GetLoChoKiemDinh(int maDaiLy)
+        {
+            var list = new List<LoChoKiemDinhDTO>();
+
+            using var conn = new SqlConnection(_connectionString);
+            using var cmd = new SqlCommand("sp_KiemDinh_GetLoChoKiemDinh", conn);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@MaDaiLy", maDaiLy);
+
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                list.Add(new LoChoKiemDinhDTO
+                {
+                    MaLo = (int)reader["MaLo"],
+                    SoChungNhanLo = reader["SoChungNhanLo"].ToString()!,
+                    TenSanPham = reader["TenSanPham"].ToString()!,
+                    SoLuongHienTai = (decimal)reader["SoLuongHienTai"],
+                    NgayThuHoach = reader["NgayThuHoach"] as DateTime?,
+                    TrangThai = reader["TrangThai"].ToString()!,
+                    MaDonHang = (int)reader["MaDonHang"],
+                    NgayDat = reader["NgayDat"] as DateTime?
+                });
+            }
+
+            return list;
+        }
+
         public int Create(KiemDinhCreateDTO dto)
         {
             using var conn = new SqlConnection(_connectionString);

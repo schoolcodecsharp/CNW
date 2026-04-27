@@ -51,6 +51,14 @@ namespace DaiLyService.Controllers
             return Ok(new { success = true, data });
         }
 
+        // GET: api/kiem-dinh/lo-cho-kiem-dinh/{maDaiLy}
+        [HttpGet("lo-cho-kiem-dinh/{maDaiLy}")]
+        public IActionResult GetLoChoKiemDinh(int maDaiLy)
+        {
+            var data = _kiemDinhService.GetLoChoKiemDinh(maDaiLy);
+            return Ok(new { success = true, data });
+        }
+
         // POST: api/kiem-dinh/create
         [HttpPost("create")]
         public IActionResult Create(KiemDinhCreateDTO dto)

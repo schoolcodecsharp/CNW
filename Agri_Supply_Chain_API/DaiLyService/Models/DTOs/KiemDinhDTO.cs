@@ -17,3 +17,15 @@ namespace DaiLyService.Models.DTOs
         public string? TenSanPham { get; set; }
     }
 }
+
+    public class LoChoKiemDinhDTO
+    {
+        public int MaLo { get; set; }
+        public string SoChungNhanLo { get; set; } = string.Empty;
+        public string TenSanPham { get; set; } = string.Empty;
+        public decimal SoLuongHienTai { get; set; }
+        public DateTime? NgayThuHoach { get; set; }
+        public string TrangThai { get; set; } = string.Empty;
+        public int MaDonHang { get; set; }
+        public DateTime? NgayDat { get; set; }
+    }
