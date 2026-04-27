@@ -93,6 +93,7 @@ export const API_ENDPOINTS = {
     getById: (id: number) => `${API_BASE_URLS.daily}/api/kiem-dinh/${id}`,
     getByMaLo: (maLo: number) => `${API_BASE_URLS.daily}/api/kiem-dinh/lo/${maLo}`,
     getByDaiLy: (id: number) => `${API_BASE_URLS.daily}/api/kiem-dinh/dai-ly/${id}`,
+    getLoChoKiemDinh: (maDaiLy: number) => `${API_BASE_URLS.daily}/api/kiem-dinh/lo-cho-kiem-dinh/${maDaiLy}`,
     create: `${API_BASE_URLS.daily}/api/kiem-dinh/create`,
     update: (id: number) => `${API_BASE_URLS.daily}/api/kiem-dinh/update/${id}`,
     delete: (id: number) => `${API_BASE_URLS.daily}/api/kiem-dinh/delete/${id}`
