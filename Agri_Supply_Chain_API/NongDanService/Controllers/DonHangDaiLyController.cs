@@ -119,17 +119,87 @@ namespace NongDanService.Controllers
         }
 
         [HttpPut("xac-nhan/{id}")]
-        public IActionResult XacNhanDon(int id, [FromBody] XacNhanDonDTO dto)
+        public IActionResult XacNhanDon(int id, [FromBody] XacNhanDonNongDanDTO dto)
         {
             try
             {
                 if (id <= 0) return BadRequest(new { success = false, message = "ID đơn hàng không hợp lệ" });
-                if (dto == null || dto.MaKho <= 0) return BadRequest(new { success = false, message = "Mã kho không hợp lệ" });
+                if (dto == null || dto.MaNongDan <= 0) return BadRequest(new { success = false, message = "Mã nông dân không hợp lệ" });
 
-                bool result = _donHangService.XacNhanDon(id, dto.MaKho);
+                bool result = _donHangService.XacNhanDonChoKiemDuyet(id, dto.MaNongDan);
                 if (!result) return NotFound(new { success = false, message = "Không tìm thấy đơn hàng để xác nhận" });
 
-                return Ok(new { success = true, message = "Xác nhận đơn hàng thành công. Lô đã chuyển sang trạng thái chờ kiểm định." });
+                return Ok(new { success = true, message = "Đã xác nhận đơn hàng, chuyển sang chờ kiểm định từ đại lý" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Lỗi server: " + ex.Message });
+            }
+        }
+
+        [HttpGet("chua-xac-nhan/{maNongDan}")]
+        public IActionResult GetDonHangChuaXacNhan(int maNongDan)
+        {
+            try
+            {
+                if (maNongDan <= 0) return BadRequest(new { success = false, message = "Mã nông dân không hợp lệ" });
+
+                var data = _donHangService.GetDonHangChuaXacNhan(maNongDan);
+                return Ok(new { success = true, message = "Lấy danh sách đơn hàng chưa xác nhận thành công", data, count = data.Count });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Lỗi server: " + ex.Message });
+            }
+        }
+
+        [HttpGet("hoan-don/{maNongDan}")]
+        public IActionResult GetDonHangHoanDon(int maNongDan)
+        {
+            try
+            {
+                if (maNongDan <= 0) return BadRequest(new { success = false, message = "Mã nông dân không hợp lệ" });
+
+                var data = _donHangService.GetDonHangHoanDon(maNongDan);
+                return Ok(new { success = true, message = "Lấy danh sách đơn hàng hoàn đơn thành công", data, count = data.Count });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Lỗi server: " + ex.Message });
+            }
+        }
+
+        [HttpPut("xu-ly-hoan-don/{id}")]
+        public IActionResult XuLyHoanDon(int id, [FromBody] XacNhanDonNongDanDTO dto)
+        {
+            try
+            {
+                if (id <= 0) return BadRequest(new { success = false, message = "ID đơn hàng không hợp lệ" });
+                if (dto == null || dto.MaNongDan <= 0) return BadRequest(new { success = false, message = "Mã nông dân không hợp lệ" });
+
+                bool result = _donHangService.XuLyHoanDon(id, dto.MaNongDan);
+                if (!result) return NotFound(new { success = false, message = "Không tìm thấy đơn hàng hoàn đơn" });
+
+                return Ok(new { success = true, message = "Đã xử lý hoàn đơn, chuyển lại sang chờ kiểm định" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Lỗi server: " + ex.Message });
+            }
+        }
+
+        [HttpPut("huy-don/{id}")]
+        public IActionResult HuyDonHang(int id, [FromBody] XacNhanDonNongDanDTO dto)
+        {
+            try
+            {
+                if (id <= 0) return BadRequest(new { success = false, message = "ID đơn hàng không hợp lệ" });
+                if (dto == null || dto.MaNongDan <= 0) return BadRequest(new { success = false, message = "Mã nông dân không hợp lệ" });
+
+                bool result = _donHangService.HuyDonHang(id, dto.MaNongDan);
+                if (!result) return NotFound(new { success = false, message = "Không tìm thấy đơn hàng để hủy" });
+
+                return Ok(new { success = true, message = "Đã hủy đơn hàng (sản phẩm lỗi/hỏng)" });
             }
             catch (Exception ex)
             {
@@ -148,24 +218,6 @@ namespace NongDanService.Controllers
                 if (!result) return NotFound(new { success = false, message = "Không tìm thấy đơn hàng để xuất" });
 
                 return Ok(new { success = true, message = "Xuất đơn hàng thành công" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { success = false, message = "Lỗi server: " + ex.Message });
-            }
-        }
-
-        [HttpPut("huy-don/{id}")]
-        public IActionResult HuyDon(int id)
-        {
-            try
-            {
-                if (id <= 0) return BadRequest(new { success = false, message = "ID đơn hàng không hợp lệ" });
-
-                bool result = _donHangService.HuyDon(id);
-                if (!result) return NotFound(new { success = false, message = "Không tìm thấy đơn hàng để hủy" });
-
-                return Ok(new { success = true, message = "Hủy đơn hàng thành công" });
             }
             catch (Exception ex)
             {
