@@ -1,0 +1,225 @@
+.nongdan-donhang {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.nongdan-donhang h2 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.tab {
+  padding: 12px 24px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  color: #666;
+  transition: all 0.3s;
+}
+
+.tab:hover {
+  color: #2c3e50;
+  background: #f5f5f5;
+}
+
+.tab.active {
+  color: #27ae60;
+  border-bottom-color: #27ae60;
+}
+
+.tab-content {
+  margin-top: 20px;
+}
+
+.tab-content h3 {
+  color: #34495e;
+  margin-bottom: 15px;
+}
+
+.donhang-list {
+  display: grid;
+  gap: 20px;
+}
+
+.donhang-item {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: box-shadow 0.3s;
+}
+
+.donhang-item:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.donhang-item.hoan-don {
+  border-left: 4px solid #e74c3c;
+}
+
+.donhang-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.donhang-header h4 {
+  margin: 0;
+  color: #2c3e50;
+}
+
+.badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-new {
+  background: #3498db;
+  color: white;
+}
+
+.badge-return {
+  background: #e74c3c;
+  color: white;
+}
+
+.donhang-info {
+  margin-bottom: 15px;
+}
+
+.donhang-info p {
+  margin: 8px 0;
+  color: #555;
+}
+
+.donhang-info strong {
+  color: #2c3e50;
+  margin-right: 8px;
+}
+
+.error-note {
+  background: #fff3cd;
+  padding: 10px;
+  border-radius: 4px;
+  border-left: 3px solid #ffc107;
+  margin-top: 10px;
+}
+
+.donhang-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s;
+  flex: 1;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.btn-success {
+  background: #27ae60;
+  color: white;
+}
+
+.btn-success:hover {
+  background: #229954;
+}
+
+.btn-primary {
+  background: #3498db;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #2980b9;
+}
+
+.btn-danger {
+  background: #e74c3c;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #c0392b;
+}
+
+.warning {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #fff3cd;
+  border-left: 3px solid #ffc107;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #856404;
+}
+
+.info-box {
+  margin-top: 15px;
+  padding: 12px;
+  background: #e8f5e9;
+  border-left: 3px solid #4caf50;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.info-box p {
+  margin: 6px 0;
+  color: #2e7d32;
+}
+
+.empty {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+  font-style: italic;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .donhang-actions {
+    flex-direction: column;
+  }
+  
+  .tabs {
+    flex-direction: column;
+  }
+  
+  .tab {
+    text-align: left;
+  }
+}
