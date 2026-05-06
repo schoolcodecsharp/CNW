@@ -21,6 +21,8 @@ namespace NongDanService.Data
             try
             {
                 using var conn = new SqlConnection(_connectionString);
+                conn.Open();
+                
                 using var cmd = new SqlCommand(@"
                     SELECT dd.MaDonHang, dd.MaDaiLy, dd.MaNongDan,
                            d.LoaiDon, d.NgayDat, d.NgayGiao, d.TrangThai, 
@@ -32,13 +34,13 @@ namespace NongDanService.Data
                     LEFT JOIN DaiLy dl ON dd.MaDaiLy = dl.MaDaiLy
                     ORDER BY d.NgayDat DESC", conn);
 
-                conn.Open();
-                using var reader = cmd.ExecuteReader();
-                while (reader.Read())
+                using (var reader = cmd.ExecuteReader())
                 {
-                    list.Add(MapToDTO(reader));
+                    while (reader.Read())
+                    {
+                        list.Add(MapToDTO(reader));
+                    }
                 }
-                reader.Close();
 
                 // Load chi tiết cho từng đơn hàng
                 foreach (var donHang in list)
@@ -59,6 +61,8 @@ namespace NongDanService.Data
             try
             {
                 using var conn = new SqlConnection(_connectionString);
+                conn.Open();
+                
                 using var cmd = new SqlCommand(@"
                     SELECT dd.MaDonHang, dd.MaDaiLy, dd.MaNongDan,
                            d.LoaiDon, d.NgayDat, d.NgayGiao, d.TrangThai, 
@@ -71,13 +75,17 @@ namespace NongDanService.Data
                     WHERE dd.MaDonHang = @id", conn);
 
                 cmd.Parameters.Add("@id", SqlDbType.Int).Value = id;
-                conn.Open();
-                using var reader = cmd.ExecuteReader();
                 
-                if (!reader.Read()) return null;
+                DonHangDaiLyDTO? donHang = null;
+                using (var reader = cmd.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        donHang = MapToDTO(reader);
+                    }
+                }
                 
-                var donHang = MapToDTO(reader);
-                reader.Close();
+                if (donHang == null) return null;
                 
                 // Load chi tiết
                 donHang.ChiTietDonHang = GetChiTietByDonHang(id, conn);
@@ -96,6 +104,8 @@ namespace NongDanService.Data
             try
             {
                 using var conn = new SqlConnection(_connectionString);
+                conn.Open();
+                
                 using var cmd = new SqlCommand(@"
                     SELECT dd.MaDonHang, dd.MaDaiLy, dd.MaNongDan,
                            d.LoaiDon, d.NgayDat, d.NgayGiao, d.TrangThai, 
@@ -109,13 +119,14 @@ namespace NongDanService.Data
                     ORDER BY d.NgayDat DESC", conn);
 
                 cmd.Parameters.Add("@maNongDan", SqlDbType.Int).Value = maNongDan;
-                conn.Open();
-                using var reader = cmd.ExecuteReader();
-                while (reader.Read())
+                
+                using (var reader = cmd.ExecuteReader())
                 {
-                    list.Add(MapToDTO(reader));
+                    while (reader.Read())
+                    {
+                        list.Add(MapToDTO(reader));
+                    }
                 }
-                reader.Close();
 
                 foreach (var donHang in list)
                 {
@@ -136,6 +147,8 @@ namespace NongDanService.Data
             try
             {
                 using var conn = new SqlConnection(_connectionString);
+                conn.Open();
+                
                 using var cmd = new SqlCommand(@"
                     SELECT dd.MaDonHang, dd.MaDaiLy, dd.MaNongDan,
                            d.LoaiDon, d.NgayDat, d.NgayGiao, d.TrangThai, 
@@ -149,13 +162,14 @@ namespace NongDanService.Data
                     ORDER BY d.NgayDat DESC", conn);
 
                 cmd.Parameters.Add("@maDaiLy", SqlDbType.Int).Value = maDaiLy;
-                conn.Open();
-                using var reader = cmd.ExecuteReader();
-                while (reader.Read())
+                
+                using (var reader = cmd.ExecuteReader())
                 {
-                    list.Add(MapToDTO(reader));
+                    while (reader.Read())
+                    {
+                        list.Add(MapToDTO(reader));
+                    }
                 }
-                reader.Close();
 
                 foreach (var donHang in list)
                 {
@@ -520,6 +534,126 @@ namespace NongDanService.Data
             cmd.Parameters.Add("@MaDonHang", SqlDbType.Int).Value = maDonHang;
             cmd.ExecuteNonQuery();
         }
+
+        // ========== CÁC METHODS MỚI CHO QUY TRÌNH KIỂM ĐỊNH ==========
+
+        public bool XacNhanDonChoKiemDuyet(int id, int maNongDan)
+        {
+            try
+            {
+                using var conn = new SqlConnection(_connectionString);
+                using var cmd = new SqlCommand("sp_NongDan_XacNhanDonHang", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                cmd.Parameters.Add("@MaDonHang", SqlDbType.Int).Value = id;
+                cmd.Parameters.Add("@MaNongDan", SqlDbType.Int).Value = maNongDan;
+
+                conn.Open();
+                cmd.ExecuteNonQuery();
+                return true;
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "SQL error confirming order for inspection");
+                throw;
+            }
+        }
+
+        public bool XuLyHoanDon(int id, int maNongDan)
+        {
+            try
+            {
+                using var conn = new SqlConnection(_connectionString);
+                using var cmd = new SqlCommand("sp_NongDan_XuLyHoanDon", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                cmd.Parameters.Add("@MaDonHang", SqlDbType.Int).Value = id;
+                cmd.Parameters.Add("@MaNongDan", SqlDbType.Int).Value = maNongDan;
+
+                conn.Open();
+                cmd.ExecuteNonQuery();
+                return true;
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "SQL error processing returned order");
+                throw;
+            }
+        }
+
+        public bool HuyDonHang(int id, int maNongDan)
+        {
+            try
+            {
+                using var conn = new SqlConnection(_connectionString);
+                using var cmd = new SqlCommand("sp_NongDan_HuyDonHang", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                cmd.Parameters.Add("@MaDonHang", SqlDbType.Int).Value = id;
+                cmd.Parameters.Add("@MaNongDan", SqlDbType.Int).Value = maNongDan;
+
+                conn.Open();
+                cmd.ExecuteNonQuery();
+                return true;
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "SQL error canceling order");
+                throw;
+            }
+        }
+
+        public List<DonHangDaiLyDTO> GetDonHangChuaXacNhan(int maNongDan)
+        {
+            var list = new List<DonHangDaiLyDTO>();
+            try
+            {
+                using var conn = new SqlConnection(_connectionString);
+                using var cmd = new SqlCommand("sp_NongDan_GetDonHangChuaXacNhan", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add("@MaNongDan", SqlDbType.Int).Value = maNongDan;
+
+                conn.Open();
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    list.Add(MapToDTO(reader));
+                }
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "SQL error getting unconfirmed orders");
+                throw;
+            }
+            return list;
+        }
+
+        public List<DonHangDaiLyDTO> GetDonHangHoanDon(int maNongDan)
+        {
+            var list = new List<DonHangDaiLyDTO>();
+            try
+            {
+                using var conn = new SqlConnection(_connectionString);
+                using var cmd = new SqlCommand("sp_NongDan_GetDonHangHoanDon", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add("@MaNongDan", SqlDbType.Int).Value = maNongDan;
+
+                conn.Open();
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    list.Add(MapToDTO(reader));
+                }
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "SQL error getting returned orders");
+                throw;
+            }
+            return list;
+        }
+
+        // ========== Private methods ==========
 
         private static DonHangDaiLyDTO MapToDTO(SqlDataReader reader)
         {
