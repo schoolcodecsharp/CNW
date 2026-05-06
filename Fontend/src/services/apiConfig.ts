@@ -66,6 +66,10 @@ export const API_ENDPOINTS = {
   },
   
   // Dai Ly Service
+  daily: {
+    base: API_BASE_URLS.daily
+  },
+  
   daiLy: {
     base: API_BASE_URLS.daily,
     getAll: `${API_BASE_URLS.daily}/api/dai-ly/get-all`,

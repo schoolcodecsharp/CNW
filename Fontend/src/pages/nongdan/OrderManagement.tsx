@@ -4,6 +4,7 @@ import { API_ENDPOINTS } from '../../services/apiConfig';
 import { useAuth } from '../../context/AuthContext';
 import TablePagination from '../../components/TablePagination';
 import usePagination from '../../hooks/usePagination';
+import NongDanDonHang from '../../components/NongDanDonHang';
 import '../../components/Common.css';
 
 function OrderManagement() {
@@ -205,6 +206,13 @@ function OrderManagement() {
       {batches.length === 0 && (
         <div className="alert alert-warning">
           ⚠️ Bạn cần có lô nông sản khả dụng để tạo đơn hàng
+        </div>
+      )}
+
+      {/* Component xử lý đơn hàng mới và hoàn đơn */}
+      {maNongDan && (
+        <div style={{ marginBottom: '32px' }}>
+          <NongDanDonHang maNongDan={maNongDan} />
         </div>
       )}
 

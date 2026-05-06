@@ -170,6 +170,23 @@ export const dailyService = {
   deleteTonKho: async (data: any) => {
     const response = await axios.delete(API_ENDPOINTS.tonKho.delete, { data });
     return response.data;
+  },
+
+  // ========== KIỂM ĐỊNH ĐƠN HÀNG ==========
+  
+  // Lấy đơn hàng chờ kiểm định
+  getDonHangChoKiemDinh: async (maDaiLy: number) => {
+    const response = await axios.get(`${API_ENDPOINTS.daily.base}/api/don-hang-dai-ly/cho-kiem-dinh/${maDaiLy}`);
+    return response.data;
+  },
+
+  // Kiểm định đơn hàng
+  kiemDinhDonHang: async (maDonHang: number, maDaiLy: number, maKho: number, ketQuaKiemDinh: boolean) => {
+    const response = await axios.put(
+      `${API_ENDPOINTS.daily.base}/api/don-hang-dai-ly/kiem-dinh/${maDonHang}`,
+      { maDaiLy, maKho, ketQuaKiemDinh }
+    );
+    return response.data;
   }
 };
 

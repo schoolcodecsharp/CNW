@@ -115,6 +115,53 @@ export const nongdanService = {
   deleteSanPham: async (id: number) => {
     const response = await axios.delete(API_ENDPOINTS.sanPham.delete(id));
     return response.data;
+  },
+
+  // ========== ĐƠN HÀNG ==========
+  
+  // Lấy đơn hàng chưa xác nhận
+  getDonHangChuaXacNhan: async (maNongDan: number) => {
+    const response = await axios.get(`${API_ENDPOINTS.nongDan.base}/api/don-hang-dai-ly/chua-xac-nhan/${maNongDan}`);
+    return response.data;
+  },
+
+  // Lấy đơn hàng hoàn đơn
+  getDonHangHoanDon: async (maNongDan: number) => {
+    const response = await axios.get(`${API_ENDPOINTS.nongDan.base}/api/don-hang-dai-ly/hoan-don/${maNongDan}`);
+    return response.data;
+  },
+
+  // Xác nhận đơn hàng (Tick)
+  xacNhanDonHang: async (maDonHang: number, maNongDan: number) => {
+    const response = await axios.put(
+      `${API_ENDPOINTS.nongDan.base}/api/don-hang-dai-ly/xac-nhan/${maDonHang}`,
+      { maNongDan }
+    );
+    return response.data;
+  },
+
+  // Xử lý hoàn đơn (Tick - Gửi lại kiểm định)
+  xuLyHoanDon: async (maDonHang: number, maNongDan: number) => {
+    const response = await axios.put(
+      `${API_ENDPOINTS.nongDan.base}/api/don-hang-dai-ly/xu-ly-hoan-don/${maDonHang}`,
+      { maNongDan }
+    );
+    return response.data;
+  },
+
+  // Hủy đơn hàng
+  huyDonHang: async (maDonHang: number, maNongDan: number) => {
+    const response = await axios.put(
+      `${API_ENDPOINTS.nongDan.base}/api/don-hang-dai-ly/huy-don/${maDonHang}`,
+      { maNongDan }
+    );
+    return response.data;
+  },
+
+  // Lấy chi tiết đơn hàng
+  getChiTietDonHang: async (maDonHang: number) => {
+    const response = await axios.get(`${API_ENDPOINTS.nongDan.base}/api/don-hang-dai-ly/${maDonHang}/chi-tiet`);
+    return response.data;
   }
 };
 

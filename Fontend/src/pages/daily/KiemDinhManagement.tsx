@@ -4,6 +4,7 @@ import { API_ENDPOINTS } from '../../services/apiConfig';
 import { useAuth } from '../../context/AuthContext';
 import TablePagination from '../../components/TablePagination';
 import usePagination from '../../hooks/usePagination';
+import DaiLyKiemDinh from '../../components/DaiLyKiemDinh';
 import './DaiLyDashboard.css';
 
 interface LoNongSan {
@@ -159,6 +160,13 @@ const KiemDinhManagement = () => {
           + Tạo phiếu kiểm định
         </button>
       </div>
+
+      {/* Component kiểm định đơn hàng */}
+      <div style={{ marginBottom: '32px' }}>
+        <DaiLyKiemDinh maDaiLy={user?.userId || 0} />
+      </div>
+
+      <h3 style={{ marginTop: '32px', marginBottom: '16px' }}>Lịch sử kiểm định</h3>
 
       <div className="table-container">
         <table className="data-table">
