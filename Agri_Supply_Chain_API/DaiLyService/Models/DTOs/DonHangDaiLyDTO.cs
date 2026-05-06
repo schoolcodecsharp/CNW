@@ -24,4 +24,11 @@ namespace DaiLyService.Models.DTOs
         public decimal? DonGia { get; set; }
         public decimal? ThanhTien { get; set; }
     }
+
+    public class KiemDinhDonHangRequest
+    {
+        public int MaDaiLy { get; set; }
+        public int MaKho { get; set; }
+        public bool KetQuaKiemDinh { get; set; } // true = đạt, false = không đạt
+    }
 }

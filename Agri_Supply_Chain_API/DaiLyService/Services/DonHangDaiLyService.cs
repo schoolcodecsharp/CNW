@@ -32,5 +32,11 @@ namespace DaiLyService.Services
         public bool HuyDon(int maDonHang) => _repo.HuyDon(maDonHang);
 
         public bool XuatDon(int maDonHang, XuatDonRequest request) => _repo.XuatDon(maDonHang, request);
+
+        public bool KiemDuyetDonHang(int maDonHang, int maDaiLy, int maKho, bool chapNhan) 
+            => _repo.KiemDuyetDonHang(maDonHang, maDaiLy, maKho, chapNhan);
+
+        public List<DonHangDaiLyDTO> GetDonHangChoKiemDuyet(int maDaiLy) 
+            => _repo.GetDonHangChoKiemDuyet(maDaiLy);
     }
 }

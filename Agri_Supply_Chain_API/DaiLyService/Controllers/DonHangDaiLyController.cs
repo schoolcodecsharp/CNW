@@ -197,5 +197,44 @@ namespace DaiLyService.Controllers
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
+
+        // PUT: api/don-hang-dai-ly/kiem-duyet/{id}
+        [HttpPut("kiem-dinh/{id}")]
+        public IActionResult KiemDinhDonHang(int id, [FromBody] KiemDinhDonHangRequest request)
+        {
+            try
+            {
+                if (id <= 0) return BadRequest(new { success = false, message = "ID đơn hàng không hợp lệ" });
+                if (request == null) return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ" });
+
+                bool result = _donHangService.KiemDuyetDonHang(id, request.MaDaiLy, request.MaKho, request.KetQuaKiemDinh);
+
+                if (!result) return NotFound(new { success = false, message = "Không tìm thấy đơn hàng để kiểm định" });
+
+                string message = request.KetQuaKiemDinh 
+                    ? "Kiểm định đạt, đã nhập kho thành công" 
+                    : "Kiểm định không đạt, đã hoàn đơn về nông dân";
+                    
+                return Ok(new { success = true, message = message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        // GET: api/don-hang-dai-ly/cho-kiem-dinh/{maDaiLy}
+        [HttpGet("cho-kiem-dinh/{maDaiLy}")]
+        public IActionResult GetDonHangChoKiemDinh(int maDaiLy)
+        {
+            var data = _donHangService.GetDonHangChoKiemDuyet(maDaiLy);
+            return Ok(new
+            {
+                success = true,
+                message = "Lấy danh sách đơn hàng chờ kiểm định thành công",
+                data = data,
+                count = data?.Count ?? 0
+            });
+        }
     }
 }

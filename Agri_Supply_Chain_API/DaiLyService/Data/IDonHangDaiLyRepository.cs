@@ -14,5 +14,7 @@ namespace DaiLyService.Data
         bool XacNhanDon(int maDonHang, int maKho);
         bool HuyDon(int maDonHang);
         bool XuatDon(int maDonHang, XuatDonRequest request);
+        bool KiemDuyetDonHang(int maDonHang, int maDaiLy, int maKho, bool chapNhan);
+        List<DonHangDaiLyDTO> GetDonHangChoKiemDuyet(int maDaiLy);
     }
 }

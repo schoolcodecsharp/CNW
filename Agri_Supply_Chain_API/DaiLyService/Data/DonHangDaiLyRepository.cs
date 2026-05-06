@@ -196,10 +196,12 @@ namespace DaiLyService.Data
                     SELECT MaLo, SoLuong FROM ChiTietDonHang WHERE MaDonHang = @MaDonHang", conn, transaction))
                 {
                     cmdGetChiTiet.Parameters.AddWithValue("@MaDonHang", maDonHang);
-                    using var reader = cmdGetChiTiet.ExecuteReader();
-                    while (reader.Read())
+                    using (var reader = cmdGetChiTiet.ExecuteReader())
                     {
-                        chiTietList.Add((reader.GetInt32(0), reader.GetDecimal(1)));
+                        while (reader.Read())
+                        {
+                            chiTietList.Add((reader.GetInt32(0), reader.GetDecimal(1)));
+                        }
                     }
                 }
 
@@ -338,6 +340,41 @@ namespace DaiLyService.Data
                 transaction.Rollback();
                 throw;
             }
+        }
+
+        public bool KiemDuyetDonHang(int maDonHang, int maDaiLy, int maKho, bool chapNhan)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            using var cmd = new SqlCommand("sp_DaiLy_KiemDinhDonHang", conn);
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            cmd.Parameters.AddWithValue("@MaDonHang", maDonHang);
+            cmd.Parameters.AddWithValue("@MaDaiLy", maDaiLy);
+            cmd.Parameters.AddWithValue("@MaKho", maKho);
+            cmd.Parameters.AddWithValue("@KetQuaKiemDinh", chapNhan);
+
+            conn.Open();
+            return cmd.ExecuteNonQuery() > 0;
+        }
+
+        public List<DonHangDaiLyDTO> GetDonHangChoKiemDuyet(int maDaiLy)
+        {
+            var list = new List<DonHangDaiLyDTO>();
+
+            using var conn = new SqlConnection(_connectionString);
+            using var cmd = new SqlCommand("sp_DaiLy_GetDonHangChoKiemDinh", conn);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@MaDaiLy", maDaiLy);
+
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                list.Add(MapToDto(reader));
+            }
+
+            return list;
         }
 
         private List<ChiTietDonHangDTO> GetChiTietDonHang(SqlConnection conn, int maDonHang)
