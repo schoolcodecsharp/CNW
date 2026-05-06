@@ -11,10 +11,13 @@ namespace NongDanService.Services
         List<DonHangDaiLyDTO> GetByDaiLyId(int maDaiLy);
         int Create(DonHangDaiLyCreateDTO dto);
         bool Update(int id, DonHangDaiLyUpdateDTO dto);
-        bool XacNhanDon(int id, int maKho);
+        bool XacNhanDonChoKiemDuyet(int id, int maNongDan);
+        bool XuLyHoanDon(int id, int maNongDan);
+        bool HuyDonHang(int id, int maNongDan);
         bool XuatDon(int id);
-        bool HuyDon(int id);
         bool Delete(int id);
+        List<DonHangDaiLyDTO> GetDonHangChuaXacNhan(int maNongDan);
+        List<DonHangDaiLyDTO> GetDonHangHoanDon(int maNongDan);
         
         // Chi tiết đơn hàng
         List<ChiTietDonHangDTO> GetChiTietDonHang(int maDonHang);

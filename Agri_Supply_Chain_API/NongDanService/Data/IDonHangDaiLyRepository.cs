@@ -13,7 +13,12 @@ namespace NongDanService.Data
         bool Update(int id, DonHangDaiLyUpdateDTO dto);
         bool UpdateTrangThai(int id, string trangThai);
         bool XacNhanDon(int id, int maKho);
+        bool XacNhanDonChoKiemDuyet(int id, int maNongDan);
+        bool XuLyHoanDon(int id, int maNongDan);
+        bool HuyDonHang(int id, int maNongDan);
         bool Delete(int id);
+        List<DonHangDaiLyDTO> GetDonHangChuaXacNhan(int maNongDan);
+        List<DonHangDaiLyDTO> GetDonHangHoanDon(int maNongDan);
         
         // Chi tiết đơn hàng
         List<ChiTietDonHangDTO> GetChiTietDonHang(int maDonHang);
