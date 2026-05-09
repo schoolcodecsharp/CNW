@@ -23,6 +23,7 @@ function OrderManagement() {
     maLo: '',
     soLuong: '',
     donGia: '',
+    maKho: '',
     ghiChu: ''
   });
 
@@ -108,10 +109,15 @@ function OrderManagement() {
         alert('❌ Số lượng vượt quá số lượng hiện có của lô!');
         return;
       }
+      if (!formDataFarmer.maKho) {
+        alert('❌ Vui lòng chọn kho để nhận hàng!');
+        return;
+      }
 
       const payload = {
         MaDaiLy: maDaiLy,
         MaNongDan: parseInt(formDataFarmer.maNongDan),
+        MaKho: parseInt(formDataFarmer.maKho),
         ChiTietDonHang: [{
           MaLo: parseInt(formDataFarmer.maLo),
           SoLuong: parseFloat(formDataFarmer.soLuong),
@@ -218,6 +224,7 @@ function OrderManagement() {
       maLo: '',
       soLuong: '',
       donGia: '',
+      maKho: '',
       ghiChu: ''
     });
     setShowModalFarmer(true);
@@ -226,10 +233,12 @@ function OrderManagement() {
   const getStatusBadge = (status: string) => {
     const badges: any = {
       'chua_nhan': <span className="badge badge-warning">⏳ Chờ xác nhận</span>,
-      'da_nhan': <span className="badge badge-success">✅ Đã chấp nhận</span>,
+      'cho_kiem_duyet': <span className="badge badge-info">🔍 Chờ kiểm định</span>,
+      'da_nhan': <span className="badge badge-success">✅ Đã nhập kho</span>,
       'dang_xu_ly': <span className="badge badge-info">🔄 Đang xử lý</span>,
+      'hoan_don': <span className="badge badge-danger">↩️ Hoàn đơn</span>,
       'hoan_thanh': <span className="badge badge-success">✅ Hoàn thành</span>,
-      'da_huy': <span className="badge badge-danger">❌ Đã từ chối</span>
+      'da_huy': <span className="badge badge-danger">❌ Đã hủy</span>
     };
     return badges[status] || <span className="badge">{status}</span>;
   };
@@ -410,6 +419,30 @@ function OrderManagement() {
                         placeholder="Nhập đơn giá"
                         className="form-control"
                       />
+                    </div>
+
+                    <div className="form-group">
+                      <label>
+                        <span className="label-icon">🏪</span>
+                        Kho nhận hàng <span className="required">*</span>
+                      </label>
+                      <select
+                        value={formDataFarmer.maKho}
+                        onChange={(e) => setFormDataFarmer({...formDataFarmer, maKho: e.target.value})}
+                        required
+                        className="form-control"
+                      >
+                        <option value="">-- Chọn kho --</option>
+                        {warehouses.length === 0 ? (
+                          <option value="" disabled>Chưa có kho nào</option>
+                        ) : (
+                          warehouses.map((kho: any) => (
+                            <option key={kho.maKho} value={kho.maKho}>
+                              {kho.tenKho} - {kho.diaChi}
+                            </option>
+                          ))
+                        )}
+                      </select>
                     </div>
 
                     {formDataFarmer.soLuong && formDataFarmer.donGia && (
