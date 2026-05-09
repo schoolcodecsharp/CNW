@@ -160,10 +160,12 @@ function OrderManagement() {
   const getStatusBadge = (status: string) => {
     const badges: any = {
       'chua_nhan': <span className="badge badge-warning">⏳ Chờ xác nhận</span>,
-      'da_nhan': <span className="badge badge-success">✅ Đã chấp nhận</span>,
+      'cho_kiem_duyet': <span className="badge badge-info">🔍 Chờ kiểm định</span>,
+      'da_nhan': <span className="badge badge-success">✅ Đã nhập kho</span>,
       'dang_xu_ly': <span className="badge badge-info">🔄 Đang xử lý</span>,
+      'hoan_don': <span className="badge badge-danger">↩️ Hoàn đơn</span>,
       'hoan_thanh': <span className="badge badge-success">✅ Hoàn thành</span>,
-      'da_huy': <span className="badge badge-danger">❌ Đã từ chối</span>
+      'da_huy': <span className="badge badge-danger">❌ Đã hủy</span>
     };
     return badges[status] || <span className="badge">{status}</span>;
   };

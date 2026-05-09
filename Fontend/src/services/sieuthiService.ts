@@ -63,6 +63,21 @@ export const sieuthiService = {
   deleteDonHangSieuThi: async (id: number) => {
     const response = await axios.delete(API_ENDPOINTS.donHangSieuThi.delete(id));
     return response.data;
+  },
+
+  // ========== KIỂM ĐỊNH ĐƠN HÀNG TỪ ĐẠI LÝ ==========
+
+  getDonHangChoKiemDinh: async (maSieuThi: number) => {
+    const response = await axios.get(API_ENDPOINTS.donHangSieuThi.choKiemDinh(maSieuThi));
+    return response.data;
+  },
+
+  kiemDinhDonHang: async (maDonHang: number, maSieuThi: number, maKho: number, ketQuaKiemDinh: boolean) => {
+    const response = await axios.put(
+      API_ENDPOINTS.donHangSieuThi.kiemDinh(maDonHang),
+      { maSieuThi, maKho, ketQuaKiemDinh }
+    );
+    return response.data;
   }
 };
 

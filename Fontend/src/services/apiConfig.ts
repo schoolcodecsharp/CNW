@@ -91,18 +91,7 @@ export const API_ENDPOINTS = {
     delete: (id: number) => `${API_BASE_URLS.daily}/api/kho/delete/${id}`
   },
   
-  // Kiem Dinh
-  kiemDinh: {
-    getAll: `${API_BASE_URLS.daily}/api/kiem-dinh/get-all`,
-    getById: (id: number) => `${API_BASE_URLS.daily}/api/kiem-dinh/${id}`,
-    getByMaLo: (maLo: number) => `${API_BASE_URLS.daily}/api/kiem-dinh/lo/${maLo}`,
-    getByDaiLy: (id: number) => `${API_BASE_URLS.daily}/api/kiem-dinh/dai-ly/${id}`,
-    getLoChoKiemDinh: (maDaiLy: number) => `${API_BASE_URLS.daily}/api/kiem-dinh/lo-cho-kiem-dinh/${maDaiLy}`,
-    create: `${API_BASE_URLS.daily}/api/kiem-dinh/create`,
-    update: (id: number) => `${API_BASE_URLS.daily}/api/kiem-dinh/update/${id}`,
-    delete: (id: number) => `${API_BASE_URLS.daily}/api/kiem-dinh/delete/${id}`
-  },
-  
+
   // Don Hang Dai Ly
   donHangDaiLy: {
     base: API_BASE_URLS.daily,
@@ -137,7 +126,16 @@ export const API_ENDPOINTS = {
     getByDaiLy: (id: number) => `${API_BASE_URLS.sieuthi}/api/DonHangSieuThi/dai-ly/${id}`,
     create: `${API_BASE_URLS.sieuthi}/api/DonHangSieuThi/tao-don-hang`,
     updateTrangThai: (id: number) => `${API_BASE_URLS.sieuthi}/api/DonHangSieuThi/nhan-hang/${id}`,
-    delete: (id: number) => `${API_BASE_URLS.sieuthi}/api/DonHangSieuThi/huy-don-hang/${id}`
+    delete: (id: number) => `${API_BASE_URLS.sieuthi}/api/DonHangSieuThi/huy-don-hang/${id}`,
+    // Kiểm định workflow - Siêu thị kiểm định đơn từ đại lý
+    choKiemDinh: (maSieuThi: number) => `${API_BASE_URLS.sieuthi}/api/DonHangSieuThi/cho-kiem-dinh/${maSieuThi}`,
+    kiemDinh: (id: number) => `${API_BASE_URLS.sieuthi}/api/DonHangSieuThi/kiem-dinh/${id}`,
+    // Đại lý xử lý đơn từ siêu thị
+    chuaXacNhanDaiLy: (maDaiLy: number) => `${API_BASE_URLS.sieuthi}/api/DonHangSieuThi/chua-xac-nhan-dai-ly/${maDaiLy}`,
+    hoanDonDaiLy: (maDaiLy: number) => `${API_BASE_URLS.sieuthi}/api/DonHangSieuThi/hoan-don-dai-ly/${maDaiLy}`,
+    xacNhanDaiLy: (id: number) => `${API_BASE_URLS.sieuthi}/api/DonHangSieuThi/xac-nhan-dai-ly/${id}`,
+    xuLyHoanDonDaiLy: (id: number) => `${API_BASE_URLS.sieuthi}/api/DonHangSieuThi/xu-ly-hoan-don-dai-ly/${id}`,
+    huyDonDaiLy: (id: number) => `${API_BASE_URLS.sieuthi}/api/DonHangSieuThi/huy-don-dai-ly/${id}`
   },
 
   // Ton Kho

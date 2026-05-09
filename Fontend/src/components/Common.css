@@ -619,6 +619,16 @@ select.form-control {
   color: #4338ca;
 }
 
+.badge-cho_kiem_duyet {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-hoan_don {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
 .badge-hoat_dong {
   background: #d1fae5;
   color: #065f46;

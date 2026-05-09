@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { dailyService } from '../services/dailyService';
+import axios from 'axios';
 import './DaiLyKiemDinh.css';
 
 interface DonHang {
@@ -18,6 +18,8 @@ interface Kho {
   maKho: number;
   tenKho: string;
   diaChi: string;
+  loaiKho: string;
+  trangThai: string;
 }
 
 interface Props {
@@ -27,8 +29,13 @@ interface Props {
 const DaiLyKiemDinh: React.FC<Props> = ({ maDaiLy }) => {
   const [donHangList, setDonHangList] = useState<DonHang[]>([]);
   const [khoList, setKhoList] = useState<Kho[]>([]);
-  const [selectedKho, setSelectedKho] = useState<{ [key: number]: number }>({});
   const [loading, setLoading] = useState(false);
+  const [showKiemDinhModal, setShowKiemDinhModal] = useState(false);
+  const [selectedDonHang, setSelectedDonHang] = useState<DonHang | null>(null);
+  const [selectedKho, setSelectedKho] = useState<number>(0);
+
+  // URL trực tiếp đến DaiLyService
+  const DAILY_SERVICE_URL = 'http://localhost:5002';
 
   useEffect(() => {
     loadData();
@@ -37,59 +44,100 @@ const DaiLyKiemDinh: React.FC<Props> = ({ maDaiLy }) => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [resDonHang, resKho] = await Promise.all([
-        dailyService.getDonHangChoKiemDinh(maDaiLy),
-        dailyService.getKhoByDaiLy(maDaiLy)
-      ]);
+      console.log('=== DEBUG: Đang tải dữ liệu cho maDaiLy:', maDaiLy);
       
-      setDonHangList(resDonHang.data || []);
-      setKhoList(resKho.data || []);
+      // Gọi API lấy kho
+      console.log('=== DEBUG: Gọi API kho:', `${DAILY_SERVICE_URL}/api/kho/dai-ly/${maDaiLy}`);
+      const resKho = await axios.get(`${DAILY_SERVICE_URL}/api/kho/dai-ly/${maDaiLy}`);
+      console.log('=== DEBUG: Response kho:', resKho.data);
       
-      // Set kho mặc định cho mỗi đơn hàng
-      if (resKho.data && resKho.data.length > 0) {
-        const defaultKho: { [key: number]: number } = {};
-        (resDonHang.data || []).forEach((dh: DonHang) => {
-          defaultKho[dh.maDonHang] = resKho.data[0].maKho;
-        });
-        setSelectedKho(defaultKho);
-      }
+      const khoData = resKho.data.data || [];
+      console.log('=== DEBUG: Dữ liệu kho:', khoData);
+      console.log('=== DEBUG: Số lượng kho:', khoData.length);
+      
+      setKhoList(khoData);
+      
+      // Gọi API lấy đơn hàng chờ kiểm định
+      console.log('=== DEBUG: Gọi API đơn hàng:', `${DAILY_SERVICE_URL}/api/don-hang-dai-ly/cho-kiem-dinh/${maDaiLy}`);
+      const resDonHang = await axios.get(`${DAILY_SERVICE_URL}/api/don-hang-dai-ly/cho-kiem-dinh/${maDaiLy}`);
+      console.log('=== DEBUG: Response đơn hàng:', resDonHang.data);
+      
+      const donHangData = resDonHang.data.data || [];
+      console.log('=== DEBUG: Dữ liệu đơn hàng:', donHangData);
+      console.log('=== DEBUG: Số lượng đơn hàng:', donHangData.length);
+      
+      setDonHangList(donHangData);
+      
     } catch (error: any) {
-      console.error('Lỗi khi tải dữ liệu:', error);
-      alert('Không thể tải dữ liệu: ' + (error.response?.data?.message || error.message));
+      console.error('=== DEBUG: LỖI khi tải dữ liệu:', error);
+      console.error('=== DEBUG: Chi tiết lỗi:', error.response);
+      alert('❌ Không thể tải dữ liệu: ' + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleKiemDinh = async (maDonHang: number, ketQua: boolean) => {
-    const maKho = selectedKho[maDonHang];
-    
-    if (ketQua && !maKho) {
-      alert('Vui lòng chọn kho để nhập hàng');
+  const handleOpenKiemDinh = (donHang: DonHang) => {
+    if (khoList.length === 0) {
+      alert('⚠️ Không có kho! Vui lòng tạo kho trước khi kiểm định.');
+      return;
+    }
+    setSelectedDonHang(donHang);
+    setSelectedKho(khoList[0].maKho);
+    setShowKiemDinhModal(true);
+  };
+
+  const handleKiemDinhDat = async () => {
+    if (!selectedDonHang || !selectedKho) {
+      alert('⚠️ Vui lòng chọn kho!');
       return;
     }
 
-    const message = ketQua
-      ? `Kiểm định ĐẠT?\n\nĐơn hàng sẽ được nhập vào kho đã chọn.`
-      : `Kiểm định KHÔNG ĐẠT?\n\nĐơn hàng sẽ được hoàn về nông dân để xử lý.`;
-    
-    if (!confirm(message)) return;
-
     try {
-      const res = await dailyService.kiemDinhDonHang(maDonHang, maDaiLy, maKho || 0, ketQua);
-      alert(res.message || (ketQua ? 'Đã nhập kho thành công' : 'Đã hoàn đơn về nông dân'));
+      console.log('=== DEBUG: Kiểm định ĐẠT - maDonHang:', selectedDonHang.maDonHang, 'maKho:', selectedKho);
+      const res = await axios.put(
+        `${DAILY_SERVICE_URL}/api/don-hang-dai-ly/kiem-dinh/${selectedDonHang.maDonHang}`,
+        { 
+          maDaiLy: maDaiLy, 
+          maKho: selectedKho, 
+          ketQuaKiemDinh: true 
+        }
+      );
+      console.log('=== DEBUG: Response kiểm định:', res.data);
+      alert(res.data.message || '✅ Đã nhập kho thành công!');
+      setShowKiemDinhModal(false);
+      setSelectedDonHang(null);
       loadData();
     } catch (error: any) {
-      console.error('Lỗi khi kiểm định:', error);
-      alert('Không thể kiểm định đơn hàng: ' + (error.response?.data?.message || error.message));
+      console.error('=== DEBUG: LỖI kiểm định:', error);
+      console.error('=== DEBUG: Chi tiết lỗi:', error.response);
+      alert('❌ Lỗi: ' + (error.response?.data?.message || error.message));
     }
   };
 
-  const handleKhoChange = (maDonHang: number, maKho: number) => {
-    setSelectedKho(prev => ({
-      ...prev,
-      [maDonHang]: maKho
-    }));
+  const handleKiemDinhKhongDat = async (donHang: DonHang) => {
+    if (!confirm(`❌ Xác nhận kiểm định KHÔNG ĐẠT?\n\nĐơn hàng #${donHang.maDonHang} sẽ được hoàn về nông dân ${donHang.tenNongDan}`)) {
+      return;
+    }
+
+    try {
+      console.log('=== DEBUG: Kiểm định KHÔNG ĐẠT - maDonHang:', donHang.maDonHang);
+      const res = await axios.put(
+        `${DAILY_SERVICE_URL}/api/don-hang-dai-ly/kiem-dinh/${donHang.maDonHang}`,
+        { 
+          maDaiLy: maDaiLy, 
+          maKho: 0, 
+          ketQuaKiemDinh: false 
+        }
+      );
+      console.log('=== DEBUG: Response kiểm định:', res.data);
+      alert(res.data.message || '↩️ Đã hoàn đơn về nông dân!');
+      loadData();
+    } catch (error: any) {
+      console.error('=== DEBUG: LỖI kiểm định:', error);
+      console.error('=== DEBUG: Chi tiết lỗi:', error.response);
+      alert('❌ Lỗi: ' + (error.response?.data?.message || error.message));
+    }
   };
 
   const formatCurrency = (value: number) => {
@@ -101,97 +149,160 @@ const DaiLyKiemDinh: React.FC<Props> = ({ maDaiLy }) => {
   };
 
   if (loading) {
-    return <div className="loading">Đang tải...</div>;
+    return <div className="loading">⏳ Đang tải dữ liệu...</div>;
   }
 
   return (
-    <div className="daily-kiemdinh">
-      <h2>Kiểm định đơn hàng</h2>
+    <div className="page-container">
+      <div className="page-header">
+        <h1>🔍 Kiểm định đơn hàng</h1>
+        <div className="header-actions">
+          <div className="header-stats">
+            <span className="stat-badge">
+              Chờ kiểm định: <strong>{donHangList.length}</strong>
+            </span>
+            <span className="stat-badge">
+              Số kho: <strong>{khoList.length}</strong>
+            </span>
+          </div>
+        </div>
+      </div>
 
       {khoList.length === 0 && (
         <div className="alert alert-warning">
-          ⚠️ Bạn chưa có kho nào. Vui lòng tạo kho trước khi kiểm định đơn hàng.
+          ⚠️ <strong>Chưa có kho!</strong> Bạn cần tạo kho trước khi kiểm định đơn hàng.
         </div>
       )}
 
       {donHangList.length === 0 ? (
-        <p className="empty">Không có đơn hàng chờ kiểm định</p>
+        <div className="empty-state">
+          <div className="empty-icon">📋</div>
+          <p>Không có đơn hàng chờ kiểm định</p>
+        </div>
       ) : (
-        <div className="donhang-list">
-          {donHangList.map(dh => (
-            <div key={dh.maDonHang} className="donhang-item">
-              <div className="donhang-header">
-                <h4>Đơn hàng #{dh.maDonHang}</h4>
-                <span className="badge badge-pending">Chờ kiểm định</span>
-              </div>
-              
-              <div className="donhang-info">
-                <div className="info-row">
-                  <div className="info-col">
-                    <p><strong>Nông dân:</strong> {dh.tenNongDan}</p>
-                    <p><strong>SĐT:</strong> {dh.sdtNongDan}</p>
-                  </div>
-                  <div className="info-col">
-                    <p><strong>Ngày đặt:</strong> {formatDate(dh.ngayDat)}</p>
-                    <p><strong>Số lượng:</strong> {dh.tongSoLuong}</p>
-                  </div>
-                  <div className="info-col">
-                    <p><strong>Giá trị:</strong> {formatCurrency(dh.tongGiaTri)}</p>
-                  </div>
-                </div>
-                
-                {dh.ghiChu && (
-                  <div className="note-box">
-                    <strong>Ghi chú:</strong> {dh.ghiChu}
-                  </div>
-                )}
-              </div>
-
-              <div className="kiemdinh-section">
-                <div className="kho-select">
-                  <label htmlFor={`kho-${dh.maDonHang}`}>
-                    <strong>Chọn kho nhập hàng:</strong>
-                  </label>
-                  <select
-                    id={`kho-${dh.maDonHang}`}
-                    value={selectedKho[dh.maDonHang] || ''}
-                    onChange={(e) => handleKhoChange(dh.maDonHang, parseInt(e.target.value))}
-                    className="kho-dropdown"
-                  >
-                    <option value="">-- Chọn kho --</option>
-                    {khoList.map(kho => (
-                      <option key={kho.maKho} value={kho.maKho}>
-                        {kho.tenKho} - {kho.diaChi}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="donhang-actions">
-                  <button 
-                    className="btn btn-success"
-                    onClick={() => handleKiemDinh(dh.maDonHang, true)}
-                    disabled={!selectedKho[dh.maDonHang]}
-                  >
-                    ✓ Đạt - Nhập kho
-                  </button>
-                  <button 
-                    className="btn btn-danger"
-                    onClick={() => handleKiemDinh(dh.maDonHang, false)}
-                  >
-                    ✗ Không đạt - Hoàn đơn
-                  </button>
-                </div>
-              </div>
-
-              <div className="info-box">
-                <p>✓ <strong>Đạt:</strong> Đơn hàng sẽ được nhập vào kho đã chọn</p>
-                <p>✗ <strong>Không đạt:</strong> Đơn hàng sẽ được hoàn về nông dân để xử lý</p>
-              </div>
-            </div>
-          ))}
+        <div className="table-container">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Mã ĐH</th>
+                <th>Nông dân</th>
+                <th>SĐT</th>
+                <th>Ngày đặt</th>
+                <th>Số lượng</th>
+                <th>Giá trị</th>
+                <th>Ghi chú</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              {donHangList.map(dh => (
+                <tr key={dh.maDonHang}>
+                  <td><strong>#{dh.maDonHang}</strong></td>
+                  <td>{dh.tenNongDan}</td>
+                  <td>{dh.sdtNongDan}</td>
+                  <td>{formatDate(dh.ngayDat)}</td>
+                  <td>{dh.tongSoLuong} kg</td>
+                  <td>{formatCurrency(dh.tongGiaTri)}</td>
+                  <td>{dh.ghiChu || '-'}</td>
+                  <td>
+                    <div className="action-buttons">
+                      <button 
+                        className="btn-action btn-success"
+                        onClick={() => handleOpenKiemDinh(dh)}
+                        disabled={khoList.length === 0}
+                        title={khoList.length === 0 ? "Cần tạo kho trước" : "Kiểm định đạt"}
+                      >
+                        ✓
+                      </button>
+                      <button 
+                        className="btn-action btn-danger"
+                        onClick={() => handleKiemDinhKhongDat(dh)}
+                        title="Kiểm định không đạt"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
+
+      {/* Modal chọn kho khi kiểm định đạt */}
+      {showKiemDinhModal && selectedDonHang && (
+        <div className="modal-overlay" onClick={() => setShowKiemDinhModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>✅ Kiểm định đạt - Chọn kho nhập hàng</h2>
+              <button className="btn-close" onClick={() => setShowKiemDinhModal(false)}>✕</button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="order-info">
+                <p><strong>Đơn hàng:</strong> #{selectedDonHang.maDonHang}</p>
+                <p><strong>Nông dân:</strong> {selectedDonHang.tenNongDan}</p>
+                <p><strong>Số lượng:</strong> {selectedDonHang.tongSoLuong} kg</p>
+                <p><strong>Giá trị:</strong> {formatCurrency(selectedDonHang.tongGiaTri)}</p>
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <span className="label-icon">🏭</span>
+                  Chọn kho <span className="required">*</span>
+                </label>
+                <select
+                  value={selectedKho}
+                  onChange={(e) => setSelectedKho(parseInt(e.target.value))}
+                  className="form-control"
+                >
+                  {khoList.map(kho => (
+                    <option key={kho.maKho} value={kho.maKho}>
+                      {kho.tenKho} {kho.diaChi ? `- ${kho.diaChi}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                onClick={() => setShowKiemDinhModal(false)}
+              >
+                <span>✕</span> Hủy
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-primary" 
+                onClick={handleKiemDinhDat}
+              >
+                <span>✅</span> Xác nhận nhập kho
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        .order-info {
+          background: #f3f4f6;
+          padding: 16px;
+          border-radius: 8px;
+          margin-bottom: 20px;
+        }
+
+        .order-info p {
+          margin: 8px 0;
+          color: #374151;
+        }
+
+        .order-info strong {
+          color: #1f2937;
+        }
+      `}</style>
     </div>
   );
 };

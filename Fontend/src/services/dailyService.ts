@@ -62,36 +62,6 @@ export const dailyService = {
     return response.data;
   },
 
-  getAllKiemDinh: async () => {
-    const response = await axios.get(API_ENDPOINTS.kiemDinh.getAll);
-    return response.data;
-  },
-
-  getKiemDinhById: async (id: number) => {
-    const response = await axios.get(API_ENDPOINTS.kiemDinh.getById(id));
-    return response.data;
-  },
-
-  getKiemDinhByDaiLy: async (daiLyId: number) => {
-    const response = await axios.get(API_ENDPOINTS.kiemDinh.getByDaiLy(daiLyId));
-    return response.data;
-  },
-
-  createKiemDinh: async (data: any) => {
-    const response = await axios.post(API_ENDPOINTS.kiemDinh.create, data);
-    return response.data;
-  },
-
-  updateKiemDinh: async (id: number, data: any) => {
-    const response = await axios.put(API_ENDPOINTS.kiemDinh.update(id), data);
-    return response.data;
-  },
-
-  deleteKiemDinh: async (id: number) => {
-    const response = await axios.delete(API_ENDPOINTS.kiemDinh.delete(id));
-    return response.data;
-  },
-
   getAllDonHangDaiLy: async () => {
     const response = await axios.get(API_ENDPOINTS.donHangDaiLy.getAll);
     return response.data;
@@ -172,19 +142,53 @@ export const dailyService = {
     return response.data;
   },
 
-  // ========== KIỂM ĐỊNH ĐƠN HÀNG ==========
+  // ========== KIỂM ĐỊNH ĐƠN HÀNG TỪ NÔNG DÂN ==========
   
-  // Lấy đơn hàng chờ kiểm định
   getDonHangChoKiemDinh: async (maDaiLy: number) => {
     const response = await axios.get(`${API_ENDPOINTS.daily.base}/api/don-hang-dai-ly/cho-kiem-dinh/${maDaiLy}`);
     return response.data;
   },
 
-  // Kiểm định đơn hàng
   kiemDinhDonHang: async (maDonHang: number, maDaiLy: number, maKho: number, ketQuaKiemDinh: boolean) => {
     const response = await axios.put(
       `${API_ENDPOINTS.daily.base}/api/don-hang-dai-ly/kiem-dinh/${maDonHang}`,
       { maDaiLy, maKho, ketQuaKiemDinh }
+    );
+    return response.data;
+  },
+
+  // ========== ĐƠN HÀNG TỪ SIÊU THỊ ==========
+  
+  getDonHangSieuThiChuaXacNhan: async (maDaiLy: number) => {
+    const response = await axios.get(API_ENDPOINTS.donHangSieuThi.chuaXacNhanDaiLy(maDaiLy));
+    return response.data;
+  },
+
+  getDonHangSieuThiHoanDon: async (maDaiLy: number) => {
+    const response = await axios.get(API_ENDPOINTS.donHangSieuThi.hoanDonDaiLy(maDaiLy));
+    return response.data;
+  },
+
+  xacNhanDonHangSieuThi: async (maDonHang: number, maDaiLy: number) => {
+    const response = await axios.put(
+      API_ENDPOINTS.donHangSieuThi.xacNhanDaiLy(maDonHang),
+      { maDaiLy }
+    );
+    return response.data;
+  },
+
+  xuLyHoanDonSieuThi: async (maDonHang: number, maDaiLy: number) => {
+    const response = await axios.put(
+      API_ENDPOINTS.donHangSieuThi.xuLyHoanDonDaiLy(maDonHang),
+      { maDaiLy }
+    );
+    return response.data;
+  },
+
+  huyDonHangSieuThi: async (maDonHang: number, maDaiLy: number) => {
+    const response = await axios.put(
+      API_ENDPOINTS.donHangSieuThi.huyDonDaiLy(maDonHang),
+      { maDaiLy }
     );
     return response.data;
   }
