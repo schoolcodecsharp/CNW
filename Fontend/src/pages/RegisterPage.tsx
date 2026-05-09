@@ -92,9 +92,9 @@ function RegisterPage() {
                 disabled={loading}
               >
                 <option value="">-- Chọn loại tài khoản --</option>
-                <option value="nong_dan">Nông dân</option>
-                <option value="dai_ly">Đại lý</option>
-                <option value="sieu_thi">Siêu thị</option>
+                <option value="nongdan">Nông dân</option>
+                <option value="daily">Đại lý</option>
+                <option value="sieuthi">Siêu thị</option>
               </select>
             </div>
 

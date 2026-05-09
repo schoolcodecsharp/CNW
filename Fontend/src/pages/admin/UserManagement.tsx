@@ -17,7 +17,7 @@ function UserManagement() {
     soDienThoai: '',
     email: '',
     diaChi: '',
-    roleType: 'nong_dan',
+    roleType: 'nongdan',
     // Thông tin tài khoản (chỉ dùng khi thêm mới)
     tenDangNhap: '',
     matKhau: ''
@@ -45,7 +45,7 @@ function UserManagement() {
           id: u.maNongDan,
           name: u.hoTen,
           role: 'Nông dân',
-          roleType: 'nong_dan',
+          roleType: 'nongdan',
           phone: u.soDienThoai,
           email: u.email,
           address: u.diaChi,
@@ -56,7 +56,7 @@ function UserManagement() {
           id: u.maDaiLy,
           name: u.tenDaiLy,
           role: 'Đại lý',
-          roleType: 'dai_ly',
+          roleType: 'daily',
           phone: u.soDienThoai,
           email: u.email,
           address: u.diaChi,
@@ -67,7 +67,7 @@ function UserManagement() {
           id: u.maSieuThi,
           name: u.tenSieuThi,
           role: 'Siêu thị',
-          roleType: 'sieu_thi',
+          roleType: 'sieuthi',
           phone: u.soDienThoai,
           email: u.email,
           address: u.diaChi,
@@ -91,7 +91,7 @@ function UserManagement() {
       soDienThoai: '',
       email: '',
       diaChi: '',
-      roleType: 'nong_dan',
+      roleType: 'nongdan',
       tenDangNhap: '',
       matKhau: ''
     });
@@ -126,11 +126,11 @@ function UserManagement() {
 
     try {
       let endpoint;
-      if (user.roleType === 'nong_dan') {
+      if (user.roleType === 'nongdan') {
         endpoint = API_ENDPOINTS.nongDan.delete(user.id);
-      } else if (user.roleType === 'dai_ly') {
+      } else if (user.roleType === 'daily') {
         endpoint = API_ENDPOINTS.daiLy.delete(user.id);
-      } else if (user.roleType === 'sieu_thi') {
+      } else if (user.roleType === 'sieuthi') {
         endpoint = API_ENDPOINTS.sieuThi.delete(user.id);
       }
 
@@ -162,7 +162,7 @@ function UserManagement() {
 
       if (modalMode === 'add') {
         let endpoint;
-        if (formData.roleType === 'nong_dan') {
+        if (formData.roleType === 'nongdan') {
           endpoint = API_ENDPOINTS.nongDan.create;
           // Gửi dữ liệu với PascalCase
           payload = {
@@ -173,7 +173,7 @@ function UserManagement() {
             Email: formData.email || null,
             DiaChi: formData.diaChi || null
           };
-        } else if (formData.roleType === 'dai_ly') {
+        } else if (formData.roleType === 'daily') {
           endpoint = API_ENDPOINTS.daiLy.create;
           // Gửi dữ liệu với PascalCase
           payload = {
@@ -184,7 +184,7 @@ function UserManagement() {
             Email: formData.email || null,
             DiaChi: formData.diaChi || null
           };
-        } else if (formData.roleType === 'sieu_thi') {
+        } else if (formData.roleType === 'sieuthi') {
           endpoint = API_ENDPOINTS.sieuThi.create;
           // Gửi dữ liệu với PascalCase
           payload = {
@@ -202,7 +202,7 @@ function UserManagement() {
       } else if (modalMode === 'edit') {
         // Khi sửa, gửi dữ liệu với PascalCase
         let endpoint;
-        if (selectedUser.roleType === 'nong_dan') {
+        if (selectedUser.roleType === 'nongdan') {
           endpoint = API_ENDPOINTS.nongDan.update(selectedUser.id);
           payload = {
             HoTen: formData.hoTen,
@@ -210,7 +210,7 @@ function UserManagement() {
             Email: formData.email || null,
             DiaChi: formData.diaChi || null
           };
-        } else if (selectedUser.roleType === 'dai_ly') {
+        } else if (selectedUser.roleType === 'daily') {
           endpoint = API_ENDPOINTS.daiLy.update(selectedUser.id);
           payload = {
             TenDaiLy: formData.hoTen,
@@ -218,7 +218,7 @@ function UserManagement() {
             Email: formData.email || null,
             DiaChi: formData.diaChi || null
           };
-        } else if (selectedUser.roleType === 'sieu_thi') {
+        } else if (selectedUser.roleType === 'sieuthi') {
           endpoint = API_ENDPOINTS.sieuThi.update(selectedUser.id);
           payload = {
             TenSieuThi: formData.hoTen,
@@ -284,9 +284,9 @@ function UserManagement() {
           <label>Lọc theo vai trò:</label>
           <select value={filterRole} onChange={(e) => setFilterRole(e.target.value)}>
             <option value="all">Tất cả ({users.length})</option>
-            <option value="nong_dan">Nông dân ({users.filter(u => u.roleType === 'nong_dan').length})</option>
-            <option value="dai_ly">Đại lý ({users.filter(u => u.roleType === 'dai_ly').length})</option>
-            <option value="sieu_thi">Siêu thị ({users.filter(u => u.roleType === 'sieu_thi').length})</option>
+            <option value="nongdan">Nông dân ({users.filter(u => u.roleType === 'nongdan').length})</option>
+            <option value="daily">Đại lý ({users.filter(u => u.roleType === 'daily').length})</option>
+            <option value="sieuthi">Siêu thị ({users.filter(u => u.roleType === 'sieuthi').length})</option>
           </select>
         </div>
       </div>
@@ -376,9 +376,9 @@ function UserManagement() {
                 <div className="modal-header">
                   <div className="modal-title-section">
                     <div className="user-avatar-large">
-                      {selectedUser.roleType === 'nong_dan' && '👨‍🌾'}
-                      {selectedUser.roleType === 'dai_ly' && '🏪'}
-                      {selectedUser.roleType === 'sieu_thi' && '🏬'}
+                      {selectedUser.roleType === 'nongdan' && '👨‍🌾'}
+                      {selectedUser.roleType === 'daily' && '🏪'}
+                      {selectedUser.roleType === 'sieuthi' && '🏬'}
                     </div>
                     <div>
                       <h2>{selectedUser.name}</h2>
@@ -447,7 +447,7 @@ function UserManagement() {
                     </div>
                   </div>
                   
-                  {selectedUser.roleType === 'nong_dan' && selectedUser.maTaiKhoan && (
+                  {selectedUser.roleType === 'nongdan' && selectedUser.maTaiKhoan && (
                     <div className="user-detail-card">
                       <h3 className="section-title">
                         <span className="section-icon">🔐</span>
@@ -551,9 +551,9 @@ function UserManagement() {
                         disabled={modalMode === 'edit'}
                         className="form-control"
                       >
-                        <option value="nong_dan">Nông dân</option>
-                        <option value="dai_ly">Đại lý</option>
-                        <option value="sieu_thi">Siêu thị</option>
+                        <option value="nongdan">Nông dân</option>
+                        <option value="daily">Đại lý</option>
+                        <option value="sieuthi">Siêu thị</option>
                       </select>
                       {modalMode === 'edit' && (
                         <small className="form-text">Không thể thay đổi vai trò khi chỉnh sửa</small>
@@ -563,7 +563,7 @@ function UserManagement() {
                     <div className="form-group">
                       <label htmlFor="hoTen">
                         <span className="label-icon">👤</span>
-                        {formData.roleType === 'nong_dan' ? 'Họ và tên' : 'Tên'} <span className="required">*</span>
+                        {formData.roleType === 'nongdan' ? 'Họ và tên' : 'Tên'} <span className="required">*</span>
                       </label>
                       <input
                         type="text"
@@ -573,9 +573,9 @@ function UserManagement() {
                         onChange={handleInputChange}
                         required
                         placeholder={
-                          formData.roleType === 'nong_dan' 
+                          formData.roleType === 'nongdan' 
                             ? 'Nhập họ và tên' 
-                            : formData.roleType === 'dai_ly'
+                            : formData.roleType === 'daily'
                             ? 'Nhập tên đại lý'
                             : 'Nhập tên siêu thị'
                         }
@@ -655,3 +655,4 @@ function UserManagement() {
 }
 
 export default UserManagement;
+
