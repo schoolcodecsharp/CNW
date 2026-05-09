@@ -10,6 +10,8 @@ namespace DaiLyService.Models.DTOs
         [Required(ErrorMessage = "Mã nông dân là bắt buộc")]
         public int MaNongDan { get; set; }
 
+        public int? MaKho { get; set; }
+
         [StringLength(255, ErrorMessage = "Ghi chú không được vượt quá 255 ký tự")]
         public string? GhiChu { get; set; }
 

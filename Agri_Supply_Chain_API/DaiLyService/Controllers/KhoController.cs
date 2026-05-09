@@ -55,11 +55,19 @@ namespace DaiLyService.Controllers
         {
             try
             {
+                Console.WriteLine($"=== KHO DEBUG: GetByMaDaiLy called with maDaiLy={maDaiLy}");
                 var data = _khoService.GetByMaDaiLy(maDaiLy);
+                Console.WriteLine($"=== KHO DEBUG: Found {data.Count} warehouses");
+                foreach (var kho in data)
+                {
+                    Console.WriteLine($"=== KHO DEBUG: Warehouse - MaKho={kho.MaKho}, TenKho={kho.TenKho}, MaDaiLy={kho.MaDaiLy}");
+                }
                 return Ok(new { success = true, message = "Lấy danh sách kho thành công", data });
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"=== KHO DEBUG ERROR: {ex.Message}");
+                Console.WriteLine($"=== KHO DEBUG STACK: {ex.StackTrace}");
                 return BadRequest(new { success = false, message = ex.Message });
             }
         }

@@ -114,6 +114,7 @@ namespace DaiLyService.Data
 
             cmdDonHang.Parameters.AddWithValue("@MaDaiLy", dto.MaDaiLy);
             cmdDonHang.Parameters.AddWithValue("@MaNongDan", dto.MaNongDan);
+            cmdDonHang.Parameters.AddWithValue("@MaKho", (object?)dto.MaKho ?? DBNull.Value);
             cmdDonHang.Parameters.AddWithValue("@TongSoLuong", tongSoLuong);
             cmdDonHang.Parameters.AddWithValue("@TongGiaTri", tongGiaTri);
             cmdDonHang.Parameters.AddWithValue("@GhiChu", (object?)dto.GhiChu ?? DBNull.Value);
@@ -410,6 +411,7 @@ namespace DaiLyService.Data
                 MaDaiLy = (int)reader["MaDaiLy"],
                 MaNongDan = (int)reader["MaNongDan"],
                 TenNongDan = reader["TenNongDan"] as string,
+                SdtNongDan = reader["SdtNongDan"] as string,
                 TenDaiLy = reader["TenDaiLy"] as string,
                 NgayDat = reader["NgayDat"] as DateTime?,
                 NgayGiao = reader["NgayGiao"] as DateTime?,
