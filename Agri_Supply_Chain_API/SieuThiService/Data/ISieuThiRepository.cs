@@ -37,5 +37,8 @@ namespace SieuThiService.Data
         bool DeleteTonKho(DeleteTonKhoRequest request);
         
         bool GetSieuThiById(int maSieuThi);
+        
+        // Get connection string for direct SQL queries
+        string GetConnectionString();
     }
 }

@@ -9,10 +9,18 @@ namespace SieuThiService.Data
     public class SieuThiRepository : ISieuThiRepository
     {
         private readonly BtlHdv1Context _context;
+        private readonly string _connectionString;
 
         public SieuThiRepository(BtlHdv1Context context)
         {
             _context = context;
+            _connectionString = _context.Database.GetConnectionString() 
+                ?? throw new InvalidOperationException("Connection string not found.");
+        }
+
+        public string GetConnectionString()
+        {
+            return _connectionString;
         }
 
         public bool CreateDonHangOnly(CreateDonHangRequest request)
@@ -502,6 +510,7 @@ namespace SieuThiService.Data
                     TongGiaTri = donHangInfo.TongGiaTri,
                     GhiChu = donHangInfo.GhiChu,
                     TenSieuThi = donHangInfo.TenSieuThi,
+                    TenDaiLy = donHangInfo.TenDaiLy,
                     ChiTietDonHangs = chiTietList.Select(ct => new ChiTietDonHangResponse
                     {
                         MaLo = ct.MaLo,
@@ -548,6 +557,7 @@ namespace SieuThiService.Data
                         TongGiaTri = donHangInfo.TongGiaTri,
                         GhiChu = donHangInfo.GhiChu,
                         TenSieuThi = donHangInfo.TenSieuThi,
+                        TenDaiLy = donHangInfo.TenDaiLy,
                         ChiTietDonHangs = chiTietList.Select(ct => new ChiTietDonHangResponse
                         {
                             MaLo = ct.MaLo,
@@ -560,9 +570,11 @@ namespace SieuThiService.Data
 
                 return result;
             }
-            catch
+            catch (Exception ex)
             {
-                return new List<DonHangSieuThiResponse>();
+                Console.WriteLine($"ERROR in GetDonHangsBySieuThi: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw;
             }
         }
 

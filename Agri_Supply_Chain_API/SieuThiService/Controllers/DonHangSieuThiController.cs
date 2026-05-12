@@ -17,34 +17,162 @@ namespace SieuThiService.Controllers
         }
 
         [HttpPost("tao-don-hang")]
-        public ActionResult CreateDonHangOnly([FromBody] CreateDonHangRequest request)
+        public ActionResult CreateDonHangOnly([FromBody] CreateDonHangSieuThiRequest request)
         {
             try
             {
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest(ModelState);
+                    var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                    return BadRequest(new { 
+                        success = false, 
+                        message = "Dữ liệu không hợp lệ", 
+                        errors = errors,
+                        modelState = ModelState 
+                    });
                 }
 
                 // Kiểm tra siêu thị có tồn tại không
                 var sieuThiExists = _sieuThiRepository.GetSieuThiById(request.MaSieuThi);
                 if (!sieuThiExists)
                 {
-                    return NotFound($"Không tìm thấy siêu thị với mã {request.MaSieuThi}");
+                    return NotFound(new { 
+                        success = false, 
+                        message = $"Không tìm thấy siêu thị với mã {request.MaSieuThi}",
+                        debug = new { maSieuThi = request.MaSieuThi }
+                    });
                 }
 
-                var result = _sieuThiRepository.CreateDonHangOnly(request);
-                
-                if (!result)
+                // Nếu có chi tiết đơn hàng, sử dụng phương thức tạo đầy đủ
+                if (request.ChiTietDonHangs != null && request.ChiTietDonHangs.Count > 0)
                 {
-                    return BadRequest("Không thể tạo đơn hàng");
-                }
+                    var result = _sieuThiRepository.CreateDonHang(request);
+                    
+                    if (!result)
+                    {
+                        return BadRequest(new { 
+                            success = false, 
+                            message = "Không thể tạo đơn hàng - Repository trả về false",
+                            debug = new {
+                                maSieuThi = request.MaSieuThi,
+                                maDaiLy = request.MaDaiLy,
+                                soChiTiet = request.ChiTietDonHangs.Count
+                            }
+                        });
+                    }
 
-                return Ok("Tạo đơn hàng thành công");
+                    return Ok(new 
+                    { 
+                        success = true, 
+                        message = "Tạo đơn hàng thành công"
+                    });
+                }
+                else
+                {
+                    // Nếu không có chi tiết, chỉ tạo đơn hàng trống (backward compatibility)
+                    var createDonHangRequest = new CreateDonHangRequest
+                    {
+                        MaSieuThi = request.MaSieuThi,
+                        MaDaiLy = request.MaDaiLy,
+                        NgayGiao = request.NgayGiao,
+                        GhiChu = request.GhiChu
+                    };
+
+                    var result = _sieuThiRepository.CreateDonHangOnly(createDonHangRequest);
+                    
+                    if (!result)
+                    {
+                        return BadRequest(new { 
+                            success = false, 
+                            message = "Không thể tạo đơn hàng trống - Repository trả về false" 
+                        });
+                    }
+
+                    return Ok(new { success = true, message = "Tạo đơn hàng thành công" });
+                }
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Lỗi server: {ex.Message}");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = $"Lỗi server: {ex.Message}",
+                    stackTrace = ex.StackTrace,
+                    innerException = ex.InnerException?.Message
+                });
+            }
+        }
+
+        [HttpPost("create")]
+        public ActionResult CreateDonHangWithDetails([FromBody] CreateDonHangSieuThiRequest request)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = ModelState });
+                }
+
+                // Kiểm tra siêu thị có tồn tại không
+                var sieuThiExists = _sieuThiRepository.GetSieuThiById(request.MaSieuThi);
+                if (!sieuThiExists)
+                {
+                    return NotFound(new { success = false, message = $"Không tìm thấy siêu thị với mã {request.MaSieuThi}" });
+                }
+
+                // Tạo đơn hàng
+                var createDonHangRequest = new CreateDonHangRequest
+                {
+                    MaSieuThi = request.MaSieuThi,
+                    MaDaiLy = request.MaDaiLy,
+                    NgayGiao = request.NgayGiao,
+                    GhiChu = request.GhiChu
+                };
+
+                var donHangCreated = _sieuThiRepository.CreateDonHangOnly(createDonHangRequest);
+                
+                if (!donHangCreated)
+                {
+                    return BadRequest(new { success = false, message = "Không thể tạo đơn hàng" });
+                }
+
+                // Lấy mã đơn hàng vừa tạo
+                var donHangs = _sieuThiRepository.GetDonHangsBySieuThi(request.MaSieuThi);
+                var newDonHang = donHangs.OrderByDescending(d => d.MaDonHang).FirstOrDefault();
+                
+                if (newDonHang == null)
+                {
+                    return BadRequest(new { success = false, message = "Không tìm thấy đơn hàng vừa tạo" });
+                }
+
+                // Thêm chi tiết đơn hàng
+                foreach (var chiTiet in request.ChiTietDonHangs)
+                {
+                    var addChiTietRequest = new CreateChiTietDonHangRequest
+                    {
+                        MaDonHang = newDonHang.MaDonHang,
+                        MaLo = chiTiet.MaLo,
+                        SoLuong = chiTiet.SoLuong,
+                        DonGia = chiTiet.DonGia
+                    };
+
+                    var chiTietAdded = _sieuThiRepository.AddChiTietDonHang(addChiTietRequest);
+                    
+                    if (!chiTietAdded)
+                    {
+                        return BadRequest(new { success = false, message = $"Không thể thêm chi tiết đơn hàng cho lô {chiTiet.MaLo}" });
+                    }
+                }
+
+                return Ok(new 
+                { 
+                    success = true, 
+                    message = "Tạo đơn hàng thành công",
+                    data = new { maDonHang = newDonHang.MaDonHang }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Lỗi server: {ex.Message}" });
             }
         }
 
@@ -279,6 +407,151 @@ namespace SieuThiService.Controllers
                     success = false,
                     message = $"Lỗi server: {ex.Message}",
                     data = (object?)null
+                });
+            }
+        }
+
+        // ============================================================================
+        // KIỂM ĐỊNH ĐƠN HÀNG TỪ ĐẠI LÝ
+        // ============================================================================
+
+        // GET: api/DonHangSieuThi/cho-kiem-dinh/{maSieuThi}
+        // Lấy danh sách đơn hàng chờ kiểm định
+        [HttpGet("cho-kiem-dinh/{maSieuThi}")]
+        public ActionResult GetChoKiemDinh(int maSieuThi)
+        {
+            try
+            {
+                var donHangs = new List<DonHangChoKiemDinhResponse>();
+
+                var connectionString = _sieuThiRepository.GetConnectionString();
+                using (var connection = new Microsoft.Data.SqlClient.SqlConnection(connectionString))
+                {
+                    using (var command = new Microsoft.Data.SqlClient.SqlCommand("sp_SieuThi_GetDonHangChoKiemDinh", connection))
+                    {
+                        command.CommandType = System.Data.CommandType.StoredProcedure;
+                        command.Parameters.AddWithValue("@MaSieuThi", maSieuThi);
+
+                        connection.Open();
+                        using (var reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                donHangs.Add(new DonHangChoKiemDinhResponse
+                                {
+                                    MaDonHang = reader.GetInt32(reader.GetOrdinal("MaDonHang")),
+                                    NgayDat = reader.GetDateTime(reader.GetOrdinal("NgayDat")),
+                                    TrangThai = reader.GetString(reader.GetOrdinal("TrangThai")),
+                                    TongSoLuong = reader.IsDBNull(reader.GetOrdinal("TongSoLuong")) ? 0 : reader.GetDecimal(reader.GetOrdinal("TongSoLuong")),
+                                    TongGiaTri = reader.IsDBNull(reader.GetOrdinal("TongGiaTri")) ? 0 : reader.GetDecimal(reader.GetOrdinal("TongGiaTri")),
+                                    GhiChu = reader.IsDBNull(reader.GetOrdinal("GhiChu")) ? null : reader.GetString(reader.GetOrdinal("GhiChu")),
+                                    MaDaiLy = reader.GetInt32(reader.GetOrdinal("MaDaiLy")),
+                                    TenDaiLy = reader.GetString(reader.GetOrdinal("TenDaiLy")),
+                                    DiaChiDaiLy = reader.IsDBNull(reader.GetOrdinal("DiaChiDaiLy")) ? null : reader.GetString(reader.GetOrdinal("DiaChiDaiLy")),
+                                    SoDienThoaiDaiLy = reader.IsDBNull(reader.GetOrdinal("SoDienThoaiDaiLy")) ? null : reader.GetString(reader.GetOrdinal("SoDienThoaiDaiLy"))
+                                });
+                            }
+                        }
+                    }
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Lấy danh sách đơn hàng chờ kiểm định thành công",
+                    data = donHangs,
+                    count = donHangs.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = $"Lỗi server: {ex.Message}",
+                    data = (object?)null
+                });
+            }
+        }
+
+        // PUT: api/DonHangSieuThi/kiem-dinh/{id}
+        // Kiểm định đơn hàng (đạt → nhập kho, không đạt → hoàn trả)
+        [HttpPut("kiem-dinh/{id}")]
+        public ActionResult KiemDinh(int id, [FromBody] KiemDinhDonHangRequest request)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Dữ liệu không hợp lệ",
+                        errors = ModelState
+                    });
+                }
+
+                // Kiểm tra nếu đạt thì phải có mã kho
+                if (request.KetQua == "dat" && (request.MaKho == null || request.MaKho <= 0))
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Vui lòng chọn kho để nhập hàng khi kiểm định đạt"
+                    });
+                }
+
+                var connectionString = _sieuThiRepository.GetConnectionString();
+                using (var connection = new Microsoft.Data.SqlClient.SqlConnection(connectionString))
+                {
+                    using (var command = new Microsoft.Data.SqlClient.SqlCommand("sp_SieuThi_KiemDinhDonHang", connection))
+                    {
+                        command.CommandType = System.Data.CommandType.StoredProcedure;
+                        command.Parameters.AddWithValue("@MaDonHang", id);
+                        command.Parameters.AddWithValue("@MaSieuThi", request.MaSieuThi);
+                        command.Parameters.AddWithValue("@KetQua", request.KetQua);
+                        command.Parameters.AddWithValue("@MaKho", (object?)request.MaKho ?? DBNull.Value);
+                        command.Parameters.AddWithValue("@GhiChu", (object?)request.GhiChu ?? DBNull.Value);
+
+                        connection.Open();
+                        using (var reader = command.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                var status = reader.GetString(reader.GetOrdinal("Status"));
+                                var message = reader.GetString(reader.GetOrdinal("Message"));
+
+                                if (status == "ERROR")
+                                {
+                                    return BadRequest(new
+                                    {
+                                        success = false,
+                                        message = message
+                                    });
+                                }
+
+                                return Ok(new
+                                {
+                                    success = true,
+                                    message = message
+                                });
+                            }
+                        }
+                    }
+                }
+
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Không thể kiểm định đơn hàng"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = $"Lỗi server: {ex.Message}"
                 });
             }
         }
