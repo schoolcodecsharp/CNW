@@ -113,21 +113,20 @@ namespace DaiLyService.Controllers
                             if (reader.Read())
                             {
                                 var status = reader.GetString(reader.GetOrdinal("Status"));
-                                var message = reader.GetString(reader.GetOrdinal("Message"));
 
                                 if (status == "ERROR")
                                 {
                                     return BadRequest(new
                                     {
                                         success = false,
-                                        message = message
+                                        message = "Không thể xác nhận đơn hàng. Vui lòng kiểm tra lại."
                                     });
                                 }
 
                                 return Ok(new
                                 {
                                     success = true,
-                                    message = message
+                                    message = "Đã xác nhận đơn hàng và trừ tồn kho. Đơn chờ siêu thị kiểm định."
                                 });
                             }
                         }
@@ -244,21 +243,20 @@ namespace DaiLyService.Controllers
                             if (reader.Read())
                             {
                                 var status = reader.GetString(reader.GetOrdinal("Status"));
-                                var message = reader.GetString(reader.GetOrdinal("Message"));
 
                                 if (status == "ERROR")
                                 {
                                     return BadRequest(new
                                     {
                                         success = false,
-                                        message = message
+                                        message = "Không thể xử lý hoàn đơn. Vui lòng kiểm tra lại."
                                     });
                                 }
 
                                 return Ok(new
                                 {
                                     success = true,
-                                    message = message
+                                    message = "Đã xử lý hoàn đơn và gửi lại kiểm định."
                                 });
                             }
                         }
@@ -314,21 +312,20 @@ namespace DaiLyService.Controllers
                             if (reader.Read())
                             {
                                 var status = reader.GetString(reader.GetOrdinal("Status"));
-                                var message = reader.GetString(reader.GetOrdinal("Message"));
 
                                 if (status == "ERROR")
                                 {
                                     return BadRequest(new
                                     {
                                         success = false,
-                                        message = message
+                                        message = "Không thể hủy đơn hàng. Vui lòng kiểm tra lại."
                                     });
                                 }
 
                                 return Ok(new
                                 {
                                     success = true,
-                                    message = message
+                                    message = "Đã hủy đơn hàng thành công."
                                 });
                             }
                         }

@@ -519,21 +519,25 @@ namespace SieuThiService.Controllers
                             if (reader.Read())
                             {
                                 var status = reader.GetString(reader.GetOrdinal("Status"));
-                                var message = reader.GetString(reader.GetOrdinal("Message"));
 
                                 if (status == "ERROR")
                                 {
                                     return BadRequest(new
                                     {
                                         success = false,
-                                        message = message
+                                        message = "Không thể kiểm định đơn hàng. Vui lòng kiểm tra lại."
                                     });
                                 }
+
+                                // Determine message based on result
+                                var successMessage = request.KetQua == "dat" 
+                                    ? "Kiểm định đạt. Đơn hàng đã được nhập kho." 
+                                    : "Kiểm định không đạt. Đơn hàng đã được hoàn trả.";
 
                                 return Ok(new
                                 {
                                     success = true,
-                                    message = message
+                                    message = successMessage
                                 });
                             }
                         }
