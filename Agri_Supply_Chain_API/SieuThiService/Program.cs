@@ -15,7 +15,12 @@ builder.Services.AddDbContext<BtlHdv1Context>(options =>
 builder.Services.AddScoped<ISieuThiRepository, SieuThiRepository>();
 builder.Services.AddScoped<ISieuThiService, SieuThiService.Services.SieuThiService>();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Ensure UTF-8 encoding for Vietnamese characters
+        options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+    });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

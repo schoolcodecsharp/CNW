@@ -26,7 +26,12 @@ builder.Services.AddScoped<ILoNongSanService, LoNongSanService>();
 builder.Services.AddScoped<IDonHangDaiLyService, DonHangDaiLyService>();
 
 // Controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Ensure UTF-8 encoding for Vietnamese characters
+        options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+    });
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();

@@ -36,6 +36,8 @@ builder.Services.AddControllers()
     {
         // Serialize to camelCase for frontend
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        // Ensure UTF-8 encoding for Vietnamese characters
+        options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
     });
 
 // Swagger/OpenAPI
