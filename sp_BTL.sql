@@ -4127,13 +4127,14 @@ BEGIN
         TK.MaLo,
         TK.SoLuong,
         TK.CapNhatCuoi,
-        L.TenSanPham,
-        L.DonViTinh,
-        L.NgaySanXuat,
+        SP.TenSanPham,
+        SP.DonViTinh,
+        L.NgayThuHoach AS NgaySanXuat,
         L.HanSuDung,
         L.TrangThai AS TrangThaiLo
     FROM TonKho TK
     INNER JOIN LoNongSan L ON TK.MaLo = L.MaLo
+    INNER JOIN SanPham SP ON L.MaSanPham = SP.MaSanPham
     WHERE TK.MaKho = @MaKho 
       AND TK.SoLuong > 0
     ORDER BY TK.CapNhatCuoi DESC;
