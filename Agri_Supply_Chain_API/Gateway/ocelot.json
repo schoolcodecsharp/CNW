@@ -124,6 +124,18 @@
       ]
     },
     {
+      "UpstreamPathTemplate": "/api/nong-dan-don-hang/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/api/nong-dan-don-hang/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7090
+        }
+      ]
+    },
+    {
       "UpstreamPathTemplate": "/api/ton-kho/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
       "DownstreamPathTemplate": "/api/ton-kho/{everything}",
