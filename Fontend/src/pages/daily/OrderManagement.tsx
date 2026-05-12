@@ -4,6 +4,8 @@ import { API_ENDPOINTS } from '../../services/apiConfig';
 import { useAuth } from '../../context/AuthContext';
 import usePagination from '../../hooks/usePagination';
 import TablePagination from '../../components/TablePagination';
+import Toast from '../../components/Toast';
+import ConfirmModal from '../../components/ConfirmModal';
 import '../../components/Common.css';
 
 function OrderManagement() {
@@ -20,6 +22,29 @@ function OrderManagement() {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [selectedWarehouse, setSelectedWarehouse] = useState('');
   const [maDaiLy, setMaDaiLy] = useState(null);
+  
+  // Toast state
+  const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' | 'warning' | 'info' }>({
+    show: false,
+    message: '',
+    type: 'success'
+  });
+  
+  // Confirm modal state
+  const [confirmModal, setConfirmModal] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    type: 'danger' | 'warning' | 'info';
+    onConfirm: () => void;
+  }>({
+    show: false,
+    title: '',
+    message: '',
+    type: 'warning',
+    onConfirm: () => {}
+  });
+  
   const [formDataFarmer, setFormDataFarmer] = useState({
     maNongDan: '',
     maLo: '',
@@ -32,6 +57,17 @@ function OrderManagement() {
   useEffect(() => {
     loadData();
   }, []);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: 'success' });
+    }, 3000);
+  };
+
+  const showConfirm = (title: string, message: string, type: 'danger' | 'warning' | 'info', onConfirm: () => void) => {
+    setConfirmModal({ show: true, title, message, type, onConfirm });
+  };
 
   const loadData = async () => {
     try {
@@ -104,15 +140,15 @@ function OrderManagement() {
     try {
       const selectedBatch = batches.find((b: any) => b.maLo === parseInt(formDataFarmer.maLo));
       if (!selectedBatch) {
-        alert('❌ Vui lòng chọn lô nông sản!');
+        showToast('Vui lòng chọn lô nông sản!', 'error');
         return;
       }
       if (parseFloat(formDataFarmer.soLuong) > selectedBatch.soLuongHienTai) {
-        alert('❌ Số lượng vượt quá số lượng hiện có của lô!');
+        showToast('Số lượng vượt quá số lượng hiện có của lô!', 'error');
         return;
       }
       if (!formDataFarmer.maKho) {
-        alert('❌ Vui lòng chọn kho để nhận hàng!');
+        showToast('Vui lòng chọn kho để nhận hàng!', 'error');
         return;
       }
 
@@ -129,19 +165,19 @@ function OrderManagement() {
       };
 
       await axios.post(API_ENDPOINTS.donHangDaiLy.create, payload);
-      alert('✅ Tạo đơn mua hàng thành công!');
+      showToast('Tạo đơn mua hàng thành công!', 'success');
       
       setShowModalFarmer(false);
       await loadData();
     } catch (error: any) {
       console.error('Error creating order:', error);
-      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
+      showToast(error.response?.data?.message || 'Có lỗi xảy ra', 'error');
     }
   };
 
   const handleAcceptOrder = async () => {
     if (!selectedWarehouse) {
-      alert('❌ Vui lòng chọn kho để nhận hàng!');
+      showToast('Vui lòng chọn kho để nhận hàng!', 'error');
       return;
     }
 
@@ -151,13 +187,12 @@ function OrderManagement() {
         MaKho: parseInt(selectedWarehouse)
       };
 
-      // Gọi API xác nhận đơn hàng từ đại lý
       const response = await axios.put(
         API_ENDPOINTS.donHangSieuThi.xacNhanDaiLy(selectedOrder.maDonHang),
         payload
       );
       
-      alert('✅ ' + (response.data.message || 'Chấp nhận đơn hàng thành công!'));
+      showToast(response.data.message || 'Chấp nhận đơn hàng thành công!', 'success');
       
       setShowModalAccept(false);
       setSelectedOrder(null);
@@ -166,32 +201,32 @@ function OrderManagement() {
     } catch (error: any) {
       console.error('Error accepting order:', error);
       const errorMsg = error.response?.data?.message || error.response?.data || 'Có lỗi xảy ra';
-      alert('❌ ' + errorMsg);
+      showToast(errorMsg, 'error');
     }
   };
 
   const handleRejectOrder = async (order: any) => {
-    if (!confirm(`Bạn có chắc muốn từ chối đơn hàng #${order.maDonHang}?`)) {
-      return;
-    }
-
-    try {
-      const payload = {
-        MaDaiLy: maDaiLy
-      };
-      
-      const response = await axios.put(
-        API_ENDPOINTS.donHangSieuThi.huyDonDaiLy(order.maDonHang),
-        payload
-      );
-      
-      alert('✅ ' + (response.data.message || 'Từ chối đơn hàng thành công!'));
-      await loadData();
-    } catch (error: any) {
-      console.error('Error rejecting order:', error);
-      const errorMsg = error.response?.data?.message || error.response?.data || 'Có lỗi xảy ra';
-      alert('❌ ' + errorMsg);
-    }
+    showConfirm(
+      'Từ chối đơn hàng',
+      `Bạn có chắc muốn từ chối đơn hàng #${order.maDonHang}?`,
+      'danger',
+      async () => {
+        setConfirmModal({ ...confirmModal, show: false });
+        try {
+          const payload = { MaDaiLy: maDaiLy };
+          const response = await axios.put(
+            API_ENDPOINTS.donHangSieuThi.huyDonDaiLy(order.maDonHang),
+            payload
+          );
+          showToast(response.data.message || 'Từ chối đơn hàng thành công!', 'success');
+          await loadData();
+        } catch (error: any) {
+          console.error('Error rejecting order:', error);
+          const errorMsg = error.response?.data?.message || error.response?.data || 'Có lỗi xảy ra';
+          showToast(errorMsg, 'error');
+        }
+      }
+    );
   };
 
   // Sử dụng hook phân trang
@@ -276,6 +311,24 @@ function OrderManagement() {
 
   return (
     <div className="page-container">
+      {/* Toast Notification */}
+      <Toast
+        show={toast.show}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ ...toast, show: false })}
+      />
+
+      {/* Confirm Modal */}
+      <ConfirmModal
+        show={confirmModal.show}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type={confirmModal.type}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal({ ...confirmModal, show: false })}
+      />
+
       <div className="page-header">
         <h1>📦 Quản lý đơn hàng</h1>
         <div className="header-actions">
