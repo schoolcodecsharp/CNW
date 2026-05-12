@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { dailyService } from '../services/dailyService';
 import './DaiLyKiemDinh.css';
 
 interface DonHang {
@@ -34,9 +34,6 @@ const DaiLyKiemDinh: React.FC<Props> = ({ maDaiLy }) => {
   const [selectedDonHang, setSelectedDonHang] = useState<DonHang | null>(null);
   const [selectedKho, setSelectedKho] = useState<number>(0);
 
-  // URL trực tiếp đến DaiLyService
-  const DAILY_SERVICE_URL = 'http://localhost:5002';
-
   useEffect(() => {
     loadData();
   }, [maDaiLy]);
@@ -44,33 +41,27 @@ const DaiLyKiemDinh: React.FC<Props> = ({ maDaiLy }) => {
   const loadData = async () => {
     setLoading(true);
     try {
-      console.log('=== DEBUG: Đang tải dữ liệu cho maDaiLy:', maDaiLy);
+      console.log('=== Đang tải dữ liệu cho maDaiLy:', maDaiLy);
       
-      // Gọi API lấy kho
-      console.log('=== DEBUG: Gọi API kho:', `${DAILY_SERVICE_URL}/api/kho/dai-ly/${maDaiLy}`);
-      const resKho = await axios.get(`${DAILY_SERVICE_URL}/api/kho/dai-ly/${maDaiLy}`);
-      console.log('=== DEBUG: Response kho:', resKho.data);
+      // Gọi API lấy kho qua Gateway
+      const resKho = await dailyService.getKhoByDaiLy(maDaiLy);
+      console.log('Response kho:', resKho);
       
-      const khoData = resKho.data.data || [];
-      console.log('=== DEBUG: Dữ liệu kho:', khoData);
-      console.log('=== DEBUG: Số lượng kho:', khoData.length);
-      
+      const khoData = resKho.data || [];
+      console.log('Số lượng kho:', khoData.length);
       setKhoList(khoData);
       
-      // Gọi API lấy đơn hàng chờ kiểm định
-      console.log('=== DEBUG: Gọi API đơn hàng:', `${DAILY_SERVICE_URL}/api/don-hang-dai-ly/cho-kiem-dinh/${maDaiLy}`);
-      const resDonHang = await axios.get(`${DAILY_SERVICE_URL}/api/don-hang-dai-ly/cho-kiem-dinh/${maDaiLy}`);
-      console.log('=== DEBUG: Response đơn hàng:', resDonHang.data);
+      // Gọi API lấy đơn hàng chờ kiểm định qua Gateway
+      const resDonHang = await dailyService.getDonHangChoKiemDinh(maDaiLy);
+      console.log('Response đơn hàng:', resDonHang);
       
-      const donHangData = resDonHang.data.data || [];
-      console.log('=== DEBUG: Dữ liệu đơn hàng:', donHangData);
-      console.log('=== DEBUG: Số lượng đơn hàng:', donHangData.length);
-      
+      const donHangData = resDonHang.data || [];
+      console.log('Số lượng đơn hàng:', donHangData.length);
       setDonHangList(donHangData);
       
     } catch (error: any) {
-      console.error('=== DEBUG: LỖI khi tải dữ liệu:', error);
-      console.error('=== DEBUG: Chi tiết lỗi:', error.response);
+      console.error('LỖI khi tải dữ liệu:', error);
+      console.error('Chi tiết lỗi:', error.response);
       alert('❌ Không thể tải dữ liệu: ' + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
@@ -94,23 +85,21 @@ const DaiLyKiemDinh: React.FC<Props> = ({ maDaiLy }) => {
     }
 
     try {
-      console.log('=== DEBUG: Kiểm định ĐẠT - maDonHang:', selectedDonHang.maDonHang, 'maKho:', selectedKho);
-      const res = await axios.put(
-        `${DAILY_SERVICE_URL}/api/don-hang-dai-ly/kiem-dinh/${selectedDonHang.maDonHang}`,
-        { 
-          maDaiLy: maDaiLy, 
-          maKho: selectedKho, 
-          ketQuaKiemDinh: true 
-        }
+      console.log('Kiểm định ĐẠT - maDonHang:', selectedDonHang.maDonHang, 'maKho:', selectedKho);
+      const res = await dailyService.kiemDinhDonHang(
+        selectedDonHang.maDonHang,
+        maDaiLy,
+        selectedKho,
+        true
       );
-      console.log('=== DEBUG: Response kiểm định:', res.data);
-      alert(res.data.message || '✅ Đã nhập kho thành công!');
+      console.log('Response kiểm định:', res);
+      alert(res.message || '✅ Đã nhập kho thành công!');
       setShowKiemDinhModal(false);
       setSelectedDonHang(null);
       loadData();
     } catch (error: any) {
-      console.error('=== DEBUG: LỖI kiểm định:', error);
-      console.error('=== DEBUG: Chi tiết lỗi:', error.response);
+      console.error('LỖI kiểm định:', error);
+      console.error('Chi tiết lỗi:', error.response);
       alert('❌ Lỗi: ' + (error.response?.data?.message || error.message));
     }
   };
@@ -121,21 +110,19 @@ const DaiLyKiemDinh: React.FC<Props> = ({ maDaiLy }) => {
     }
 
     try {
-      console.log('=== DEBUG: Kiểm định KHÔNG ĐẠT - maDonHang:', donHang.maDonHang);
-      const res = await axios.put(
-        `${DAILY_SERVICE_URL}/api/don-hang-dai-ly/kiem-dinh/${donHang.maDonHang}`,
-        { 
-          maDaiLy: maDaiLy, 
-          maKho: 0, 
-          ketQuaKiemDinh: false 
-        }
+      console.log('Kiểm định KHÔNG ĐẠT - maDonHang:', donHang.maDonHang);
+      const res = await dailyService.kiemDinhDonHang(
+        donHang.maDonHang,
+        maDaiLy,
+        0,
+        false
       );
-      console.log('=== DEBUG: Response kiểm định:', res.data);
-      alert(res.data.message || '↩️ Đã hoàn đơn về nông dân!');
+      console.log('Response kiểm định:', res);
+      alert(res.message || '↩️ Đã hoàn đơn về nông dân!');
       loadData();
     } catch (error: any) {
-      console.error('=== DEBUG: LỖI kiểm định:', error);
-      console.error('=== DEBUG: Chi tiết lỗi:', error.response);
+      console.error('LỖI kiểm định:', error);
+      console.error('Chi tiết lỗi:', error.response);
       alert('❌ Lỗi: ' + (error.response?.data?.message || error.message));
     }
   };

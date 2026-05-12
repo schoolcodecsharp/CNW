@@ -112,6 +112,31 @@ function ProductManagement() {
     }
   };
 
+  // Hàm lấy ảnh sản phẩm dựa trên tên
+  const getProductImage = (tenSanPham: string) => {
+    const name = tenSanPham.toLowerCase();
+    
+    // Map tên sản phẩm với ảnh tương ứng
+    if (name.includes('cà chua') || name.includes('ca chua')) {
+      return 'https://images.unsplash.com/photo-1546470427-227e2e1e8c8e?w=400&h=400&fit=crop';
+    } else if (name.includes('rau cải') || name.includes('cải')) {
+      return 'https://images.unsplash.com/photo-1556801712-76c8eb07bbc9?w=400&h=400&fit=crop';
+    } else if (name.includes('xoài') || name.includes('xoai')) {
+      return 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=400&h=400&fit=crop';
+    } else if (name.includes('ớt') || name.includes('ot')) {
+      return 'https://images.unsplash.com/photo-1583663848850-46af132dc08e?w=400&h=400&fit=crop';
+    } else if (name.includes('hành') || name.includes('hanh')) {
+      return 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400&h=400&fit=crop';
+    } else if (name.includes('rau muống') || name.includes('muong')) {
+      return 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=400&fit=crop';
+    } else if (name.includes('bắp cải') || name.includes('bap cai')) {
+      return 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=400&h=400&fit=crop';
+    } else {
+      // Ảnh mặc định cho rau củ
+      return 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&h=400&fit=crop';
+    }
+  };
+
   if (loading) {
     return <div className="loading">Đang tải danh sách sản phẩm...</div>;
   }
@@ -141,7 +166,17 @@ function ProductManagement() {
         ) : (
           products.map((product) => (
             <div key={product.maSanPham} className="product-card">
-              <div className="product-icon">🥬</div>
+              <div className="product-image-container">
+                <img 
+                  src={getProductImage(product.tenSanPham)} 
+                  alt={product.tenSanPham}
+                  className="product-image"
+                  onError={(e) => {
+                    // Fallback nếu ảnh không load được
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&h=400&fit=crop';
+                  }}
+                />
+              </div>
               <h3>{product.tenSanPham}</h3>
               <div className="product-details">
                 <p><strong>Đơn vị tính:</strong> {product.donViTinh}</p>
@@ -260,11 +295,32 @@ function ProductManagement() {
           box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
           transition: all 0.3s;
           text-align: center;
+          overflow: hidden;
         }
 
         .product-card:hover {
           transform: translateY(-5px);
           box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .product-image-container {
+          width: 100%;
+          height: 200px;
+          margin-bottom: 15px;
+          border-radius: 12px;
+          overflow: hidden;
+          background: #f5f5f5;
+        }
+
+        .product-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.3s;
+        }
+
+        .product-card:hover .product-image {
+          transform: scale(1.1);
         }
 
         .product-icon {
