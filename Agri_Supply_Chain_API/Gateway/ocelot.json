@@ -182,6 +182,18 @@
           "Port": 7002
         }
       ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/KhoHang/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/api/KhoHang/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7087
+        }
+      ]
     }
   ]
 }

@@ -723,45 +723,86 @@ namespace SieuThiService.Data
         {
             try
             {
-                // Lấy thông tin kho bằng stored procedure
-                var khoParam = new SqlParameter("@MaKho", maKho);
-                var khoInfo = _context.Database.SqlQueryRaw<KhoInfo>(
-                    "EXEC sp_GetKhoHangById @MaKho", khoParam).FirstOrDefault();
-
-                if (khoInfo == null)
+                using (var connection = new SqlConnection(_context.Database.GetConnectionString()))
                 {
-                    return null;
+                    connection.Open();
+                    using (var command = new SqlCommand("sp_GetKhoHangById", connection))
+                    {
+                        command.CommandType = System.Data.CommandType.StoredProcedure;
+                        command.Parameters.AddWithValue("@MaKho", maKho);
+
+                        using (var reader = command.ExecuteReader())
+                        {
+                            // Read first result set (Kho info)
+                            KhoInfo? khoInfo = null;
+                            if (reader.Read())
+                            {
+                                khoInfo = new KhoInfo
+                                {
+                                    MaKho = reader.GetInt32(reader.GetOrdinal("MaKho")),
+                                    TenKho = reader.GetString(reader.GetOrdinal("TenKho")),
+                                    LoaiKho = reader.GetString(reader.GetOrdinal("LoaiKho")),
+                                    DiaChi = reader.IsDBNull(reader.GetOrdinal("DiaChi")) ? null : reader.GetString(reader.GetOrdinal("DiaChi")),
+                                    TrangThai = reader.GetString(reader.GetOrdinal("TrangThai")),
+                                    NgayTao = reader.GetDateTime(reader.GetOrdinal("NgayTao"))
+                                };
+                            }
+
+                            if (khoInfo == null)
+                            {
+                                return null;
+                            }
+
+                            // Move to second result set (TonKho)
+                            var tonKhoList = new List<TonKhoDetail>();
+                            if (reader.NextResult())
+                            {
+                                while (reader.Read())
+                                {
+                                    tonKhoList.Add(new TonKhoDetail
+                                    {
+                                        MaKho = reader.GetInt32(reader.GetOrdinal("MaKho")),
+                                        MaLo = reader.GetInt32(reader.GetOrdinal("MaLo")),
+                                        SoLuong = reader.GetDecimal(reader.GetOrdinal("SoLuong")),
+                                        CapNhatCuoi = reader.GetDateTime(reader.GetOrdinal("CapNhatCuoi")),
+                                        TenSanPham = reader.IsDBNull(reader.GetOrdinal("TenSanPham")) ? null : reader.GetString(reader.GetOrdinal("TenSanPham")),
+                                        DonViTinh = reader.IsDBNull(reader.GetOrdinal("DonViTinh")) ? null : reader.GetString(reader.GetOrdinal("DonViTinh")),
+                                        NgaySanXuat = reader.IsDBNull(reader.GetOrdinal("NgaySanXuat")) ? null : reader.GetDateTime(reader.GetOrdinal("NgaySanXuat")),
+                                        HanSuDung = reader.IsDBNull(reader.GetOrdinal("HanSuDung")) ? null : reader.GetDateTime(reader.GetOrdinal("HanSuDung")),
+                                        TrangThaiLo = reader.IsDBNull(reader.GetOrdinal("TrangThaiLo")) ? null : reader.GetString(reader.GetOrdinal("TrangThaiLo"))
+                                    });
+                                }
+                            }
+
+                            var tonKhoResponses = tonKhoList.Select(tk => new TonKhoResponse
+                            {
+                                MaLo = tk.MaLo,
+                                SoLuong = tk.SoLuong,
+                                CapNhatCuoi = tk.CapNhatCuoi,
+                                TenSanPham = tk.TenSanPham ?? $"Sản phẩm lô {tk.MaLo}",
+                                DonViTinh = tk.DonViTinh ?? "kg",
+                                TrangThaiLo = tk.TrangThaiLo
+                            }).ToList();
+
+                            return new KhoHangResponse
+                            {
+                                MaKho = khoInfo.MaKho,
+                                TenKho = khoInfo.TenKho,
+                                LoaiKho = khoInfo.LoaiKho,
+                                DiaChi = khoInfo.DiaChi,
+                                TrangThai = khoInfo.TrangThai,
+                                NgayTao = khoInfo.NgayTao,
+                                TonKhos = tonKhoResponses,
+                                TongSoLoHang = tonKhoResponses.Count,
+                                TongSoLuong = tonKhoResponses.Sum(tk => tk.SoLuong)
+                            };
+                        }
+                    }
                 }
-
-                // Lấy tồn kho bằng stored procedure (sử dụng cùng stored procedure)
-                var tonKhoList = _context.Database.SqlQueryRaw<TonKhoDetail>(
-                    "EXEC sp_GetKhoHangById @MaKho", khoParam).ToList();
-
-                var tonKhoResponses = tonKhoList.Select(tk => new TonKhoResponse
-                {
-                    MaLo = tk.MaLo,
-                    SoLuong = tk.SoLuong,
-                    CapNhatCuoi = tk.CapNhatCuoi,
-                    TenSanPham = tk.TenSanPham ?? $"Sản phẩm lô {tk.MaLo}",
-                    DonViTinh = tk.DonViTinh ?? "kg",
-                    TrangThaiLo = tk.TrangThaiLo
-                }).ToList();
-
-                return new KhoHangResponse
-                {
-                    MaKho = khoInfo.MaKho,
-                    TenKho = khoInfo.TenKho,
-                    LoaiKho = khoInfo.LoaiKho,
-                    DiaChi = khoInfo.DiaChi,
-                    TrangThai = khoInfo.TrangThai,
-                    NgayTao = khoInfo.NgayTao,
-                    TonKhos = tonKhoResponses,
-                    TongSoLoHang = tonKhoResponses.Count,
-                    TongSoLuong = tonKhoResponses.Sum(tk => tk.SoLuong)
-                };
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"Error in GetKhoHangById: {ex.Message}");
                 return null;
             }
         }
