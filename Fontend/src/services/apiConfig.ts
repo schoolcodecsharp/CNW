@@ -131,11 +131,11 @@ export const API_ENDPOINTS = {
     choKiemDinh: (maSieuThi: number) => `${API_BASE_URLS.sieuthi}/api/DonHangSieuThi/cho-kiem-dinh/${maSieuThi}`,
     kiemDinh: (id: number) => `${API_BASE_URLS.sieuthi}/api/DonHangSieuThi/kiem-dinh/${id}`,
     // Đại lý xử lý đơn từ siêu thị
-    chuaXacNhanDaiLy: (maDaiLy: number) => `${API_BASE_URLS.sieuthi}/api/don-hang-sieu-thi/chua-xac-nhan-dai-ly/${maDaiLy}`,
-    hoanDonDaiLy: (maDaiLy: number) => `${API_BASE_URLS.sieuthi}/api/don-hang-sieu-thi/hoan-don-dai-ly/${maDaiLy}`,
-    xacNhanDaiLy: (id: number) => `${API_BASE_URLS.sieuthi}/api/don-hang-sieu-thi/xac-nhan-dai-ly/${id}`,
-    xuLyHoanDonDaiLy: (id: number) => `${API_BASE_URLS.sieuthi}/api/don-hang-sieu-thi/xu-ly-hoan-don-dai-ly/${id}`,
-    huyDonDaiLy: (id: number) => `${API_BASE_URLS.sieuthi}/api/don-hang-sieu-thi/huy-don-dai-ly/${id}`
+    chuaXacNhanDaiLy: (maDaiLy: number) => `${API_BASE_URLS.daily}/api/don-hang-sieu-thi/chua-xac-nhan-dai-ly/${maDaiLy}`,
+    hoanDonDaiLy: (maDaiLy: number) => `${API_BASE_URLS.daily}/api/don-hang-sieu-thi/hoan-don-dai-ly/${maDaiLy}`,
+    xacNhanDaiLy: (id: number) => `${API_BASE_URLS.daily}/api/don-hang-sieu-thi/xac-nhan-dai-ly/${id}`,
+    xuLyHoanDonDaiLy: (id: number) => `${API_BASE_URLS.daily}/api/don-hang-sieu-thi/xu-ly-hoan-don-dai-ly/${id}`,
+    huyDonDaiLy: (id: number) => `${API_BASE_URLS.daily}/api/don-hang-sieu-thi/huy-don-dai-ly/${id}`
   },
 
   // Ton Kho
