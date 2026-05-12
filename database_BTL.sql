@@ -199,7 +199,7 @@ CREATE TABLE ChiTietDonHang (
 );
 PRINT '✓ Đã tạo bảng ChiTietDonHang';
 
--- 15. KIEM DINH DON HANG (MỚI - Kiểm định đơn hàng từ nông dân)
+-- 15. KIEM DINH DON HANG (Kiểm định đơn hàng từ nông dân)
 CREATE TABLE KiemDinhDonHang (
     MaKiemDinh INT IDENTITY(1,1) PRIMARY KEY,
     MaDonHang INT NOT NULL,
@@ -213,28 +213,9 @@ CREATE TABLE KiemDinhDonHang (
     
     -- Thông tin kho (nếu đạt)
     MaKho INT NULL,
-    
-    -- Chi tiết kiểm định
-    ChatLuong NVARCHAR(50), -- tot, kha, trung_binh, kem
-    DoAn DECIMAL(5,2), -- % độ ẩm
-    TapChat DECIMAL(5,2), -- % tạp chất
-    MauSac NVARCHAR(50),
-    MuiVi NVARCHAR(100),
-    
     -- Ghi chú và biên bản
     GhiChu NVARCHAR(500),
-    BienBan NVARCHAR(MAX),
-    
-    -- Hình ảnh kiểm định (JSON array)
-    HinhAnh NVARCHAR(MAX),
-    
-    -- Chữ ký số
-    ChuKySo NVARCHAR(255),
-    
-    -- Audit
-    CreatedAt DATETIME DEFAULT GETDATE(),
-    UpdatedAt DATETIME DEFAULT GETDATE(),
-    
+
     -- Foreign Keys
     CONSTRAINT FK_KiemDinhDonHang_DonHang FOREIGN KEY (MaDonHang) 
         REFERENCES DonHangDaiLy(MaDonHang),
@@ -255,16 +236,57 @@ CREATE INDEX IX_KiemDinhDonHang_NgayKiemDinh ON KiemDinhDonHang(NgayKiemDinh);
 CREATE INDEX IX_KiemDinhDonHang_KetQua ON KiemDinhDonHang(KetQua);
 PRINT '✓ Đã tạo indexes cho KiemDinhDonHang';
 
+-- 16. KIEM DINH DON HANG SIEU THI (Kiểm định đơn hàng từ siêu thị)
+CREATE TABLE KiemDinhDonHangSieuThi (
+    MaKiemDinh INT IDENTITY(1,1) PRIMARY KEY,
+    MaDonHang INT NOT NULL,
+    MaSieuThi INT NULL,
+    
+    -- Thông tin kiểm định
+    NgayKiemDinh DATETIME NOT NULL DEFAULT GETDATE(),
+    NguoiKiemDinh NVARCHAR(100),
+    KetQua NVARCHAR(20) NOT NULL CHECK (KetQua IN (N'dat', N'khong_dat')),
+    
+    -- Thông tin kho (nếu đạt)
+    MaKho INT NULL,
+    -- Ghi chú và biên bản
+    GhiChu NVARCHAR(500),
+
+    -- Foreign Keys
+    CONSTRAINT FK_KiemDinhDonHangSieuThi_DonHang FOREIGN KEY (MaDonHang) 
+        REFERENCES DonHangSieuThi(MaDonHang),
+    CONSTRAINT FK_KiemDinhDonHangSieuThi_SieuThi FOREIGN KEY (MaSieuThi) 
+        REFERENCES SieuThi(MaSieuThi),
+    CONSTRAINT FK_KiemDinhDonHangSieuThi_Kho FOREIGN KEY (MaKho) 
+        REFERENCES Kho(MaKho)
+);
+PRINT '✓ Đã tạo bảng KiemDinhDonHangSieuThi';
+
+-- Tạo indexes cho KiemDinhDonHangSieuThi
+CREATE INDEX IX_KiemDinhDonHangSieuThi_MaDonHang ON KiemDinhDonHangSieuThi(MaDonHang);
+CREATE INDEX IX_KiemDinhDonHangSieuThi_MaSieuThi ON KiemDinhDonHangSieuThi(MaSieuThi);
+CREATE INDEX IX_KiemDinhDonHangSieuThi_NgayKiemDinh ON KiemDinhDonHangSieuThi(NgayKiemDinh);
+CREATE INDEX IX_KiemDinhDonHangSieuThi_KetQua ON KiemDinhDonHangSieuThi(KetQua);
+PRINT '✓ Đã tạo indexes cho KiemDinhDonHangSieuThi';
+
 PRINT '';
 PRINT '========================================';
 PRINT 'HOÀN THÀNH TẠO DATABASE';
 PRINT '========================================';
 PRINT '';
 PRINT 'ĐÃ TẠO:';
-PRINT '- 15 bảng (bao gồm KiemDinhDonHang)';
-PRINT '- 5 indexes cho KiemDinhDonHang';
+PRINT '- 16 bảng (bao gồm KiemDinhDonHang và KiemDinhDonHangSieuThi)';
+PRINT '- 9 indexes cho các bảng kiểm định';
 PRINT '';
-PRINT 'TIẾP THEO: Chạy file sp_BTL_FULL.sql để tạo stored procedures';
+PRINT 'CẤU TRÚC:';
+PRINT '  • TaiKhoan (Authentication)';
+PRINT '  • Admin, NongDan, DaiLy, SieuThi (Users)';
+PRINT '  • TrangTrai, SanPham, LoNongSan (Products)';
+PRINT '  • Kho, TonKho (Inventory)';
+PRINT '  • DonHang, DonHangDaiLy, DonHangSieuThi, ChiTietDonHang (Orders)';
+PRINT '  • KiemDinhDonHang, KiemDinhDonHangSieuThi (Inspection)';
+PRINT '';
+PRINT 'TIẾP THEO: Chạy file sp_BTL.sql để tạo stored procedures';
 PRINT '';
 PRINT '========================================';
 GO

@@ -1152,49 +1152,6 @@ BEGIN
 END;
 GO
 
--- SP CONFIRM ORDER AND UPDATE LOT STATUS
-CREATE OR ALTER PROCEDURE sp_DonHangDaiLy_XacNhan
-    @MaDonHang INT,
-    @MaKho INT
-AS
-BEGIN
-    BEGIN TRY
-        BEGIN TRANSACTION;
-        
-        -- Update order status in DonHang table
-        UPDATE DonHang
-        SET TrangThai = 'da_xac_nhan'
-        WHERE MaDonHang = @MaDonHang;
-        
-        -- Update warehouse in DonHangDaiLy table
-        UPDATE DonHangDaiLy
-        SET MaKho = @MaKho
-        WHERE MaDonHang = @MaDonHang;
-        
-        -- Update lot status to 'cho_kiem_dinh' for all lots in this order
-        UPDATE LoNongSan
-        SET TrangThai = 'cho_kiem_dinh'
-        WHERE MaLo IN (
-            SELECT MaLo 
-            FROM ChiTietDonHang 
-            WHERE MaDonHang = @MaDonHang
-        );
-        
-        COMMIT TRANSACTION;
-        SELECT 'SUCCESS' AS Status, 'Xác nhận đơn hàng thành công' AS Message;
-    END TRY
-    BEGIN CATCH
-        IF @@TRANCOUNT > 0
-            ROLLBACK TRANSACTION;
-        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
-    END CATCH
-END;
-GO
-
-
-
-
-
 -- =====================================================
 -- STORED PROCEDURES FOR ADMIN TABLE
 -- =====================================================
@@ -3109,15 +3066,7 @@ CREATE OR ALTER PROCEDURE sp_KiemDinhDonHang_Create
     @NguoiKiemDinh NVARCHAR(100) = NULL,
     @KetQua NVARCHAR(20),
     @MaKho INT = NULL,
-    @ChatLuong NVARCHAR(50) = NULL,
-    @DoAn DECIMAL(5,2) = NULL,
-    @TapChat DECIMAL(5,2) = NULL,
-    @MauSac NVARCHAR(50) = NULL,
-    @MuiVi NVARCHAR(100) = NULL,
-    @GhiChu NVARCHAR(500) = NULL,
-    @BienBan NVARCHAR(MAX) = NULL,
-    @HinhAnh NVARCHAR(MAX) = NULL,
-    @ChuKySo NVARCHAR(255) = NULL
+    @GhiChu NVARCHAR(500) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -3148,15 +3097,11 @@ BEGIN
         -- Tạo phiếu kiểm định
         INSERT INTO KiemDinhDonHang (
             MaDonHang, MaDaiLy, MaNongDan,
-            NguoiKiemDinh, KetQua, MaKho,
-            ChatLuong, DoAn, TapChat, MauSac, MuiVi,
-            GhiChu, BienBan, HinhAnh, ChuKySo
+            NguoiKiemDinh, KetQua, MaKho, GhiChu
         )
         VALUES (
             @MaDonHang, @MaDaiLy, @MaNongDan,
-            @NguoiKiemDinh, @KetQua, @MaKho,
-            @ChatLuong, @DoAn, @TapChat, @MauSac, @MuiVi,
-            @GhiChu, @BienBan, @HinhAnh, @ChuKySo
+            @NguoiKiemDinh, @KetQua, @MaKho, @GhiChu
         );
         
         DECLARE @MaKiemDinh INT = SCOPE_IDENTITY();
@@ -3181,15 +3126,7 @@ GO
 CREATE OR ALTER PROCEDURE sp_KiemDinhDonHang_Update
     @MaKiemDinh INT,
     @NguoiKiemDinh NVARCHAR(100) = NULL,
-    @ChatLuong NVARCHAR(50) = NULL,
-    @DoAn DECIMAL(5,2) = NULL,
-    @TapChat DECIMAL(5,2) = NULL,
-    @MauSac NVARCHAR(50) = NULL,
-    @MuiVi NVARCHAR(100) = NULL,
-    @GhiChu NVARCHAR(500) = NULL,
-    @BienBan NVARCHAR(MAX) = NULL,
-    @HinhAnh NVARCHAR(MAX) = NULL,
-    @ChuKySo NVARCHAR(255) = NULL
+    @GhiChu NVARCHAR(500) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -3204,16 +3141,7 @@ BEGIN
         UPDATE KiemDinhDonHang
         SET 
             NguoiKiemDinh = ISNULL(@NguoiKiemDinh, NguoiKiemDinh),
-            ChatLuong = ISNULL(@ChatLuong, ChatLuong),
-            DoAn = ISNULL(@DoAn, DoAn),
-            TapChat = ISNULL(@TapChat, TapChat),
-            MauSac = ISNULL(@MauSac, MauSac),
-            MuiVi = ISNULL(@MuiVi, MuiVi),
-            GhiChu = ISNULL(@GhiChu, GhiChu),
-            BienBan = ISNULL(@BienBan, BienBan),
-            HinhAnh = ISNULL(@HinhAnh, HinhAnh),
-            ChuKySo = ISNULL(@ChuKySo, ChuKySo),
-            UpdatedAt = GETDATE()
+            GhiChu = ISNULL(@GhiChu, GhiChu)
         WHERE MaKiemDinh = @MaKiemDinh;
         
         -- Trả về phiếu kiểm định đã cập nhật
@@ -3321,16 +3249,73 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
         
-        -- Kiểm tra đơn hàng tồn tại và thuộc đại lý này
-        IF NOT EXISTS (
-            SELECT 1 FROM DonHangDaiLy 
-            WHERE MaDonHang = @MaDonHang AND MaDaiLy = @MaDaiLy
-        )
+        -- Kiểm tra đơn hàng tồn tại
+        IF NOT EXISTS (SELECT 1 FROM DonHang WHERE MaDonHang = @MaDonHang)
         BEGIN
             ROLLBACK TRANSACTION;
-            RAISERROR(N'Đơn hàng không tồn tại hoặc không thuộc đại lý này', 16, 1);
+            RAISERROR(N'Đơn hàng không tồn tại', 16, 1);
             RETURN;
         END
+        
+        -- Lấy thông tin đại lý để ghi nhận người kiểm định
+        DECLARE @TenDaiLy NVARCHAR(100);
+        SELECT @TenDaiLy = TenDaiLy FROM DaiLy WHERE MaDaiLy = @MaDaiLy;
+        
+        -- Lấy MaNongDan từ DonHangDaiLy
+        DECLARE @MaNongDan INT;
+        SELECT @MaNongDan = MaNongDan FROM DonHangDaiLy WHERE MaDonHang = @MaDonHang;
+        
+        -- Kiểm tra hoặc tạo record trong DonHangDaiLy nếu chưa có
+        IF NOT EXISTS (SELECT 1 FROM DonHangDaiLy WHERE MaDonHang = @MaDonHang)
+        BEGIN
+            -- Nếu không tìm thấy, insert record mới
+            IF @MaNongDan IS NULL
+            BEGIN
+                SET @MaNongDan = 1; -- Default, có thể cần điều chỉnh
+            END
+            
+            INSERT INTO DonHangDaiLy (MaDonHang, MaDaiLy, MaNongDan)
+            VALUES (@MaDonHang, @MaDaiLy, @MaNongDan);
+        END
+        ELSE
+        BEGIN
+            -- Cập nhật MaDaiLy nếu record đã tồn tại
+            UPDATE DonHangDaiLy
+            SET MaDaiLy = @MaDaiLy
+            WHERE MaDonHang = @MaDonHang;
+        END
+        
+        -- ===== LƯU BẢN GHI KIỂM ĐỊNH =====
+        DECLARE @KetQuaText NVARCHAR(20);
+        SET @KetQuaText = CASE WHEN @KetQuaKiemDinh = 1 THEN N'dat' ELSE N'khong_dat' END;
+        
+        DECLARE @GhiChu NVARCHAR(500);
+        SET @GhiChu = CASE 
+            WHEN @KetQuaKiemDinh = 1 THEN N'Kiểm định đạt, đã nhập kho'
+            ELSE N'Kiểm định không đạt, hoàn trả về nông dân'
+        END;
+        
+        -- Insert bản ghi kiểm định
+        INSERT INTO KiemDinhDonHang (
+            MaDonHang,
+            MaDaiLy,
+            MaNongDan,
+            NgayKiemDinh,
+            NguoiKiemDinh,
+            KetQua,
+            MaKho,
+            GhiChu
+        )
+        VALUES (
+            @MaDonHang,
+            @MaDaiLy,
+            @MaNongDan,
+            GETDATE(),
+            @TenDaiLy,
+            @KetQuaText,
+            CASE WHEN @KetQuaKiemDinh = 1 THEN @MaKho ELSE NULL END,
+            @GhiChu
+        );
         
         IF @KetQuaKiemDinh = 1
         BEGIN
@@ -3533,45 +3518,36 @@ GO
 PRINT '✓ Đã tạo sp_NongDan_GetDonHangHoanDon';
 GO
 
--- 6. Nông dân xác nhận đơn hàng (chuyển sang chờ kiểm duyệt)
+-- 6. Nông dân xác nhận đơn hàng (CHỈ ĐỔI TRẠNG THÁI)
+-- KHÔNG CẦN STORED PROCEDURE - Backend sẽ gọi trực tiếp UPDATE
+-- Giữ lại để tương thích với code cũ
 CREATE OR ALTER PROCEDURE sp_NongDan_XacNhanDonHang
     @MaDonHang INT,
     @MaNongDan INT
 AS
 BEGIN
     SET NOCOUNT ON;
-    BEGIN TRY
-        BEGIN TRANSACTION;
-        
-        -- Kiểm tra đơn hàng tồn tại và thuộc nông dân này
-        IF NOT EXISTS (
-            SELECT 1 
-            FROM DonHangDaiLy 
-            WHERE MaDonHang = @MaDonHang AND MaNongDan = @MaNongDan
-        )
-        BEGIN
-            ROLLBACK TRANSACTION;
-            RAISERROR(N'Đơn hàng không tồn tại hoặc không thuộc nông dân này', 16, 1);
-            RETURN;
-        END
-        
-        -- Cập nhật trạng thái đơn hàng
-        UPDATE DonHang
-        SET TrangThai = N'cho_kiem_duyet'
-        WHERE MaDonHang = @MaDonHang;
-        
-        COMMIT TRANSACTION;
-        SELECT 1 AS Success, N'Xác nhận đơn hàng thành công' AS Message;
-        
-    END TRY
-    BEGIN CATCH
-        IF @@TRANCOUNT > 0
-            ROLLBACK TRANSACTION;
-        THROW;
-    END CATCH
+    UPDATE DonHang SET TrangThai = N'cho_kiem_duyet' WHERE MaDonHang = @MaDonHang;
+    SELECT 1 AS Success, N'Xác nhận thành công' AS Message;
 END
 GO
-PRINT '✓ Đã tạo sp_NongDan_XacNhanDonHang';
+PRINT '✓ Đã tạo sp_NongDan_XacNhanDonHang'; 
+GO
+
+-- 6b. Nông dân hủy đơn hàng (CHỈ ĐỔI TRẠNG THÁI)
+-- KHÔNG CẦN STORED PROCEDURE - Backend sẽ gọi trực tiếp UPDATE
+-- Giữ lại để tương thích với code cũ
+CREATE OR ALTER PROCEDURE sp_NongDan_HuyDonHang
+    @MaDonHang INT,
+    @MaNongDan INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE DonHang SET TrangThai = N'da_huy' WHERE MaDonHang = @MaDonHang;
+    SELECT 1 AS Success, N'Hủy thành công' AS Message;
+END
+GO
+PRINT '✓ Đã tạo sp_NongDan_HuyDonHang';
 GO
 
 -- 7. Cập nhật trạng thái đơn hàng
@@ -3654,4 +3630,469 @@ PRINT '';
 PRINT '========================================';
 PRINT 'TẤT CẢ STORED PROCEDURES ĐÃ HOÀN THÀNH';
 PRINT '========================================';
+GO
+
+
+-- ============================================================================
+-- STORED PROCEDURES FOR SUPERMARKET-DISTRIBUTOR ORDER FLOW
+-- Luồng xử lý đơn hàng Siêu Thị ↔ Đại Lý (giống Nông Dân ↔ Đại Lý)
+-- ============================================================================
+
+PRINT '========================================';
+PRINT 'TẠO STORED PROCEDURES CHO LUỒNG SIÊU THỊ - ĐẠI LÝ';
+PRINT '========================================';
+PRINT '';
+GO
+
+-- ============================================================================
+-- 1. sp_DaiLy_GetDonHangChuaXacNhan_SieuThi
+-- Lấy danh sách đơn hàng từ siêu thị chưa xác nhận
+-- ============================================================================
+CREATE OR ALTER PROCEDURE sp_DaiLy_GetDonHangChuaXacNhan_SieuThi
+    @MaDaiLy INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    SELECT 
+        DH.MaDonHang,
+        DH.NgayDat,
+        DH.TrangThai,
+        DH.TongSoLuong,
+        DH.TongGiaTri,
+        DH.GhiChu,
+        DHST.MaSieuThi,
+        ST.TenSieuThi,
+        ST.DiaChi AS DiaChiSieuThi,
+        ST.SoDienThoai AS SoDienThoaiSieuThi
+    FROM DonHang DH
+    INNER JOIN DonHangSieuThi DHST ON DH.MaDonHang = DHST.MaDonHang
+    INNER JOIN SieuThi ST ON DHST.MaSieuThi = ST.MaSieuThi
+    WHERE DHST.MaDaiLy = @MaDaiLy
+        AND DH.TrangThai = N'chua_nhan'
+    ORDER BY DH.NgayDat DESC;
+END;
+GO
+PRINT '✓ Đã tạo sp_DaiLy_GetDonHangChuaXacNhan_SieuThi';
+GO
+
+-- ============================================================================
+-- 2. sp_DaiLy_XacNhanDonHang_SieuThi
+-- Xác nhận đơn hàng từ siêu thị (trừ tồn kho, chuyển sang chờ kiểm định)
+-- ============================================================================
+CREATE OR ALTER PROCEDURE sp_DaiLy_XacNhanDonHang_SieuThi
+    @MaDonHang INT,
+    @MaDaiLy INT,
+    @MaKho INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        -- 1. Kiểm tra đơn hàng tồn tại và thuộc đại lý
+        IF NOT EXISTS (
+            SELECT 1 FROM DonHangSieuThi 
+            WHERE MaDonHang = @MaDonHang AND MaDaiLy = @MaDaiLy
+        )
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 'ERROR' AS Status, N'Không tìm thấy đơn hàng hoặc đơn hàng không thuộc đại lý này' AS Message;
+            RETURN;
+        END
+        
+        -- 2. Kiểm tra trạng thái đơn hàng
+        DECLARE @TrangThai NVARCHAR(30);
+        SELECT @TrangThai = TrangThai FROM DonHang WHERE MaDonHang = @MaDonHang;
+        
+        IF @TrangThai != N'chua_nhan'
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 'ERROR' AS Status, N'Đơn hàng không ở trạng thái chờ xác nhận' AS Message;
+            RETURN;
+        END
+        
+        -- 3. Kiểm tra tồn kho đủ không
+        DECLARE @MaLo INT, @SoLuongYeuCau DECIMAL(18,2);
+        DECLARE @SoLuongTonKho DECIMAL(18,2);
+        
+        DECLARE cur CURSOR FOR
+        SELECT MaLo, SoLuong FROM ChiTietDonHang WHERE MaDonHang = @MaDonHang;
+        
+        OPEN cur;
+        FETCH NEXT FROM cur INTO @MaLo, @SoLuongYeuCau;
+        
+        WHILE @@FETCH_STATUS = 0
+        BEGIN
+            -- Kiểm tra tồn kho
+            SELECT @SoLuongTonKho = ISNULL(SoLuong, 0)
+            FROM TonKho
+            WHERE MaKho = @MaKho AND MaLo = @MaLo;
+            
+            IF @SoLuongTonKho < @SoLuongYeuCau
+            BEGIN
+                CLOSE cur;
+                DEALLOCATE cur;
+                ROLLBACK TRANSACTION;
+                SELECT 'ERROR' AS Status, N'Tồn kho không đủ cho lô ' + CAST(@MaLo AS NVARCHAR(10)) AS Message;
+                RETURN;
+            END
+            
+            FETCH NEXT FROM cur INTO @MaLo, @SoLuongYeuCau;
+        END
+        
+        CLOSE cur;
+        DEALLOCATE cur;
+        
+        -- 4. TRỪ số lượng trong TonKho
+        UPDATE TK
+        SET TK.SoLuong = TK.SoLuong - CTDH.SoLuong,
+            TK.CapNhatCuoi = GETDATE()
+        FROM TonKho TK
+        INNER JOIN ChiTietDonHang CTDH ON TK.MaLo = CTDH.MaLo
+        WHERE CTDH.MaDonHang = @MaDonHang AND TK.MaKho = @MaKho;
+        
+        -- 5. Cập nhật trạng thái đơn hàng
+        UPDATE DonHang
+        SET TrangThai = N'cho_kiem_duyet'
+        WHERE MaDonHang = @MaDonHang;
+        
+        COMMIT TRANSACTION;
+        SELECT 'SUCCESS' AS Status, N'Đã xác nhận đơn hàng. Chuyển sang chờ siêu thị kiểm định.' AS Message;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+PRINT '✓ Đã tạo sp_DaiLy_XacNhanDonHang_SieuThi';
+GO
+
+-- ============================================================================
+-- 3. sp_DaiLy_GetDonHangHoanDon_SieuThi
+-- Lấy danh sách đơn hàng hoàn trả từ siêu thị
+-- ============================================================================
+CREATE OR ALTER PROCEDURE sp_DaiLy_GetDonHangHoanDon_SieuThi
+    @MaDaiLy INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    SELECT 
+        DH.MaDonHang,
+        DH.NgayDat,
+        DH.TrangThai,
+        DH.TongSoLuong,
+        DH.TongGiaTri,
+        DH.GhiChu,
+        DHST.MaSieuThi,
+        ST.TenSieuThi,
+        ST.DiaChi AS DiaChiSieuThi,
+        ST.SoDienThoai AS SoDienThoaiSieuThi
+    FROM DonHang DH
+    INNER JOIN DonHangSieuThi DHST ON DH.MaDonHang = DHST.MaDonHang
+    INNER JOIN SieuThi ST ON DHST.MaSieuThi = ST.MaSieuThi
+    WHERE DHST.MaDaiLy = @MaDaiLy
+        AND DH.TrangThai = N'hoan_don'
+    ORDER BY DH.NgayDat DESC;
+END;
+GO
+PRINT '✓ Đã tạo sp_DaiLy_GetDonHangHoanDon_SieuThi';
+GO
+
+-- ============================================================================
+-- 4. sp_DaiLy_XuLyHoanDon_SieuThi
+-- Xử lý đơn hoàn trả (gửi lại kiểm định, cộng lại tồn kho)
+-- ============================================================================
+CREATE OR ALTER PROCEDURE sp_DaiLy_XuLyHoanDon_SieuThi
+    @MaDonHang INT,
+    @MaDaiLy INT,
+    @MaKho INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        -- 1. Kiểm tra đơn hàng tồn tại và trạng thái
+        IF NOT EXISTS (
+            SELECT 1 FROM DonHangSieuThi 
+            WHERE MaDonHang = @MaDonHang AND MaDaiLy = @MaDaiLy
+        )
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 'ERROR' AS Status, N'Không tìm thấy đơn hàng' AS Message;
+            RETURN;
+        END
+        
+        DECLARE @TrangThai NVARCHAR(30);
+        SELECT @TrangThai = TrangThai FROM DonHang WHERE MaDonHang = @MaDonHang;
+        
+        IF @TrangThai != N'hoan_don'
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 'ERROR' AS Status, N'Đơn hàng không ở trạng thái hoàn đơn' AS Message;
+            RETURN;
+        END
+        
+        -- 2. CỘNG lại số lượng vào TonKho
+        UPDATE TK
+        SET TK.SoLuong = TK.SoLuong + CTDH.SoLuong,
+            TK.CapNhatCuoi = GETDATE()
+        FROM TonKho TK
+        INNER JOIN ChiTietDonHang CTDH ON TK.MaLo = CTDH.MaLo
+        WHERE CTDH.MaDonHang = @MaDonHang AND TK.MaKho = @MaKho;
+        
+        -- Nếu lô chưa có trong kho, thêm mới
+        INSERT INTO TonKho (MaKho, MaLo, SoLuong, CapNhatCuoi)
+        SELECT @MaKho, CTDH.MaLo, CTDH.SoLuong, GETDATE()
+        FROM ChiTietDonHang CTDH
+        WHERE CTDH.MaDonHang = @MaDonHang
+            AND NOT EXISTS (
+                SELECT 1 FROM TonKho TK 
+                WHERE TK.MaKho = @MaKho AND TK.MaLo = CTDH.MaLo
+            );
+        
+        -- 3. Cập nhật trạng thái đơn hàng
+        UPDATE DonHang
+        SET TrangThai = N'cho_kiem_duyet'
+        WHERE MaDonHang = @MaDonHang;
+        
+        COMMIT TRANSACTION;
+        SELECT 'SUCCESS' AS Status, N'Đã gửi lại đơn hàng cho siêu thị kiểm định' AS Message;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+PRINT '✓ Đã tạo sp_DaiLy_XuLyHoanDon_SieuThi';
+GO
+
+-- ============================================================================
+-- 5. sp_DaiLy_HuyDonHang_SieuThi
+-- Hủy đơn hàng (không cộng lại số lượng nếu từ hoàn đơn)
+-- ============================================================================
+CREATE OR ALTER PROCEDURE sp_DaiLy_HuyDonHang_SieuThi
+    @MaDonHang INT,
+    @MaDaiLy INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        -- 1. Kiểm tra đơn hàng tồn tại
+        IF NOT EXISTS (
+            SELECT 1 FROM DonHangSieuThi 
+            WHERE MaDonHang = @MaDonHang AND MaDaiLy = @MaDaiLy
+        )
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 'ERROR' AS Status, N'Không tìm thấy đơn hàng' AS Message;
+            RETURN;
+        END
+        
+        DECLARE @TrangThai NVARCHAR(30);
+        SELECT @TrangThai = TrangThai FROM DonHang WHERE MaDonHang = @MaDonHang;
+        
+        -- 2. Nếu trạng thái = 'chua_nhan': KHÔNG cộng lại số lượng (chưa trừ)
+        -- 3. Nếu trạng thái = 'hoan_don': KHÔNG cộng lại (sản phẩm lỗi/hỏng)
+        
+        -- 4. Cập nhật trạng thái đơn hàng
+        UPDATE DonHang
+        SET TrangThai = N'da_huy'
+        WHERE MaDonHang = @MaDonHang;
+        
+        COMMIT TRANSACTION;
+        SELECT 'SUCCESS' AS Status, N'Đã hủy đơn hàng' AS Message;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+PRINT '✓ Đã tạo sp_DaiLy_HuyDonHang_SieuThi';
+GO
+
+-- ============================================================================
+-- 6. sp_SieuThi_GetDonHangChoKiemDinh
+-- Lấy danh sách đơn hàng chờ kiểm định
+-- ============================================================================
+CREATE OR ALTER PROCEDURE sp_SieuThi_GetDonHangChoKiemDinh
+    @MaSieuThi INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    SELECT 
+        DH.MaDonHang,
+        DH.NgayDat,
+        DH.TrangThai,
+        DH.TongSoLuong,
+        DH.TongGiaTri,
+        DH.GhiChu,
+        DHST.MaDaiLy,
+        DL.TenDaiLy,
+        DL.DiaChi AS DiaChiDaiLy,
+        DL.SoDienThoai AS SoDienThoaiDaiLy
+    FROM DonHang DH
+    INNER JOIN DonHangSieuThi DHST ON DH.MaDonHang = DHST.MaDonHang
+    INNER JOIN DaiLy DL ON DHST.MaDaiLy = DL.MaDaiLy
+    WHERE DHST.MaSieuThi = @MaSieuThi
+        AND DH.TrangThai = N'cho_kiem_duyet'
+    ORDER BY DH.NgayDat DESC;
+END;
+GO
+PRINT '✓ Đã tạo sp_SieuThi_GetDonHangChoKiemDinh';
+GO
+
+-- ============================================================================
+-- 7. sp_SieuThi_KiemDinhDonHang
+-- Kiểm định đơn hàng (đạt → nhập kho, không đạt → hoàn trả)
+-- ============================================================================
+CREATE OR ALTER PROCEDURE sp_SieuThi_KiemDinhDonHang
+    @MaDonHang INT,
+    @MaSieuThi INT,
+    @KetQua NVARCHAR(20), -- 'dat' hoặc 'khong_dat'
+    @MaKho INT = NULL, -- Bắt buộc nếu đạt
+    @GhiChu NVARCHAR(500) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        -- 1. Kiểm tra đơn hàng tồn tại và trạng thái
+        IF NOT EXISTS (
+            SELECT 1 FROM DonHangSieuThi 
+            WHERE MaDonHang = @MaDonHang AND MaSieuThi = @MaSieuThi
+        )
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 'ERROR' AS Status, N'Không tìm thấy đơn hàng' AS Message;
+            RETURN;
+        END
+        
+        DECLARE @TrangThai NVARCHAR(30);
+        DECLARE @MaDaiLy INT;
+        
+        SELECT @TrangThai = DH.TrangThai, @MaDaiLy = DHST.MaDaiLy
+        FROM DonHang DH
+        INNER JOIN DonHangSieuThi DHST ON DH.MaDonHang = DHST.MaDonHang
+        WHERE DH.MaDonHang = @MaDonHang;
+        
+        IF @TrangThai != N'cho_kiem_duyet'
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 'ERROR' AS Status, N'Đơn hàng không ở trạng thái chờ kiểm định' AS Message;
+            RETURN;
+        END
+        
+        -- 2. Xử lý theo kết quả kiểm định
+        IF @KetQua = N'dat'
+        BEGIN
+            -- Kiểm tra MaKho
+            IF @MaKho IS NULL
+            BEGIN
+                ROLLBACK TRANSACTION;
+                SELECT 'ERROR' AS Status, N'Vui lòng chọn kho để nhập hàng' AS Message;
+                RETURN;
+            END
+            
+            -- CỘNG số lượng vào TonKho của siêu thị
+            UPDATE TK
+            SET TK.SoLuong = TK.SoLuong + CTDH.SoLuong,
+                TK.CapNhatCuoi = GETDATE()
+            FROM TonKho TK
+            INNER JOIN ChiTietDonHang CTDH ON TK.MaLo = CTDH.MaLo
+            WHERE CTDH.MaDonHang = @MaDonHang AND TK.MaKho = @MaKho;
+            
+            -- Nếu lô chưa có trong kho, thêm mới
+            INSERT INTO TonKho (MaKho, MaLo, SoLuong, CapNhatCuoi)
+            SELECT @MaKho, CTDH.MaLo, CTDH.SoLuong, GETDATE()
+            FROM ChiTietDonHang CTDH
+            WHERE CTDH.MaDonHang = @MaDonHang
+                AND NOT EXISTS (
+                    SELECT 1 FROM TonKho TK 
+                    WHERE TK.MaKho = @MaKho AND TK.MaLo = CTDH.MaLo
+                );
+            
+            -- Cập nhật trạng thái đơn hàng
+            UPDATE DonHang
+            SET TrangThai = N'da_nhan',
+                NgayGiao = GETDATE()
+            WHERE MaDonHang = @MaDonHang;
+        END
+        ELSE IF @KetQua = N'khong_dat'
+        BEGIN
+            -- Cập nhật trạng thái đơn hàng
+            UPDATE DonHang
+            SET TrangThai = N'hoan_don',
+                GhiChu = @GhiChu
+            WHERE MaDonHang = @MaDonHang;
+        END
+        ELSE
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 'ERROR' AS Status, N'Kết quả kiểm định không hợp lệ' AS Message;
+            RETURN;
+        END
+        
+        -- 3. Lưu lịch sử kiểm định vào bảng KiemDinhDonHangSieuThi
+        -- (Cần tạo bảng này trước - xem file THEM_BANG_KIEM_DINH_SIEU_THI.sql)
+        -- Chỉ lưu MaSieuThi (người kiểm định), không cần MaDaiLy vì đã có trong DonHangSieuThi
+        IF EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[KiemDinhDonHangSieuThi]') AND type in (N'U'))
+        BEGIN
+            INSERT INTO KiemDinhDonHangSieuThi (
+                MaDonHang, MaSieuThi, NgayKiemDinh, 
+                KetQua, MaKho, GhiChu
+            )
+            VALUES (
+                @MaDonHang, @MaSieuThi, GETDATE(),
+                @KetQua, @MaKho, @GhiChu
+            );
+        END
+        
+        COMMIT TRANSACTION;
+        
+        IF @KetQua = N'dat'
+            SELECT 'SUCCESS' AS Status, N'Kiểm định đạt. Đã nhập kho siêu thị.' AS Message;
+        ELSE
+            SELECT 'SUCCESS' AS Status, N'Kiểm định không đạt. Đã hoàn trả cho đại lý.' AS Message;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+    END CATCH
+END;
+GO
+PRINT '✓ Đã tạo sp_SieuThi_KiemDinhDonHang';
+
+PRINT '';
+PRINT '========================================';
+PRINT 'HOÀN TẤT TẠO STORED PROCEDURES';
+PRINT '========================================';
+PRINT '';
+PRINT 'ĐÃ TẠO 7 STORED PROCEDURES:';
+PRINT '1. sp_DaiLy_GetDonHangChuaXacNhan_SieuThi - Lấy đơn chưa xác nhận';
+PRINT '2. sp_DaiLy_XacNhanDonHang_SieuThi - Xác nhận đơn hàng';
+PRINT '3. sp_DaiLy_GetDonHangHoanDon_SieuThi - Lấy đơn hoàn trả';
+PRINT '4. sp_DaiLy_XuLyHoanDon_SieuThi - Xử lý hoàn đơn (gửi lại)';
+PRINT '5. sp_DaiLy_HuyDonHang_SieuThi - Hủy đơn hàng';
+PRINT '6. sp_SieuThi_GetDonHangChoKiemDinh - Lấy đơn chờ kiểm định';
+PRINT '7. sp_SieuThi_KiemDinhDonHang - Kiểm định đơn hàng';
+PRINT '';
+PRINT 'TIẾP THEO:';
+PRINT '1. Chạy file THEM_BANG_KIEM_DINH_SIEU_THI.sql để tạo bảng kiểm định';
+PRINT '2. Thêm API endpoints vào DaiLyService và SieuThiService';
+PRINT '3. Cập nhật frontend';
+PRINT '';
 GO
