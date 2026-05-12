@@ -77,14 +77,33 @@ function WarehouseManagement() {
     return allInventory.filter(item => item.maKho === maKho);
   };
 
-  const toggleWarehouse = (maKho: number) => {
+  const toggleWarehouse = async (maKho: number) => {
     const newExpanded = new Set(expandedWarehouses);
     if (newExpanded.has(maKho)) {
       newExpanded.delete(maKho);
     } else {
       newExpanded.add(maKho);
+      // Load inventory for this warehouse if not already loaded
+      await loadWarehouseInventory(maKho);
     }
     setExpandedWarehouses(newExpanded);
+  };
+
+  const loadWarehouseInventory = async (maKho: number) => {
+    try {
+      const response = await axios.get(`https://localhost:7087/api/KhoHang/${maKho}`);
+      if (response.data && response.data.tonKho) {
+        // Update inventory for this warehouse
+        setAllInventory(prev => {
+          // Remove old inventory for this warehouse
+          const filtered = prev.filter(item => item.maKho !== maKho);
+          // Add new inventory
+          return [...filtered, ...response.data.tonKho];
+        });
+      }
+    } catch (error) {
+      console.error('Error loading warehouse inventory:', error);
+    }
   };
 
   const handleOpenModal = (warehouse: any = null) => {
@@ -243,16 +262,12 @@ function WarehouseManagement() {
                       </td>
                       <td>{warehouse.ngayTao ? new Date(warehouse.ngayTao).toLocaleDateString('vi-VN') : '-'}</td>
                       <td>
-                        {inventory.length > 0 ? (
-                          <button 
-                            className="btn-view-inventory"
-                            onClick={() => toggleWarehouse(warehouse.maKho)}
-                          >
-                            {isExpanded ? '▼ Ẩn' : '▶ Xem'} ({inventory.length} lô)
-                          </button>
-                        ) : (
-                          <span style={{ color: '#9ca3af' }}>Trống</span>
-                        )}
+                        <button 
+                          className="btn-view-inventory"
+                          onClick={() => toggleWarehouse(warehouse.maKho)}
+                        >
+                          {isExpanded ? '▼ Ẩn' : '▶ Xem'} tồn kho
+                        </button>
                       </td>
                       <td>
                         <div className="action-buttons">
@@ -273,38 +288,44 @@ function WarehouseManagement() {
                         </div>
                       </td>
                     </tr>
-                    {isExpanded && inventory.length > 0 && (
+                    {isExpanded && (
                       <tr className="inventory-row">
                         <td colSpan={7}>
                           <div className="inventory-details">
                             <h4>📦 Tồn kho</h4>
-                            <table className="inventory-table">
-                              <thead>
-                                <tr>
-                                  <th>Mã lô</th>
-                                  <th>Sản phẩm</th>
-                                  <th>Số lượng</th>
-                                  <th>Đơn vị</th>
-                                  <th>Cập nhật cuối</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {inventory.map((item: any) => (
-                                  <tr key={item.maLo}>
-                                    <td>#{item.maLo}</td>
-                                    <td>{item.tenSanPham || 'N/A'}</td>
-                                    <td><strong style={{ color: '#8b5cf6' }}>{item.soLuong}</strong></td>
-                                    <td>{item.donViTinh || 'kg'}</td>
-                                    <td>
-                                      {item.capNhatCuoi 
-                                        ? new Date(item.capNhatCuoi).toLocaleString('vi-VN')
-                                        : '-'
-                                      }
-                                    </td>
+                            {inventory.length === 0 ? (
+                              <p style={{ textAlign: 'center', color: '#9ca3af', padding: '20px' }}>
+                                Kho này chưa có hàng
+                              </p>
+                            ) : (
+                              <table className="inventory-table">
+                                <thead>
+                                  <tr>
+                                    <th>Mã lô</th>
+                                    <th>Sản phẩm</th>
+                                    <th>Số lượng</th>
+                                    <th>Đơn vị</th>
+                                    <th>Cập nhật cuối</th>
                                   </tr>
-                                ))}
-                              </tbody>
-                            </table>
+                                </thead>
+                                <tbody>
+                                  {inventory.map((item: any) => (
+                                    <tr key={item.maLo}>
+                                      <td>#{item.maLo}</td>
+                                      <td>{item.tenSanPham || 'N/A'}</td>
+                                      <td><strong style={{ color: '#8b5cf6' }}>{item.soLuong}</strong></td>
+                                      <td>{item.donViTinh || 'kg'}</td>
+                                      <td>
+                                        {item.capNhatCuoi 
+                                          ? new Date(item.capNhatCuoi).toLocaleString('vi-VN')
+                                          : '-'
+                                        }
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            )}
                           </div>
                         </td>
                       </tr>

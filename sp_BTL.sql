@@ -4096,3 +4096,49 @@ PRINT '2. Thêm API endpoints vào DaiLyService và SieuThiService';
 PRINT '3. Cập nhật frontend';
 PRINT '';
 GO
+
+
+-- ============================================================================
+-- STORED PROCEDURE: sp_GetKhoHangById
+-- Lấy thông tin kho và tồn kho theo mã kho
+-- ============================================================================
+CREATE OR ALTER PROCEDURE sp_GetKhoHangById
+    @MaKho INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    -- Trả về thông tin kho
+    SELECT 
+        K.MaKho,
+        K.LoaiKho,
+        K.MaDaiLy,
+        K.MaSieuThi,
+        K.TenKho,
+        K.DiaChi,
+        K.TrangThai,
+        K.NgayTao
+    FROM Kho K
+    WHERE K.MaKho = @MaKho;
+    
+    -- Trả về danh sách tồn kho (chỉ những lô có số lượng > 0)
+    SELECT 
+        TK.MaKho,
+        TK.MaLo,
+        TK.SoLuong,
+        TK.CapNhatCuoi,
+        L.TenSanPham,
+        L.DonViTinh,
+        L.NgaySanXuat,
+        L.HanSuDung,
+        L.TrangThai AS TrangThaiLo
+    FROM TonKho TK
+    INNER JOIN LoNongSan L ON TK.MaLo = L.MaLo
+    WHERE TK.MaKho = @MaKho 
+      AND TK.SoLuong > 0
+    ORDER BY TK.CapNhatCuoi DESC;
+END;
+GO
+
+PRINT '✓ Đã tạo sp_GetKhoHangById - Lấy thông tin kho và tồn kho';
+GO
