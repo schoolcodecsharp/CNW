@@ -169,18 +169,18 @@ export const dailyService = {
     return response.data;
   },
 
-  xacNhanDonHangSieuThi: async (maDonHang: number, maDaiLy: number) => {
+  xacNhanDonHangSieuThi: async (maDonHang: number, maDaiLy: number, maKho: number) => {
     const response = await axios.put(
       API_ENDPOINTS.donHangSieuThi.xacNhanDaiLy(maDonHang),
-      { maDaiLy }
+      { maDaiLy, maKho }
     );
     return response.data;
   },
 
-  xuLyHoanDonSieuThi: async (maDonHang: number, maDaiLy: number) => {
+  xuLyHoanDonSieuThi: async (maDaiLy: number, maKho: number, maDonHang: number) => {
     const response = await axios.put(
       API_ENDPOINTS.donHangSieuThi.xuLyHoanDonDaiLy(maDonHang),
-      { maDaiLy }
+      { maDaiLy, maKho }
     );
     return response.data;
   },
