@@ -170,6 +170,18 @@
           "Port": 7087
         }
       ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/don-hang-sieu-thi/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/api/don-hang-sieu-thi/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7002
+        }
+      ]
     }
   ]
 }
