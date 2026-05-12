@@ -742,8 +742,8 @@ namespace SieuThiService.Data
                     MaLo = tk.MaLo,
                     SoLuong = tk.SoLuong,
                     CapNhatCuoi = tk.CapNhatCuoi,
-                    TenSanPham = $"Sản phẩm lô {tk.MaLo}", // Tạm thời
-                    DonViTinh = "kg", // Tạm thời
+                    TenSanPham = tk.TenSanPham ?? $"Sản phẩm lô {tk.MaLo}",
+                    DonViTinh = tk.DonViTinh ?? "kg",
                     TrangThaiLo = tk.TrangThaiLo
                 }).ToList();
 

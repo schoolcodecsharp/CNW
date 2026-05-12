@@ -92,13 +92,19 @@ function WarehouseManagement() {
   const loadWarehouseInventory = async (maKho: number) => {
     try {
       const response = await axios.get(`https://localhost:7087/api/KhoHang/${maKho}`);
-      if (response.data && response.data.tonKho) {
+      console.log('Warehouse inventory response:', response.data);
+      
+      if (response.data && response.data.tonKhos) {
         // Update inventory for this warehouse
         setAllInventory(prev => {
           // Remove old inventory for this warehouse
           const filtered = prev.filter(item => item.maKho !== maKho);
-          // Add new inventory
-          return [...filtered, ...response.data.tonKho];
+          // Add new inventory with maKho
+          const newInventory = response.data.tonKhos.map((item: any) => ({
+            ...item,
+            maKho: maKho
+          }));
+          return [...filtered, ...newInventory];
         });
       }
     } catch (error) {

@@ -52,9 +52,14 @@ namespace SieuThiService.Models.DTOs
     // DTO cho stored procedure sp_GetKhoHangById (tồn kho)
     public class TonKhoDetail
     {
+        public int MaKho { get; set; }
         public int MaLo { get; set; }
         public decimal SoLuong { get; set; }
         public DateTime CapNhatCuoi { get; set; }
+        public string? TenSanPham { get; set; }
+        public string? DonViTinh { get; set; }
+        public DateTime? NgaySanXuat { get; set; }
+        public DateTime? HanSuDung { get; set; }
         public string? TrangThaiLo { get; set; }
     }
 
