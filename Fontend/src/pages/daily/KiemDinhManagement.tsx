@@ -3,8 +3,6 @@ import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
 import { dailyService } from '../../services/dailyService';
 import { useAuth } from '../../context/AuthContext';
-import TablePagination from '../../components/TablePagination';
-import usePagination from '../../hooks/usePagination';
 import '../../components/Common.css';
 
 interface DonHang {
@@ -27,23 +25,19 @@ interface Kho {
   diaChi: string;
 }
 
-interface KiemDinh {
-  maKiemDinh: number;
-  maLo: number;
-  nguoiKiemDinh: string;
-  maDaiLy?: number;
-  ngayKiemDinh: string;
-  ketQua: string;
-  ghiChu?: string;
-  soChungNhanLo: string;
-  tenSanPham: string;
-}
-
 const KiemDinhManagement = () => {
   const { user } = useAuth();
   const [maDaiLy, setMaDaiLy] = useState<number>(0);
   const [khoList, setKhoList] = useState<Kho[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  
+  // Toast notification
+  const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' | 'info' }>({
+    show: false,
+    message: '',
+    type: 'success'
+  });
   
   // Đơn hàng từ nông dân chờ kiểm định
   const [donHangNongDan, setDonHangNongDan] = useState<DonHang[]>([]);
@@ -52,19 +46,14 @@ const KiemDinhManagement = () => {
   const [donHangSieuThiMoi, setDonHangSieuThiMoi] = useState<DonHang[]>([]);
   const [donHangSieuThiHoan, setDonHangSieuThiHoan] = useState<DonHang[]>([]);
   
-  // Lịch sử kiểm định
-  const [kiemDinhList, setKiemDinhList] = useState<KiemDinh[]>([]);
-  
   // Modal state
   const [showKhoModal, setShowKhoModal] = useState(false);
   const [selectedDonHang, setSelectedDonHang] = useState<DonHang | null>(null);
   const [selectedKho, setSelectedKho] = useState<number>(0);
+  const [modalType, setModalType] = useState<'nongdan' | 'sieuthi'>('nongdan'); // Track modal purpose
   
   // Tab state
-  const [activeTab, setActiveTab] = useState<'nongdan' | 'sieuthi_moi' | 'sieuthi_hoan' | 'lichsu'>('nongdan');
-
-  const { currentPage, pageSize, paginatedData, handlePageChange } = 
-    usePagination({ data: kiemDinhList, initialPageSize: 10 });
+  const [activeTab, setActiveTab] = useState<'nongdan' | 'sieuthi_moi' | 'sieuthi_hoan'>('nongdan');
 
   useEffect(() => {
     initData();
@@ -72,42 +61,46 @@ const KiemDinhManagement = () => {
 
   const initData = async () => {
     try {
-      setLoading(true);
+      setInitialLoading(true);
       const dailyRes = await axios.get(API_ENDPOINTS.daiLy.getAll);
       const currentDaily = dailyRes.data.data?.find(
         (dl: any) => dl.maTaiKhoan === user?.maTaiKhoan
       );
-      if (!currentDaily) { setLoading(false); return; }
+      if (!currentDaily) { setInitialLoading(false); return; }
       
       setMaDaiLy(currentDaily.maDaiLy);
       await loadAllData(currentDaily.maDaiLy);
     } catch (error) {
       console.error('Error init:', error);
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
     }
   };
 
   const loadAllData = async (id: number) => {
     try {
-      const [khoRes, ndRes, stMoiRes, stHoanRes, kdRes] = await Promise.all([
+      const [khoRes, ndRes, stMoiRes, stHoanRes] = await Promise.all([
         axios.get(API_ENDPOINTS.kho.getByDaiLy(id)).catch(() => ({ data: { data: [] } })),
         axios.get(`${API_ENDPOINTS.daily.base}/api/don-hang-dai-ly/cho-kiem-dinh/${id}`).catch(() => ({ data: { data: [] } })),
         dailyService.getDonHangSieuThiChuaXacNhan(id).catch(() => ({ data: [] })),
-        dailyService.getDonHangSieuThiHoanDon(id).catch(() => ({ data: [] })),
-        axios.get(API_ENDPOINTS.kiemDinh.getAll).catch(() => ({ data: [] }))
+        dailyService.getDonHangSieuThiHoanDon(id).catch(() => ({ data: [] }))
       ]);
 
       setKhoList(khoRes.data.data || []);
       setDonHangNongDan(ndRes.data.data || []);
       setDonHangSieuThiMoi(stMoiRes.data || []);
       setDonHangSieuThiHoan(stHoanRes.data || []);
-      
-      const allKd = Array.isArray(kdRes.data) ? kdRes.data : [];
-      setKiemDinhList(allKd.filter((k: KiemDinh) => k.maDaiLy === id));
     } catch (error) {
       console.error('Error loading data:', error);
     }
+  };
+
+  // Helper function to show toast
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: 'success' });
+    }, 3000);
   };
 
   // === KIỂM ĐỊNH ĐẠT (Nông dân) ===
@@ -115,99 +108,256 @@ const KiemDinhManagement = () => {
     if (khoList.length === 0) { alert('⚠️ Chưa có kho! Tạo kho trước.'); return; }
     setSelectedDonHang(dh);
     setSelectedKho(khoList[0].maKho);
+    setModalType('nongdan');
     setShowKhoModal(true);
   };
 
   const confirmKiemDinhDat = async () => {
-    if (!selectedDonHang || !selectedKho) { alert('⚠️ Chọn kho!'); return; }
+    if (!selectedDonHang || !selectedKho) { 
+      showToast('Vui lòng chọn kho!', 'error');
+      return; 
+    }
+    
+    // Đóng modal ngay
+    setShowKhoModal(false);
+    
     try {
+      setLoading(true);
+      
       const res = await axios.put(
         `${API_ENDPOINTS.daily.base}/api/don-hang-dai-ly/kiem-dinh/${selectedDonHang.maDonHang}`,
         { maDaiLy: maDaiLy, maKho: selectedKho, ketQuaKiemDinh: true }
       );
-      alert(res.data.message || '✅ Kiểm định đạt! Đã nhập kho.');
-      setShowKhoModal(false);
+      
+      // Reload dữ liệu
+      await loadAllData(maDaiLy);
+      
+      // Reset selected
       setSelectedDonHang(null);
-      loadAllData(maDaiLy);
+      
+      // Hiển thị thông báo thành công
+      const message = res.data?.message || 'Kiểm định đạt, đã nhập kho thành công';
+      showToast(message, 'success');
+      
     } catch (error: any) {
-      alert('❌ Lỗi: ' + (error.response?.data?.message || error.message));
+      const errorMsg = error.response?.data?.message || error.message || 'Có lỗi xảy ra';
+      showToast(errorMsg, 'error');
+      console.error('Lỗi kiểm định:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   // === KIỂM ĐỊNH KHÔNG ĐẠT (Nông dân) ===
   const handleKiemDinhKhongDat = async (dh: DonHang) => {
     if (!confirm(`❌ Kiểm định KHÔNG ĐẠT?\n\nĐơn #${dh.maDonHang} sẽ hoàn về nông dân ${dh.tenNongDan}.`)) return;
+    
     try {
+      setLoading(true);
       const res = await axios.put(
         `${API_ENDPOINTS.daily.base}/api/don-hang-dai-ly/kiem-dinh/${dh.maDonHang}`,
         { maDaiLy: maDaiLy, maKho: 0, ketQuaKiemDinh: false }
       );
-      alert(res.data.message || '↩️ Đã hoàn đơn về nông dân!');
-      loadAllData(maDaiLy);
+      
+      // Reload dữ liệu
+      await loadAllData(maDaiLy);
+      
+      // Hiển thị thông báo
+      const message = res.data?.message || 'Kiểm định không đạt, đã hoàn đơn về nông dân';
+      showToast(message, 'success');
+      
     } catch (error: any) {
-      alert('❌ Lỗi: ' + (error.response?.data?.message || error.message));
+      const errorMsg = error.response?.data?.message || error.message || 'Có lỗi xảy ra';
+      showToast(errorMsg, 'error');
+      console.error('Lỗi kiểm định:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // === XÁC NHẬN ĐƠN TỪ SIÊU THỊ ===
-  const handleXacNhanSieuThi = async (maDonHang: number) => {
-    if (!confirm('✅ Xác nhận đơn hàng từ siêu thị?\n\nĐơn sẽ chuyển sang chờ kiểm định.')) return;
+  // === XÁC NHẬN ĐƠN TỪ SIÊU THỊ (CHỌN KHO) ===
+  const handleXacNhanSieuThi = (dh: DonHang) => {
+    if (khoList.length === 0) { 
+      alert('⚠️ Chưa có kho! Tạo kho trước khi xác nhận.'); 
+      return; 
+    }
+    setSelectedDonHang(dh);
+    setSelectedKho(khoList[0].maKho);
+    setModalType('sieuthi');
+    setShowKhoModal(true);
+  };
+
+  const confirmXacNhanSieuThi = async () => {
+    if (!selectedDonHang || !selectedKho) { 
+      showToast('Vui lòng chọn kho!', 'error');
+      return; 
+    }
+    
+    // Đóng modal ngay
+    setShowKhoModal(false);
+    
     try {
-      const res = await dailyService.xacNhanDonHangSieuThi(maDonHang, maDaiLy);
-      alert(res.message || '✅ Đã xác nhận! Chuyển sang chờ kiểm định.');
-      loadAllData(maDaiLy);
+      setLoading(true);
+      
+      // Kiểm tra xem đơn hàng đang ở trạng thái nào
+      const isHoanDon = selectedDonHang.trangThai === 'hoan_don';
+      
+      let res;
+      if (isHoanDon) {
+        // Xử lý hoàn đơn - gửi lại cho siêu thị
+        res = await dailyService.xuLyHoanDonSieuThi(maDaiLy, selectedKho, selectedDonHang.maDonHang);
+      } else {
+        // Xác nhận đơn mới
+        res = await dailyService.xacNhanDonHangSieuThi(selectedDonHang.maDonHang, maDaiLy, selectedKho);
+      }
+      
+      // Reload dữ liệu
+      await loadAllData(maDaiLy);
+      
+      // Reset selected
+      setSelectedDonHang(null);
+      
+      // Hiển thị thông báo
+      const message = res.message || (isHoanDon ? 'Đã gửi lại đơn hàng thành công' : 'Đã xác nhận đơn hàng và trừ tồn kho thành công');
+      showToast(message, 'success');
+      
     } catch (error: any) {
-      alert('❌ Lỗi: ' + (error.response?.data?.message || error.message));
+      const errorMsg = error.response?.data?.message || error.message || 'Có lỗi xảy ra';
+      showToast(errorMsg, 'error');
+      console.error('Lỗi xác nhận:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   // === HỦY ĐƠN TỪ SIÊU THỊ ===
   const handleHuySieuThi = async (maDonHang: number, isHoan: boolean) => {
-    const msg = isHoan ? '❌ Hủy vĩnh viễn? Sản phẩm sẽ MẤT.' : '❌ Hủy đơn hàng này?';
+    const msg = isHoan 
+      ? '❌ Hủy vĩnh viễn đơn hàng này?\n\nSản phẩm sẽ MẤT và không thể khôi phục!' 
+      : '❌ Hủy đơn hàng này?';
     if (!confirm(msg)) return;
+    
     try {
+      setLoading(true);
       const res = await dailyService.huyDonHangSieuThi(maDonHang, maDaiLy);
-      alert(res.message || '✅ Đã hủy.');
-      loadAllData(maDaiLy);
+      
+      // Reload dữ liệu
+      await loadAllData(maDaiLy);
+      
+      // Hiển thị thông báo
+      const message = res.message || 'Đã hủy đơn hàng thành công';
+      showToast(message, 'success');
+      
     } catch (error: any) {
-      alert('❌ Lỗi: ' + (error.response?.data?.message || error.message));
+      const errorMsg = error.response?.data?.message || error.message || 'Có lỗi xảy ra';
+      showToast(errorMsg, 'error');
+      console.error('Lỗi hủy đơn:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   // === XỬ LÝ HOÀN ĐƠN SIÊU THỊ ===
-  const handleXuLyHoanSieuThi = async (maDonHang: number) => {
-    if (!confirm('✅ Gửi lại cho siêu thị kiểm định?')) return;
-    try {
-      const res = await dailyService.xuLyHoanDonSieuThi(maDonHang, maDaiLy);
-      alert(res.message || '✅ Đã gửi lại.');
-      loadAllData(maDaiLy);
-    } catch (error: any) {
-      alert('❌ Lỗi: ' + (error.response?.data?.message || error.message));
+  const handleXuLyHoanSieuThi = (dh: DonHang) => {
+    if (khoList.length === 0) { 
+      alert('⚠️ Chưa có kho! Tạo kho trước khi xử lý hoàn đơn.'); 
+      return; 
     }
+    setSelectedDonHang(dh);
+    setSelectedKho(khoList[0].maKho);
+    setModalType('sieuthi');
+    setShowKhoModal(true);
   };
 
   const formatCurrency = (v: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v);
   const formatDate = (d: string) => new Date(d).toLocaleDateString('vi-VN');
 
-  const getKetQuaBadge = (k: string) => {
-    const map: Record<string, { cls: string; label: string }> = {
-      'dat': { cls: 'badge-success', label: '✅ Đạt' },
-      'khong_dat': { cls: 'badge-danger', label: '❌ Không đạt' },
-    };
-    const s = map[k] || { cls: '', label: k };
-    return <span className={`badge ${s.cls}`}>{s.label}</span>;
-  };
-
-  if (loading) return <div className="loading">⏳ Đang tải dữ liệu...</div>;
+  if (initialLoading) return <div className="loading">⏳ Đang tải dữ liệu...</div>;
 
   return (
     <div className="page-container">
+      {/* Toast Notification */}
+      {toast.show && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          zIndex: 10000,
+          minWidth: '300px',
+          maxWidth: '500px',
+          animation: 'slideIn 0.3s ease-out'
+        }}>
+          <div style={{
+            background: toast.type === 'success' ? '#10b981' : toast.type === 'error' ? '#ef4444' : '#3b82f6',
+            color: 'white',
+            padding: '16px 20px',
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <div style={{ fontSize: '24px' }}>
+              {toast.type === 'success' ? '✅' : toast.type === 'error' ? '❌' : 'ℹ️'}
+            </div>
+            <div style={{ flex: 1, fontSize: '15px', fontWeight: 500 }}>
+              {toast.message}
+            </div>
+            <button 
+              onClick={() => setToast({ ...toast, show: false })}
+              style={{
+                background: 'rgba(255,255,255,0.2)',
+                border: 'none',
+                color: 'white',
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                cursor: 'pointer',
+                fontSize: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* Loading overlay khi đang xử lý */}
+      {loading && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            background: 'white',
+            padding: '30px 50px',
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
+            <div style={{ fontSize: '18px', fontWeight: 500, color: '#333' }}>Đang xử lý...</div>
+          </div>
+        </div>
+      )}
+      
       <div className="page-header">
         <h1>🔍 Kiểm định & Xử lý đơn hàng</h1>
       </div>
 
       {/* ===== STATS ===== */}
-      <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', marginBottom: '24px' }}>
+      <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: '24px' }}>
         <div className="stat-card" style={{ borderLeft: `4px solid ${activeTab === 'nongdan' ? '#3b82f6' : '#e5e7eb'}`, cursor: 'pointer' }} onClick={() => setActiveTab('nongdan')}>
           <div className="stat-icon" style={{ background: '#dbeafe' }}>🔍</div>
           <div className="stat-label">Chờ kiểm định (Nông dân)</div>
@@ -222,11 +372,6 @@ const KiemDinhManagement = () => {
           <div className="stat-icon" style={{ background: '#fee2e2' }}>↩️</div>
           <div className="stat-label">Hoàn trả (Siêu thị)</div>
           <div className="stat-value">{donHangSieuThiHoan.length}</div>
-        </div>
-        <div className="stat-card" style={{ borderLeft: `4px solid ${activeTab === 'lichsu' ? '#667eea' : '#e5e7eb'}`, cursor: 'pointer' }} onClick={() => setActiveTab('lichsu')}>
-          <div className="stat-icon" style={{ background: '#e0e7ff' }}>📋</div>
-          <div className="stat-label">Kho hiện có</div>
-          <div className="stat-value">{khoList.length}</div>
         </div>
       </div>
 
@@ -304,7 +449,7 @@ const KiemDinhManagement = () => {
           ) : (
             <>
               <div className="alert alert-info" style={{ marginBottom: '16px' }}>
-                <strong>💡 Hướng dẫn:</strong> Ấn <strong>✓</strong> để xác nhận (đơn chuyển sang chờ kiểm định từ siêu thị). Ấn <strong>✕</strong> để hủy đơn.
+                <strong>💡 Hướng dẫn:</strong> Ấn <strong>✓</strong> để xác nhận (chọn kho, trừ tồn kho, đơn chuyển sang chờ kiểm định). Ấn <strong>✕</strong> để hủy đơn.
               </div>
               <table className="data-table">
                 <thead>
@@ -329,7 +474,7 @@ const KiemDinhManagement = () => {
                       <td>{dh.ghiChu || '-'}</td>
                       <td>
                         <div className="action-buttons" style={{ justifyContent: 'center' }}>
-                          <button className="btn btn-success btn-sm" onClick={() => handleXacNhanSieuThi(dh.maDonHang)}>✓ Xác nhận</button>
+                          <button className="btn btn-success btn-sm" onClick={() => handleXacNhanSieuThi(dh)} disabled={khoList.length === 0}>✓ Xác nhận</button>
                           <button className="btn btn-danger btn-sm" onClick={() => handleHuySieuThi(dh.maDonHang, false)}>✕ Hủy</button>
                         </div>
                       </td>
@@ -379,7 +524,7 @@ const KiemDinhManagement = () => {
                       <td style={{ color: '#dc2626' }}>{dh.ghiChu || 'Không đạt kiểm định'}</td>
                       <td>
                         <div className="action-buttons" style={{ justifyContent: 'center' }}>
-                          <button className="btn btn-primary btn-sm" onClick={() => handleXuLyHoanSieuThi(dh.maDonHang)}>✓ Gửi lại</button>
+                          <button className="btn btn-primary btn-sm" onClick={() => handleXuLyHoanSieuThi(dh)} disabled={khoList.length === 0}>✓ Gửi lại</button>
                           <button className="btn btn-danger btn-sm" onClick={() => handleHuySieuThi(dh.maDonHang, true)}>✕ Hủy vĩnh viễn</button>
                         </div>
                       </td>
@@ -392,56 +537,38 @@ const KiemDinhManagement = () => {
         </div>
       )}
 
-      {/* ===== TAB: LỊCH SỬ KIỂM ĐỊNH ===== */}
-      {activeTab === 'lichsu' && (
-        <div className="table-container">
-          <h3 style={{ margin: '0 0 20px 0', color: '#333' }}>📋 Lịch sử kiểm định</h3>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Mã KĐ</th>
-                <th>Mã lô</th>
-                <th>Sản phẩm</th>
-                <th>Người kiểm định</th>
-                <th>Ngày kiểm định</th>
-                <th>Kết quả</th>
-                <th>Ghi chú</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 ? (
-                <tr><td colSpan={7} className="text-center">Chưa có phiếu kiểm định nào</td></tr>
-              ) : (
-                paginatedData.map(item => (
-                  <tr key={item.maKiemDinh}>
-                    <td>{item.maKiemDinh}</td>
-                    <td>{item.soChungNhanLo}</td>
-                    <td>{item.tenSanPham}</td>
-                    <td>{item.nguoiKiemDinh}</td>
-                    <td>{formatDate(item.ngayKiemDinh)}</td>
-                    <td>{getKetQuaBadge(item.ketQua)}</td>
-                    <td>{item.ghiChu || '-'}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-          <TablePagination current={currentPage} total={kiemDinhList.length} pageSize={pageSize} onChange={handlePageChange} />
-        </div>
-      )}
-
       {/* ===== MODAL CHỌN KHO ===== */}
       {showKhoModal && selectedDonHang && (
         <div className="modal-overlay" onClick={() => setShowKhoModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>✅ Kiểm định đạt - Chọn kho nhập hàng</h2>
+              <h2>
+                {modalType === 'nongdan' 
+                  ? '✅ Kiểm định đạt - Chọn kho nhập hàng' 
+                  : selectedDonHang.trangThai === 'hoan_don'
+                    ? '✅ Xử lý hoàn đơn - Chọn kho'
+                    : '✅ Xác nhận đơn hàng - Chọn kho'}
+              </h2>
               <button className="btn-close" onClick={() => setShowKhoModal(false)}>✕</button>
             </div>
             <div className="modal-body">
-              <div style={{ background: '#f0fdf4', padding: '16px', borderRadius: '10px', marginBottom: '20px', borderLeft: '4px solid #10b981' }}>
+              <div style={{ 
+                background: modalType === 'nongdan' ? '#f0fdf4' : '#fef3c7', 
+                padding: '16px', 
+                borderRadius: '10px', 
+                marginBottom: '20px', 
+                borderLeft: `4px solid ${modalType === 'nongdan' ? '#10b981' : '#f59e0b'}` 
+              }}>
                 <p style={{ margin: '6px 0' }}><strong>Đơn hàng:</strong> #{selectedDonHang.maDonHang}</p>
-                <p style={{ margin: '6px 0' }}><strong>Nông dân:</strong> {selectedDonHang.tenNongDan}</p>
+                {modalType === 'nongdan' ? (
+                  <>
+                    <p style={{ margin: '6px 0' }}><strong>Nông dân:</strong> {selectedDonHang.tenNongDan}</p>
+                  </>
+                ) : (
+                  <>
+                    <p style={{ margin: '6px 0' }}><strong>Siêu thị:</strong> {selectedDonHang.tenSieuThi}</p>
+                  </>
+                )}
                 <p style={{ margin: '6px 0' }}><strong>Số lượng:</strong> {selectedDonHang.tongSoLuong} kg</p>
                 <p style={{ margin: '6px 0' }}><strong>Giá trị:</strong> {formatCurrency(selectedDonHang.tongGiaTri)}</p>
               </div>
@@ -453,10 +580,29 @@ const KiemDinhManagement = () => {
                   ))}
                 </select>
               </div>
+              {modalType === 'sieuthi' && (
+                <div className="alert alert-info" style={{ marginTop: '15px' }}>
+                  <strong>💡 Lưu ý:</strong> {selectedDonHang.trangThai === 'hoan_don' 
+                    ? 'Xác nhận sẽ gửi lại đơn hàng cho siêu thị kiểm định.' 
+                    : 'Xác nhận sẽ trừ tồn kho và chuyển đơn sang chờ kiểm định.'}
+                </div>
+              )}
             </div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setShowKhoModal(false)}>✕ Hủy</button>
-              <button className="btn btn-primary" onClick={confirmKiemDinhDat}>✅ Xác nhận nhập kho</button>
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => setShowKhoModal(false)}
+                disabled={loading}
+              >
+                ✕ Hủy
+              </button>
+              <button 
+                className="btn btn-primary" 
+                onClick={modalType === 'nongdan' ? confirmKiemDinhDat : confirmXacNhanSieuThi}
+                disabled={loading}
+              >
+                {loading ? '⏳ Đang xử lý...' : modalType === 'nongdan' ? '✅ Xác nhận nhập kho' : '✅ Xác nhận'}
+              </button>
             </div>
           </div>
         </div>
@@ -470,6 +616,28 @@ const KiemDinhManagement = () => {
         .btn.btn-success:disabled { background: #9ca3af; cursor: not-allowed; transform: none; box-shadow: none; }
         .btn.btn-danger { background: #ef4444; color: white; }
         .btn.btn-danger:hover { background: #dc2626; }
+        
+        @keyframes slideIn {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        @keyframes slideOut {
+          from {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          to {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+        }
       `}</style>
     </div>
   );

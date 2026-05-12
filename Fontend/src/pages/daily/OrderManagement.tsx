@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
 import { useAuth } from '../../context/AuthContext';
+import usePagination from '../../hooks/usePagination';
+import TablePagination from '../../components/TablePagination';
 import '../../components/Common.css';
 
 function OrderManagement() {
@@ -176,6 +178,15 @@ function OrderManagement() {
     }
   };
 
+  // Sử dụng hook phân trang
+  const {
+    currentPage,
+    pageSize,
+    paginatedData: paginatedOrders,
+    totalItems,
+    handlePageChange
+  } = usePagination({ data: allOrders, initialPageSize: 10 });
+
   const handleOpenAcceptModal = (order: any) => {
     setSelectedOrder(order);
     setSelectedWarehouse('');
@@ -283,12 +294,12 @@ function OrderManagement() {
             </tr>
           </thead>
           <tbody>
-            {allOrders.length === 0 ? (
+            {paginatedOrders.length === 0 ? (
               <tr>
                 <td colSpan={8} className="text-center">Chưa có đơn hàng nào</td>
               </tr>
             ) : (
-              allOrders.map((order: any) => (
+              paginatedOrders.map((order: any) => (
                 <tr key={`${order.loaiDon}-${order.maDonHang}`}>
                   <td><span className="order-type">{order.loaiDon}</span></td>
                   <td>{order.maDonHang}</td>
@@ -324,6 +335,14 @@ function OrderManagement() {
             )}
           </tbody>
         </table>
+
+        {/* Phân trang */}
+        <TablePagination
+          current={currentPage}
+          total={totalItems}
+          pageSize={pageSize}
+          onChange={handlePageChange}
+        />
       </div>
 
       {/* Modal: Tạo đơn mua từ nông dân */}
