@@ -147,11 +147,17 @@ function OrderManagement() {
 
     try {
       const payload = {
+        MaDaiLy: maDaiLy,
         MaKho: parseInt(selectedWarehouse)
       };
 
-      await axios.put(API_ENDPOINTS.donHangSieuThi.updateTrangThai(selectedOrder.maDonHang), payload);
-      alert('✅ Chấp nhận đơn hàng thành công!');
+      // Gọi API xác nhận đơn hàng từ đại lý
+      await axios.put(
+        `${API_ENDPOINTS.daily.base}/api/don-hang-sieu-thi-dai-ly/xac-nhan/${selectedOrder.maDonHang}`,
+        payload
+      );
+      
+      alert('✅ Chấp nhận đơn hàng thành công! Đã trừ tồn kho và chuyển sang chờ kiểm định.');
       
       setShowModalAccept(false);
       setSelectedOrder(null);
@@ -159,7 +165,8 @@ function OrderManagement() {
       await loadData();
     } catch (error: any) {
       console.error('Error accepting order:', error);
-      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
+      const errorMsg = error.response?.data?.message || error.response?.data || 'Có lỗi xảy ra';
+      alert('❌ ' + errorMsg);
     }
   };
 
