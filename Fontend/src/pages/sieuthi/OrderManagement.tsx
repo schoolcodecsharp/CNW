@@ -10,11 +10,17 @@ function OrderManagement() {
   const { user } = useAuth();
   const [allOrders, setAllOrders] = useState([]);
   const [dailyList, setDailyList] = useState([]);
+  const [dailyBatches, setDailyBatches] = useState<{[key: number]: any[]}>({});
+  const [loadingBatches, setLoadingBatches] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [maSieuThi, setMaSieuThi] = useState(null);
   const [formData, setFormData] = useState({
     maDaiLy: '',
+    maLo: '',
+    soLuong: '',
+    donGia: '',
+    ngayGiao: '',
     ghiChu: ''
   });
 
@@ -61,25 +67,115 @@ function OrderManagement() {
   const handleOpenModal = () => {
     setFormData({
       maDaiLy: '',
+      maLo: '',
+      soLuong: '',
+      donGia: '',
+      ngayGiao: '',
       ghiChu: ''
     });
     setShowModal(true);
+  };
+
+  const loadBatchesByDaily = async (maDaiLy: number) => {
+    // Nếu đã tải rồi thì không tải lại
+    if (dailyBatches[maDaiLy]) return;
+
+    try {
+      setLoadingBatches(true);
+      // Lấy danh sách kho của đại lý
+      const khoRes = await axios.get(API_ENDPOINTS.kho.getByDaiLy(maDaiLy));
+      const khoList = khoRes.data.data || [];
+      
+      if (khoList.length === 0) {
+        setDailyBatches(prev => ({ ...prev, [maDaiLy]: [] }));
+        setLoadingBatches(false);
+        return;
+      }
+
+      // Lấy tồn kho của tất cả kho của đại lý
+      const tonKhoRes = await axios.get(API_ENDPOINTS.tonKho.getAll);
+      const allTonKho = tonKhoRes.data.data || [];
+      
+      // Lọc tồn kho thuộc các kho của đại lý
+      const maKhoList = khoList.map((k: any) => k.maKho);
+      const tonKhoDaily = allTonKho.filter((tk: any) => 
+        maKhoList.includes(tk.maKho) && tk.soLuong > 0
+      );
+
+      // Lấy thông tin lô nông sản
+      const loNongSanRes = await axios.get(API_ENDPOINTS.loNongSan.getAll);
+      const allBatches = loNongSanRes.data.data || [];
+      
+      // Kết hợp thông tin
+      const availableBatches = tonKhoDaily.map((tk: any) => {
+        const batch = allBatches.find((b: any) => b.maLo === tk.maLo);
+        return {
+          ...tk,
+          tenSanPham: batch?.tenSanPham || 'N/A',
+          donViTinh: batch?.donViTinh || 'kg'
+        };
+      });
+
+      setDailyBatches(prev => ({
+        ...prev,
+        [maDaiLy]: availableBatches
+      }));
+    } catch (error) {
+      console.error('Error loading batches for daily:', error);
+      setDailyBatches(prev => ({ ...prev, [maDaiLy]: [] }));
+    } finally {
+      setLoadingBatches(false);
+    }
+  };
+
+  const handleDailyChange = async (maDaiLy: string) => {
+    setFormData({...formData, maDaiLy, maLo: '', soLuong: '', donGia: ''});
+    if (maDaiLy) {
+      await loadBatchesByDaily(parseInt(maDaiLy));
+    }
+  };
+
+  const getAvailableBatchesByDaily = () => {
+    if (!formData.maDaiLy) return [];
+    const maDaiLy = parseInt(formData.maDaiLy);
+    return dailyBatches[maDaiLy] || [];
+  };
+
+  const getSelectedBatch = () => {
+    if (!formData.maLo) return null;
+    const batches = getAvailableBatchesByDaily();
+    return batches.find((b: any) => b.maLo === parseInt(formData.maLo));
   };
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     
     try {
+      const selectedBatch = getSelectedBatch();
+      if (!selectedBatch) {
+        alert('❌ Vui lòng chọn sản phẩm!');
+        return;
+      }
+      
+      if (parseFloat(formData.soLuong) > selectedBatch.soLuong) {
+        alert(`❌ Số lượng vượt quá tồn kho! Tồn kho hiện tại: ${selectedBatch.soLuong} ${selectedBatch.donViTinh}`);
+        return;
+      }
+
       const payload = {
         MaSieuThi: maSieuThi,
         MaDaiLy: parseInt(formData.maDaiLy),
-        NgayGiao: null,
+        NgayGiao: formData.ngayGiao || null,
+        ChiTietDonHangs: [{
+          MaLo: parseInt(formData.maLo),
+          SoLuong: parseFloat(formData.soLuong),
+          DonGia: parseFloat(formData.donGia)
+        }],
         GhiChu: formData.ghiChu || null
       };
 
       console.log('Creating order with payload:', payload);
       
-      // API endpoint: POST /api/DonHangSieuThi/tao-don-hang
       const response = await axios.post(API_ENDPOINTS.donHangSieuThi.create, payload);
       
       console.log('Create order response:', response.data);
@@ -90,72 +186,36 @@ function OrderManagement() {
     } catch (error: any) {
       console.error('Error creating order:', error);
       console.error('Error response:', error.response?.data);
-      alert('❌ ' + (error.response?.data?.message || error.response?.data || 'Có lỗi xảy ra'));
-    }
-  };
-
-  const handleAcceptOrder = async (orderId: number, maDaiLy: number) => {
-    // Cần chọn kho để nhận hàng
-    try {
-      // Tải danh sách kho của siêu thị
-      const warehousesRes = await axios.get(API_ENDPOINTS.kho.getBySieuThi(maSieuThi!));
       
-      if (!warehousesRes.data.success || !warehousesRes.data.data || warehousesRes.data.data.length === 0) {
-        alert('❌ Bạn chưa có kho nào! Vui lòng tạo kho trước khi nhận hàng.');
-        return;
-      }
-
-      const warehouses = warehousesRes.data.data;
-      
-      // Nếu chỉ có 1 kho, tự động chọn
-      let selectedWarehouse = warehouses[0].maKho;
-      
-      // Nếu có nhiều kho, cho người dùng chọn
-      if (warehouses.length > 1) {
-        const warehouseOptions = warehouses.map((w: any) => 
-          `${w.maKho}. ${w.tenKho} (${w.diaChi || 'Không có địa chỉ'})`
-        ).join('\n');
-        
-        const choice = prompt(`Chọn kho để nhận hàng:\n${warehouseOptions}\n\nNhập mã kho:`);
-        
-        if (!choice) return; // User cancelled
-        
-        selectedWarehouse = parseInt(choice);
-        
-        if (!warehouses.find((w: any) => w.maKho === selectedWarehouse)) {
-          alert('❌ Mã kho không hợp lệ!');
-          return;
+      // Hiển thị error chi tiết
+      let errorMessage = 'Có lỗi xảy ra';
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+          // Thêm debug info nếu có
+          if (errorData.debug) {
+            console.error('Debug info:', errorData.debug);
+          }
+          if (errorData.errors) {
+            console.error('Validation errors:', errorData.errors);
+          }
+          if (errorData.stackTrace) {
+            console.error('Stack trace:', errorData.stackTrace);
+          }
         }
       }
-
-      if (!window.confirm(`Xác nhận nhận hàng vào kho #${selectedWarehouse}?`)) return;
       
-      // API endpoint: PUT /api/DonHangSieuThi/nhan-hang/{id}
-      await axios.put(`${API_ENDPOINTS.donHangSieuThi.base}/nhan-hang/${orderId}`, {
-        MaKho: selectedWarehouse
-      });
-      
-      alert('✅ Đã nhận hàng thành công!');
-      await loadData();
-    } catch (error: any) {
-      console.error('Error accepting order:', error);
-      alert('❌ ' + (error.response?.data?.message || error.response?.data || 'Có lỗi xảy ra'));
+      alert('❌ ' + errorMessage);
     }
   };
 
-  const handleRejectOrder = async (orderId: number) => {
-    if (!window.confirm('Bạn có chắc muốn hủy đơn hàng này?')) return;
-    
-    try {
-      // API endpoint: PUT /api/DonHangSieuThi/huy-don-hang/{id}
-      await axios.put(`${API_ENDPOINTS.donHangSieuThi.base}/huy-don-hang/${orderId}`);
-      alert('✅ Đã hủy đơn hàng!');
-      await loadData();
-    } catch (error: any) {
-      console.error('Error rejecting order:', error);
-      alert('❌ ' + (error.response?.data?.message || error.response?.data || 'Có lỗi xảy ra'));
-    }
-  };
+  // REMOVED: handleAcceptOrder and handleRejectOrder
+  // User said to remove action buttons from supermarket order page
+  // Supermarket only views orders, doesn't confirm/cancel
+  // Actions are handled by distributor in KiemDinhManagement page
 
   const getStatusBadge = (status: string) => {
     const badges: any = {
@@ -209,13 +269,12 @@ function OrderManagement() {
               <th>Tổng SL</th>
               <th>Tổng giá trị</th>
               <th>Trạng thái</th>
-              <th>Hành động</th>
             </tr>
           </thead>
           <tbody>
             {paginatedOrders.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center">
+                <td colSpan={6} className="text-center">
                   Chưa có đơn hàng nào
                 </td>
               </tr>
@@ -228,26 +287,6 @@ function OrderManagement() {
                   <td>{order.tongSoLuong} kg</td>
                   <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.tongGiaTri)}</td>
                   <td>{getStatusBadge(order.trangThai)}</td>
-                  <td>
-                    {order.trangThai === 'chua_nhan' && (
-                      <div className="action-buttons">
-                        <button 
-                          className="btn-action btn-success"
-                          onClick={() => handleAcceptOrder(order.maDonHang, order.maDaiLy)}
-                          title="Nhận hàng"
-                        >
-                          ✓
-                        </button>
-                        <button 
-                          className="btn-action btn-danger"
-                          onClick={() => handleRejectOrder(order.maDonHang)}
-                          title="Hủy đơn"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    )}
-                  </td>
                 </tr>
               ))
             )}
@@ -280,7 +319,7 @@ function OrderManagement() {
                   </label>
                   <select
                     value={formData.maDaiLy}
-                    onChange={(e) => setFormData({...formData, maDaiLy: e.target.value})}
+                    onChange={(e) => handleDailyChange(e.target.value)}
                     required
                     className="form-control"
                   >
@@ -292,6 +331,105 @@ function OrderManagement() {
                     ))}
                   </select>
                 </div>
+
+                {formData.maDaiLy && (
+                  <>
+                    <div className="form-group">
+                      <label>
+                        <span className="label-icon">📦</span>
+                        Sản phẩm <span className="required">*</span>
+                      </label>
+                      {loadingBatches ? (
+                        <div style={{padding: '10px', textAlign: 'center', color: '#6b7280'}}>
+                          Đang tải danh sách sản phẩm...
+                        </div>
+                      ) : (
+                        <select
+                          value={formData.maLo}
+                          onChange={(e) => setFormData({...formData, maLo: e.target.value})}
+                          required
+                          className="form-control"
+                        >
+                          <option value="">-- Chọn sản phẩm --</option>
+                          {getAvailableBatchesByDaily().length === 0 ? (
+                            <option value="" disabled>Đại lý này chưa có sản phẩm nào</option>
+                          ) : (
+                            getAvailableBatchesByDaily().map((batch: any) => (
+                              <option key={batch.maLo} value={batch.maLo}>
+                                {batch.tenSanPham} - Lô #{batch.maLo} (Còn: {batch.soLuong} {batch.donViTinh})
+                              </option>
+                            ))
+                          )}
+                        </select>
+                      )}
+                    </div>
+
+                    {formData.maLo && (
+                      <>
+                        <div className="form-group">
+                          <label>
+                            <span className="label-icon">⚖️</span>
+                            Số lượng ({getSelectedBatch()?.donViTinh || 'kg'}) <span className="required">*</span>
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={formData.soLuong}
+                            onChange={(e) => setFormData({...formData, soLuong: e.target.value})}
+                            required
+                            placeholder="Nhập số lượng"
+                            className="form-control"
+                            max={getSelectedBatch()?.soLuong || 0}
+                          />
+                          <small style={{ color: '#6b7280', marginTop: '5px', display: 'block' }}>
+                            Tồn kho: {getSelectedBatch()?.soLuong || 0} {getSelectedBatch()?.donViTinh || 'kg'}
+                          </small>
+                        </div>
+
+                        <div className="form-group">
+                          <label>
+                            <span className="label-icon">💰</span>
+                            Đơn giá (VNĐ/{getSelectedBatch()?.donViTinh || 'kg'}) <span className="required">*</span>
+                          </label>
+                          <input
+                            type="number"
+                            step="1000"
+                            value={formData.donGia}
+                            onChange={(e) => setFormData({...formData, donGia: e.target.value})}
+                            required
+                            placeholder="Nhập đơn giá"
+                            className="form-control"
+                          />
+                        </div>
+
+                        {formData.soLuong && formData.donGia && (
+                          <div className="form-group">
+                            <label>💵 Tổng giá trị</label>
+                            <div className="total-value">
+                              {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
+                                parseFloat(formData.soLuong) * parseFloat(formData.donGia)
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="form-group">
+                          <label>
+                            <span className="label-icon">📅</span>
+                            Ngày giao mong muốn
+                          </label>
+                          <input
+                            type="date"
+                            value={formData.ngayGiao}
+                            onChange={(e) => setFormData({...formData, ngayGiao: e.target.value})}
+                            className="form-control"
+                            min={new Date().toISOString().split('T')[0]}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
 
                 <div className="form-group">
                   <label>
@@ -317,7 +455,7 @@ function OrderManagement() {
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
                   <span>✕</span> Hủy
                 </button>
-                <button type="submit" className="btn btn-primary">
+                <button type="submit" className="btn btn-primary" disabled={!formData.maDaiLy || !formData.maLo}>
                   <span>➕</span> Tạo đơn hàng
                 </button>
               </div>
@@ -368,6 +506,16 @@ function OrderManagement() {
           padding: 12px;
           border-radius: 8px;
           font-size: 14px;
+        }
+
+        .total-value {
+          font-size: 24px;
+          font-weight: bold;
+          color: #8b5cf6;
+          padding: 12px;
+          background: #f3e8ff;
+          border-radius: 8px;
+          text-align: center;
         }
       `}</style>
     </div>
