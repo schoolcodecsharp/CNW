@@ -1,258 +1,148 @@
-# 🌾 Hệ Thống Quản Lý Chuỗi Cung Ứng Nông Sản
+# 🌾 Hệ thống Quản lý Chuỗi Cung ứng Nông sản
 
-Hệ thống quản lý chuỗi cung ứng nông sản từ trang trại đến siêu thị, sử dụng kiến trúc Microservices.
+## 📋 Giới thiệu
 
-## 📋 Tổng Quan
+Hệ thống quản lý chuỗi cung ứng nông sản từ nông dân → đại lý → siêu thị với các tính năng:
+- Quản lý đơn hàng
+- Kiểm định chất lượng
+- Quản lý kho và tồn kho
+- Theo dõi lô nông sản
 
-Dự án này là một hệ thống quản lý chuỗi cung ứng nông sản hoàn chỉnh, bao gồm:
-- **Backend**: .NET Core 8.0 Microservices Architecture
-- **Frontend**: React.js với Node.js backend
-- **Database**: SQL Server
-- **API Gateway**: Ocelot
+## 🏗️ Kiến trúc hệ thống
 
-## 🏗️ Kiến Trúc Hệ Thống
+### Backend (ASP.NET Core 8.0)
+- **Gateway**: Port 7217
+- **AuthService**: Port 7217 (Authentication & Authorization)
+- **NongDanService**: Port 7090 (Farmer management)
+- **DaiLyService**: Port 7002 (Distributor management)
+- **SieuThiService**: Port 7087 (Supermarket management)
+
+### Frontend (React + TypeScript)
+- **Port**: 5173
+- **Framework**: React 18 + Vite
+- **UI**: Custom CSS components
+
+### Database
+- **SQL Server**: BTL_HDV1
+- **Server**: NVT
+
+## 🚀 Cài đặt và Chạy
+
+### 1. Database
+```sql
+-- Chạy file tạo database và bảng
+USE master;
+GO
+EXEC sp_executesql N'USE [BTL_HDV1]';
+GO
+
+-- Import file database_BTL.sql
+-- Import file sp_BTL.sql (stored procedures)
+```
+
+### 2. Backend
+```bash
+cd Agri_Supply_Chain_API
+dotnet restore
+dotnet build
+dotnet run --project Gateway
+```
+
+### 3. Frontend
+```bash
+cd Fontend
+npm install
+npm run dev
+```
+
+## 👥 Tài khoản test
+
+| Loại tài khoản | Username | Password |
+|----------------|----------|----------|
+| Nông dân       | nd1      | 123456   |
+| Đại lý         | dl1      | 123456   |
+| Siêu thị       | st1      | 123456   |
+
+## 📊 Luồng hoạt động
+
+### Đơn hàng Nông dân → Đại lý
+1. Nông dân tạo đơn hàng → `chua_nhan`
+2. Đại lý kiểm định:
+   - ✅ Đạt → Chọn kho → `da_nhan` (nhập kho)
+   - ❌ Không đạt → `hoan_don` (hoàn về nông dân)
+
+### Đơn hàng Siêu thị → Đại lý
+1. Siêu thị tạo đơn hàng → `chua_nhan`
+2. Đại lý xác nhận:
+   - ✅ Xác nhận → Chọn kho → Trừ tồn kho → `cho_kiem_duyet`
+   - ❌ Hủy → `da_huy`
+3. Siêu thị kiểm định:
+   - ✅ Đạt → `da_nhan` (nhập kho siêu thị)
+   - ❌ Không đạt → `hoan_don` (hoàn về đại lý)
+4. Nếu hoàn đơn, đại lý xử lý:
+   - ✅ Gửi lại → Chọn kho → `cho_kiem_duyet`
+   - ❌ Hủy vĩnh viễn → `da_huy`
+
+## 📁 Cấu trúc thư mục
 
 ```
-┌─────────────┐
-│   React     │
-│  Frontend   │
-└──────┬──────┘
-       │
-┌──────▼──────────┐
-│  API Gateway    │
-│   (Ocelot)      │
-└────────┬────────┘
-         │
-    ┌────┴────┬────────┬────────┬────────┐
-    │         │        │        │        │
-┌───▼───┐ ┌──▼──┐ ┌───▼───┐ ┌──▼──┐ ┌──▼──┐
-│ Auth  │ │Admin│ │NongDan│ │DaiLy│ │SieuT│
-│Service│ │Serv.│ │Service│ │Serv.│ │hi S.│
-└───┬───┘ └──┬──┘ └───┬───┘ └──┬──┘ └──┬──┘
-    │        │        │        │       │
-    └────────┴────────┴────────┴───────┘
-                     │
-              ┌──────▼──────┐
-              │ SQL Server  │
-              │  BTL_HDV1   │
-              └─────────────┘
+CNW/
+├── Agri_Supply_Chain_API/      # Backend services
+│   ├── Gateway/                # API Gateway
+│   ├── AuthService/            # Authentication service
+│   ├── NongDanService/         # Farmer service
+│   ├── DaiLyService/           # Distributor service
+│   └── SieuThiService/         # Supermarket service
+├── Fontend/                    # React frontend
+│   ├── src/
+│   │   ├── components/         # Reusable components
+│   │   ├── pages/              # Page components
+│   │   ├── services/           # API services
+│   │   └── context/            # React context
+│   └── public/
+├── database_BTL.sql            # Database schema
+└── sp_BTL.sql                  # Stored procedures
 ```
 
-## 🚀 Công Nghệ Sử Dụng
+## 🔧 Công nghệ sử dụng
 
 ### Backend
-- .NET Core 8.0
-- ASP.NET Core Web API
-- Ocelot API Gateway
+- ASP.NET Core 8.0
 - Entity Framework Core
 - SQL Server
 - JWT Authentication
 
 ### Frontend
 - React 18
-- React Router v6
+- TypeScript
+- Vite
 - Axios
-- Context API
-- CSS3 (Modern Design)
+- React Router
 
-## 📦 Cấu Trúc Dự Án
+## 📝 Ghi chú
 
-```
-├── Agri_Supply_Chain_API/          # Backend Microservices
-│   ├── Gateway/                    # API Gateway (Port 5041)
-│   ├── AuthService/                # Authentication Service (Port 5297)
-│   ├── AdminService/               # Admin Management (Port 5000)
-│   ├── NongDanService/             # Farmer Management (Port 5251)
-│   ├── DaiLyService/               # Distributor Management (Port 5214)
-│   ├── SieuThiService/             # Supermarket Management (Port 5291)
-│   ├── Database_Setup.sql          # Database schema
-│   ├── SETUP_DATABASE_QUICK.sql    # Quick setup with sample data
-│   └── INSERT_SAMPLE_DATA.sql      # Sample data insertion
-│
-└── frontend/                       # Frontend Application
-    ├── server.js                   # Node.js backend (Port 6000)
-    └── client/                     # React app (Port 3000)
-        ├── public/
-        └── src/
-            ├── components/         # Reusable components
-            ├── context/            # React Context (Auth)
-            ├── pages/              # Page components
-            │   ├── admin/          # Admin dashboard
-            │   ├── nongdan/        # Farmer dashboard
-            │   ├── daily/          # Distributor dashboard
-            │   └── sieuthi/        # Supermarket dashboard
-            └── services/           # API services
-```
+- Hệ thống sử dụng stored procedures cho các thao tác phức tạp
+- Authentication sử dụng JWT tokens
+- Frontend sử dụng Context API cho state management
+- Tất cả API đều có validation và error handling
 
-## 🔧 Cài Đặt và Chạy
+## 🐛 Troubleshooting
 
-### Yêu Cầu Hệ Thống
-- .NET Core SDK 8.0+
-- Node.js 16+
-- SQL Server 2019+
-- Visual Studio 2022 hoặc VS Code
+### Backend không chạy
+- Kiểm tra SQL Server đang chạy
+- Kiểm tra connection string trong appsettings.json
+- Chạy `dotnet restore` và `dotnet build`
 
-### 1. Setup Database
+### Frontend không kết nối được API
+- Kiểm tra backend đang chạy
+- Kiểm tra API endpoints trong `src/services/apiConfig.ts`
+- Kiểm tra CORS settings trong backend
 
-```sql
--- Mở SQL Server Management Studio
--- Kết nối đến server: NVT (hoặc localhost)
--- Chạy các script theo thứ tự:
+### Database lỗi
+- Chạy lại file `database_BTL.sql`
+- Chạy lại file `sp_BTL.sql`
+- Kiểm tra SQL Server authentication
 
-1. SETUP_DATABASE_QUICK.sql      -- Tạo database và tài khoản
-2. INSERT_SAMPLE_DATA.sql        -- Thêm dữ liệu mẫu
-```
+## 📞 Liên hệ
 
-### 2. Chạy Backend Services
-
-```bash
-# Mở terminal tại thư mục Agri_Supply_Chain_API
-
-# Chạy Gateway
-cd Gateway
-dotnet run
-
-# Chạy AuthService (terminal mới)
-cd AuthService
-dotnet run
-
-# Chạy các services khác tương tự...
-```
-
-### 3. Chạy Frontend
-
-```bash
-# Mở terminal tại thư mục frontend/client
-cd frontend/client
-
-# Cài đặt dependencies
-npm install --legacy-peer-deps
-
-# Chạy React app
-npm start
-```
-
-## 🌐 Truy Cập Hệ Thống
-
-- **Frontend**: http://localhost:3000
-- **API Gateway**: http://localhost:5041
-- **Swagger UI**:
-  - AuthService: http://localhost:5297/swagger
-  - AdminService: http://localhost:5000/swagger
-  - NongDanService: http://localhost:5251/swagger
-  - DaiLyService: http://localhost:5214/swagger
-  - SieuThiService: http://localhost:5291/swagger
-
-## 👥 Tài Khoản Demo
-
-| Loại TK | Username | Password | Mô tả |
-|---------|----------|----------|-------|
-| Admin | admin | admin123 | Quản trị hệ thống |
-| Nông dân | nongdan1 | 123456 | Trần Văn Nông |
-| Nông dân | nongdan2 | 123456 | Lê Thị Hoa |
-| Đại lý | daily1 | 123456 | Đại Lý Nông Sản Xanh |
-| Đại lý | daily2 | 123456 | Đại Lý Thực Phẩm Sạch |
-| Siêu thị | sieuthi1 | 123456 | Co.opMart Đà Lạt |
-| Siêu thị | sieuthi2 | 123456 | BigC Đà Lạt |
-
-## 🎨 Tính Năng
-
-### Admin Dashboard
-- Quản lý người dùng
-- Quản lý trang trại
-- Quản lý lô nông sản
-- Quản lý đơn hàng
-- Báo cáo và thống kê
-
-### Nông Dân Dashboard (Green Theme)
-- Tổng quan trang trại
-- Quản lý trang trại
-- Quản lý lô nông sản
-- Quản lý đơn hàng
-- Danh sách sản phẩm
-
-### Đại Lý Dashboard (Blue Theme)
-- Tổng quan kho hàng
-- Quản lý kho
-- Quản lý đơn hàng từ nông dân
-- Đặt hàng cho siêu thị
-- Kiểm định chất lượng
-
-### Siêu Thị Dashboard (Purple Theme)
-- Tổng quan đơn hàng
-- Quản lý kho
-- Quản lý đơn hàng
-- Đặt hàng từ đại lý
-
-## 🔐 Bảo Mật
-
-- JWT Authentication
-- Password hashing
-- CORS configuration
-- API Gateway routing
-- Role-based access control
-
-## 📱 Responsive Design
-
-Giao diện được thiết kế responsive, hỗ trợ:
-- Desktop (1920px+)
-- Laptop (1024px - 1920px)
-- Tablet (768px - 1024px)
-- Mobile (< 768px)
-
-## 🛠️ Development
-
-### Backend Development
-```bash
-# Restore packages
-dotnet restore
-
-# Build solution
-dotnet build
-
-# Run specific service
-cd <ServiceName>
-dotnet run
-```
-
-### Frontend Development
-```bash
-# Install dependencies
-npm install --legacy-peer-deps
-
-# Start development server
-npm start
-
-# Build for production
-npm run build
-```
-
-## 📝 API Documentation
-
-Tất cả các API đều có Swagger UI documentation. Truy cập `/swagger` trên mỗi service để xem chi tiết.
-
-## 🤝 Đóng Góp
-
-Mọi đóng góp đều được chào đón! Vui lòng:
-1. Fork repository
-2. Tạo branch mới (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Tạo Pull Request
-
-## 📄 License
-
-Distributed under the MIT License.
-
-## 👨‍💻 Tác Giả
-
-Dự án được phát triển bởi nhóm sinh viên
-
-## 📞 Liên Hệ
-
-- Email: [your-email@example.com]
-- GitHub: [your-github-profile]
-
----
-
-
+Dự án bài tập lớn môn Công nghệ Web
