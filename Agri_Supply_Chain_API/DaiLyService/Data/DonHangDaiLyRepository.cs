@@ -355,7 +355,17 @@ namespace DaiLyService.Data
             cmd.Parameters.AddWithValue("@KetQuaKiemDinh", chapNhan);
 
             conn.Open();
-            return cmd.ExecuteNonQuery() > 0;
+            
+            // Đọc kết quả từ SELECT statement trong stored procedure
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                // Stored procedure trả về: SELECT 1 AS Success, N'...' AS Message
+                var success = reader["Success"];
+                return success != null && Convert.ToInt32(success) == 1;
+            }
+            
+            return false;
         }
 
         public List<DonHangDaiLyDTO> GetDonHangChoKiemDuyet(int maDaiLy)

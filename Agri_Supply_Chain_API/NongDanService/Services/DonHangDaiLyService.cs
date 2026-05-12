@@ -19,6 +19,7 @@ namespace NongDanService.Services
         public List<DonHangDaiLyDTO> GetByDaiLyId(int maDaiLy) => _repo.GetByDaiLyId(maDaiLy);
         public int Create(DonHangDaiLyCreateDTO dto) => _repo.Create(dto);
         public bool Update(int id, DonHangDaiLyUpdateDTO dto) => _repo.Update(id, dto);
+        public bool UpdateTrangThai(int id, string trangThai) => _repo.UpdateTrangThai(id, trangThai);
         public bool XacNhanDonChoKiemDuyet(int id, int maNongDan) => _repo.XacNhanDonChoKiemDuyet(id, maNongDan);
         public bool XuLyHoanDon(int id, int maNongDan) => _repo.XuLyHoanDon(id, maNongDan);
         public bool HuyDonHang(int id, int maNongDan) => _repo.HuyDonHang(id, maNongDan);
