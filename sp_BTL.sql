@@ -131,7 +131,7 @@ GO
 -- ============================================================================
 
 
--- SP GET ALL
+-- SP GET ALL (Soft Delete: Lọc TrangThai != 'da_xoa')
 CREATE OR ALTER PROCEDURE sp_NongDan_GetAll
 AS
 BEGIN
@@ -142,16 +142,16 @@ BEGIN
         ND.SoDienThoai,
         ND.Email,
         ND.DiaChi,
-        TK.TenDangNhap,
-        TK.TrangThai
+        ND.TrangThai,
+        TK.TenDangNhap
     FROM NongDan ND
-    JOIN TaiKhoan TK ON ND.MaTaiKhoan = TK.MaTaiKhoan
-    WHERE TK.TrangThai = N'hoat_dong'
-    ORDER BY ND.MaNongDan DESC;
+    INNER JOIN TaiKhoan TK ON ND.MaTaiKhoan = TK.MaTaiKhoan
+    WHERE ND.TrangThai != 'da_xoa'
+    ORDER BY ND.MaNongDan;
 END;
 GO
 
--- SP GET BY ID
+-- SP GET BY ID (Soft Delete: Lọc TrangThai != 'da_xoa')
 CREATE OR ALTER PROCEDURE sp_NongDan_GetById
     @MaNongDan INT
 AS
@@ -163,11 +163,12 @@ BEGIN
         ND.SoDienThoai,
         ND.Email,
         ND.DiaChi,
-        TK.TenDangNhap,
-        TK.TrangThai
+        ND.TrangThai,
+        TK.TenDangNhap
     FROM NongDan ND
-    JOIN TaiKhoan TK ON ND.MaTaiKhoan = TK.MaTaiKhoan
-    WHERE ND.MaNongDan = @MaNongDan;
+    INNER JOIN TaiKhoan TK ON ND.MaTaiKhoan = TK.MaTaiKhoan
+    WHERE ND.MaNongDan = @MaNongDan
+      AND ND.TrangThai != 'da_xoa';
 END;
 GO
 
@@ -202,8 +203,8 @@ BEGIN
         SET @MaTaiKhoan = SCOPE_IDENTITY();
         
         -- Tạo nông dân
-        INSERT INTO NongDan (MaTaiKhoan, HoTen, SoDienThoai, Email, DiaChi)
-        VALUES (@MaTaiKhoan, @HoTen, @SoDienThoai, @Email, @DiaChi);
+        INSERT INTO NongDan (MaTaiKhoan, HoTen, SoDienThoai, Email, DiaChi, TrangThai)
+        VALUES (@MaTaiKhoan, @HoTen, @SoDienThoai, @Email, @DiaChi, N'hoat_dong');
         
         SET @MaNongDan = SCOPE_IDENTITY();
         
@@ -244,7 +245,7 @@ BEGIN
 END;
 GO
 
--- SP DELETE (Soft Delete)
+-- SP DELETE (Soft Delete với Cascade)
 CREATE OR ALTER PROCEDURE sp_NongDan_Delete
     @MaNongDan INT
 AS
@@ -260,23 +261,36 @@ BEGIN
         IF @MaTaiKhoan IS NULL
         BEGIN
             ROLLBACK TRANSACTION;
-            RAISERROR(N'Không tìm thấy nông dân', 16, 1);
+            SELECT 0 AS RowsAffected;
             RETURN;
         END
         
-        -- Đánh dấu tài khoản là đã xóa (Soft Delete)
+        -- Đánh dấu xóa trang trại
+        UPDATE TrangTrai 
+        SET TrangThai = 'da_xoa' 
+        WHERE MaNongDan = @MaNongDan;
+        
+        -- Đánh dấu xóa nông dân
+        UPDATE NongDan 
+        SET TrangThai = 'da_xoa' 
+        WHERE MaNongDan = @MaNongDan;
+        
+        -- Đánh dấu xóa tài khoản
         UPDATE TaiKhoan 
-        SET TrangThai = N'da_xoa'
+        SET TrangThai = 'da_xoa'
         WHERE MaTaiKhoan = @MaTaiKhoan;
         
         COMMIT TRANSACTION;
+        SELECT 1 AS RowsAffected;
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0
             ROLLBACK TRANSACTION;
+        SELECT 0 AS RowsAffected;
         THROW;
     END CATCH
 END;
+GO
 GO
 
 -- SP SEARCH
@@ -2328,21 +2342,35 @@ BEGIN
 END
 GO
 
--- Create: Thêm mới đơn hàng siêu thị
+-- Create: Thêm mới đơn hàng siêu thị (Siêu thị đặt hàng từ Đại lý)
 CREATE OR ALTER PROCEDURE sp_DonHangSieuThi_Create
-    @MaDonHang INT,
     @MaSieuThi INT,
-    @MaDaiLy INT
+    @MaDaiLy INT,
+    @MaKho INT = NULL,
+    @TongSoLuong DECIMAL(18,2),
+    @TongGiaTri DECIMAL(18,2),
+    @GhiChu NVARCHAR(255) = NULL,
+    @MaDonHang INT OUTPUT
 AS
 BEGIN
+    SET NOCOUNT ON;
     BEGIN TRY
-        INSERT INTO DonHangSieuThi (MaDonHang, MaSieuThi, MaDaiLy)
-        VALUES (@MaDonHang, @MaSieuThi, @MaDaiLy)
+        -- 1. Tạo DonHang trước với LoaiDon = 'sieuthi_to_daily'
+        INSERT INTO DonHang (LoaiDon, NgayDat, TrangThai, TongSoLuong, TongGiaTri, GhiChu)
+        VALUES (N'sieuthi_to_daily', GETDATE(), N'chua_nhan', @TongSoLuong, @TongGiaTri, @GhiChu);
         
-        SELECT 'Success' AS Status, 'Tạo đơn hàng siêu thị thành công' AS Message
+        SET @MaDonHang = SCOPE_IDENTITY();
+        
+        -- 2. Tạo DonHangSieuThi
+        INSERT INTO DonHangSieuThi (MaDonHang, MaSieuThi, MaDaiLy)
+        VALUES (@MaDonHang, @MaSieuThi, @MaDaiLy);
+        
+        SELECT 'Success' AS Status, 'Tạo đơn hàng siêu thị thành công' AS Message, @MaDonHang AS MaDonHang;
     END TRY
     BEGIN CATCH
-        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        SELECT 'Error' AS Status, @ErrorMessage AS Message;
+        RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END
 GO

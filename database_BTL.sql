@@ -1,4 +1,4 @@
--- ============================================================================
+﻿-- ============================================================================
 -- DATABASE BTL_HDV1 - PHIÊN BẢN ĐẦY ĐỦ
 -- Bao gồm: Tất cả bảng + Bảng KiemDinhDonHang (kiểm định đơn hàng)
 -- ============================================================================
@@ -42,6 +42,7 @@ CREATE TABLE Admin (
     HoTen NVARCHAR(100),
     SoDienThoai NVARCHAR(20),
     Email NVARCHAR(100),
+    TrangThai NVARCHAR(20) DEFAULT N'hoat_dong', -- hoat_dong, da_xoa
     FOREIGN KEY (MaTaiKhoan) REFERENCES TaiKhoan(MaTaiKhoan)
 );
 PRINT '✓ Đã tạo bảng Admin';
@@ -54,6 +55,7 @@ CREATE TABLE NongDan (
     SoDienThoai NVARCHAR(20),
     Email NVARCHAR(100),
     DiaChi NVARCHAR(255),
+    TrangThai NVARCHAR(20) DEFAULT N'hoat_dong', -- hoat_dong, da_xoa
     FOREIGN KEY (MaTaiKhoan) REFERENCES TaiKhoan(MaTaiKhoan)
 );
 PRINT '✓ Đã tạo bảng NongDan';
@@ -66,6 +68,7 @@ CREATE TABLE DaiLy (
     SoDienThoai NVARCHAR(20),
     Email NVARCHAR(100),
     DiaChi NVARCHAR(255),
+    TrangThai NVARCHAR(20) DEFAULT N'hoat_dong', -- hoat_dong, da_xoa
     FOREIGN KEY (MaTaiKhoan) REFERENCES TaiKhoan(MaTaiKhoan)
 );
 PRINT '✓ Đã tạo bảng DaiLy';
@@ -78,6 +81,7 @@ CREATE TABLE SieuThi (
     SoDienThoai NVARCHAR(20),
     Email NVARCHAR(100),
     DiaChi NVARCHAR(255),
+    TrangThai NVARCHAR(20) DEFAULT N'hoat_dong', -- hoat_dong, da_xoa
     FOREIGN KEY (MaTaiKhoan) REFERENCES TaiKhoan(MaTaiKhoan)
 );
 PRINT '✓ Đã tạo bảng SieuThi';
@@ -89,6 +93,7 @@ CREATE TABLE TrangTrai (
     TenTrangTrai NVARCHAR(100) NOT NULL,
     DiaChi NVARCHAR(255),
     SoChungNhan NVARCHAR(50),
+    TrangThai NVARCHAR(20) DEFAULT N'hoat_dong', -- hoat_dong, da_xoa
     NgayTao DATETIME2 DEFAULT SYSDATETIME(),
     FOREIGN KEY (MaNongDan) REFERENCES NongDan(MaNongDan)
 );
@@ -100,6 +105,7 @@ CREATE TABLE SanPham (
     TenSanPham NVARCHAR(100) NOT NULL,
     DonViTinh NVARCHAR(20) NOT NULL,
     MoTa NVARCHAR(255),
+    TrangThai NVARCHAR(20) DEFAULT N'hoat_dong', -- hoat_dong, da_xoa
     NgayTao DATETIME2 DEFAULT SYSDATETIME()
 );
 PRINT '✓ Đã tạo bảng SanPham';
@@ -148,6 +154,25 @@ CREATE TABLE TonKho (
     FOREIGN KEY (MaLo) REFERENCES LoNongSan(MaLo)
 );
 PRINT '✓ Đã tạo bảng TonKho';
+
+-- 10.5. KIEM DINH (Kiểm định chất lượng lô nông sản)
+CREATE TABLE KiemDinh (
+    MaKiemDinh INT IDENTITY(1,1) PRIMARY KEY,
+    MaLo INT NOT NULL,
+    NguoiKiemDinh NVARCHAR(100),
+    MaDaiLy INT NULL,
+    MaSieuThi INT NULL,
+    NgayKiemDinh DATETIME2 DEFAULT SYSDATETIME(),
+    KetQua NVARCHAR(20) NOT NULL, -- dat, khong_dat
+    TrangThai NVARCHAR(20) DEFAULT N'hoan_thanh', -- hoan_thanh, da_xoa
+    BienBan NVARCHAR(MAX),
+    ChuKySo NVARCHAR(255),
+    GhiChu NVARCHAR(255),
+    FOREIGN KEY (MaLo) REFERENCES LoNongSan(MaLo),
+    FOREIGN KEY (MaDaiLy) REFERENCES DaiLy(MaDaiLy),
+    FOREIGN KEY (MaSieuThi) REFERENCES SieuThi(MaSieuThi)
+);
+PRINT '✓ Đã tạo bảng KiemDinh';
 
 -- 11. DON HANG (Bảng cha chung)
 CREATE TABLE DonHang (
