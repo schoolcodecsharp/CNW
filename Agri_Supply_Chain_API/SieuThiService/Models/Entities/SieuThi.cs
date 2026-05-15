@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace SieuThiService.Models.Entities;
@@ -16,6 +16,8 @@ public partial class SieuThi
     public string? Email { get; set; }
 
     public string? DiaChi { get; set; }
+
+    public string? TrangThai { get; set; }
 
     public virtual ICollection<DonHangSieuThi> DonHangSieuThis { get; set; } = new List<DonHangSieuThi>();
 
