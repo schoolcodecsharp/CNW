@@ -149,12 +149,19 @@ const DaiLyKiemDinhFull: React.FC<Props> = ({ maDaiLy }) => {
   // ========== XỬ LÝ ĐƠN HÀNG TỪ SIÊU THỊ ==========
   
   const handleXacNhanDonSieuThi = async (donHang: DonHang) => {
+    if (khoList.length === 0) {
+      alert('⚠️ Không có kho! Vui lòng tạo kho trước.');
+      return;
+    }
+
     if (!confirm(`✅ Xác nhận đơn hàng #${donHang.maDonHang} từ ${donHang.tenSieuThi}?`)) {
       return;
     }
 
     try {
-      const res = await dailyService.xacNhanDonHangSieuThi(donHang.maDonHang, maDaiLy);
+      // Sử dụng kho đầu tiên trong danh sách
+      const maKho = khoList[0].maKho;
+      const res = await dailyService.xacNhanDonHangSieuThi(donHang.maDonHang, maDaiLy, maKho);
       alert(res.message || '✅ Đã xác nhận đơn hàng!');
       loadData();
     } catch (error: any) {
@@ -179,12 +186,19 @@ const DaiLyKiemDinhFull: React.FC<Props> = ({ maDaiLy }) => {
   };
 
   const handleXuLyHoanTra = async (donHang: DonHang) => {
+    if (khoList.length === 0) {
+      alert('⚠️ Không có kho! Vui lòng tạo kho trước.');
+      return;
+    }
+
     if (!confirm(`✅ Đã xử lý xong đơn hàng hoàn trả #${donHang.maDonHang}?`)) {
       return;
     }
 
     try {
-      const res = await dailyService.xuLyHoanDonSieuThi(donHang.maDonHang, maDaiLy);
+      // Sử dụng kho đầu tiên trong danh sách
+      const maKho = khoList[0].maKho;
+      const res = await dailyService.xuLyHoanDonSieuThi(maDaiLy, maKho, donHang.maDonHang);
       alert(res.message || '✅ Đã xử lý hoàn trả!');
       loadData();
     } catch (error: any) {

@@ -14,5 +14,16 @@ export default defineConfig({
         rewrite: (path) => path
       }
     }
+  },
+  build: {
+    rollupOptions: {
+      onwarn(warning, warn) {
+        // Bỏ qua warning về "use client" directive từ antd
+        if (warning.code === 'MODULE_LEVEL_DIRECTIVE' && warning.message.includes('"use client"')) {
+          return
+        }
+        warn(warning)
+      }
+    }
   }
 })

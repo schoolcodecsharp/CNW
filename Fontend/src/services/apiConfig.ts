@@ -159,5 +159,16 @@ export const API_ENDPOINTS = {
     create: `${API_BASE_URLS.daily}/api/ton-kho/create`,
     update: `${API_BASE_URLS.daily}/api/ton-kho/update`,
     delete: `${API_BASE_URLS.daily}/api/ton-kho/delete`
+  },
+
+  // Kiem Dinh
+  kiemDinh: {
+    base: API_BASE_URLS.admin,
+    getAll: `${API_BASE_URLS.admin}/api/kiem-dinh/get-all`,
+    getById: (id: number) => `${API_BASE_URLS.admin}/api/kiem-dinh/get-by-id/${id}`,
+    getByDonHang: (id: number) => `${API_BASE_URLS.admin}/api/kiem-dinh/don-hang/${id}`,
+    create: `${API_BASE_URLS.admin}/api/kiem-dinh/create`,
+    update: (id: number) => `${API_BASE_URLS.admin}/api/kiem-dinh/update/${id}`,
+    delete: (id: number) => `${API_BASE_URLS.admin}/api/kiem-dinh/delete/${id}`
   }
 };
