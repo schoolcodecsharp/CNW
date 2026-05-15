@@ -21,25 +21,25 @@ interface DonHang {
 function OrderManagement() {
   const { user } = useAuth();
   const [allOrders, setAllOrders] = useState<DonHang[]>([]);
-  const [donHangMoi, setDonHangMoi] = useState<DonHang[]>([]);
+  const [donHangChoXacNhan, setDonHangChoXacNhan] = useState<DonHang[]>([]);
   const [donHangHoanDon, setDonHangHoanDon] = useState<DonHang[]>([]);
-  const [batches, setBatches] = useState([]);
-  const [dailyList, setDailyList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
   const [maNongDan, setMaNongDan] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<'moi' | 'hoan' | 'tatca'>('moi');
-  const [formData, setFormData] = useState({
-    maDaiLy: '',
-    maLo: '',
-    soLuong: '',
-    donGia: '',
-    ghiChu: ''
+  const [activeTab, setActiveTab] = useState<'choxacnhan' | 'hoan' | 'tatca'>('choxacnhan');
+
+  // Toast
+  const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' | 'info' }>({
+    show: false, message: '', type: 'success'
   });
 
   useEffect(() => {
     loadData();
   }, []);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
+  };
 
   const loadData = async () => {
     try {
@@ -59,23 +59,15 @@ function OrderManagement() {
       setMaNongDan(currentMaNongDan);
 
       // Load all data in parallel
-      const [ordersRes, moiRes, hoanRes, batchesRes, dailyRes] = await Promise.all([
+      const [ordersRes, chuaXacNhanRes, hoanRes] = await Promise.all([
         axios.get(API_ENDPOINTS.donHangDaiLy.getByNongDan(currentMaNongDan)),
         nongdanService.getDonHangChuaXacNhan(currentMaNongDan).catch(() => ({ data: [] })),
         nongdanService.getDonHangHoanDon(currentMaNongDan).catch(() => ({ data: [] })),
-        axios.get(API_ENDPOINTS.loNongSan.getByNongDan(currentMaNongDan)),
-        axios.get(API_ENDPOINTS.daiLy.getAll)
       ]);
 
       setAllOrders(ordersRes.data.data || []);
-      setDonHangMoi(moiRes.data || []);
+      setDonHangChoXacNhan(chuaXacNhanRes.data || []);
       setDonHangHoanDon(hoanRes.data || []);
-      
-      const availableBatches = (batchesRes.data.data || []).filter((b: any) => 
-        b.trangThai === 'tai_trang_trai' && b.soLuongHienTai > 0
-      );
-      setBatches(availableBatches);
-      setDailyList(dailyRes.data.data || []);
 
     } catch (error) {
       console.error('Error loading data:', error);
@@ -84,15 +76,15 @@ function OrderManagement() {
     }
   };
 
-  // === XÁC NHẬN ĐƠN HÀNG MỚI ===
+  // === XÁC NHẬN ĐƠN HÀNG (Tick) ===
   const handleXacNhan = async (maDonHang: number) => {
-    if (!confirm('✅ Xác nhận đơn hàng này?\n\nSố lượng trong lô sẽ bị TRỪ ĐI và đơn hàng chuyển sang chờ kiểm định.')) return;
+    if (!confirm('✅ Xác nhận đơn hàng này?\n\nĐơn hàng sẽ chuyển sang trạng thái chờ kiểm duyệt bởi đại lý.')) return;
     try {
       const res = await nongdanService.xacNhanDonHang(maDonHang, maNongDan!);
-      alert(res.message || '✅ Đã xác nhận! Đơn hàng chuyển sang chờ kiểm định từ đại lý.');
+      showToast(res.message || '✅ Đã xác nhận đơn hàng. Chờ đại lý kiểm duyệt.', 'success');
       loadData();
     } catch (error: any) {
-      alert('❌ Lỗi: ' + (error.response?.data?.message || error.message));
+      showToast('❌ Lỗi: ' + (error.response?.data?.message || error.message), 'error');
     }
   };
 
@@ -104,10 +96,10 @@ function OrderManagement() {
     if (!confirm(msg)) return;
     try {
       const res = await nongdanService.huyDonHang(maDonHang, maNongDan!);
-      alert(res.message || '✅ Đã hủy đơn hàng.');
+      showToast(res.message || '✅ Đã hủy đơn hàng.', 'success');
       loadData();
     } catch (error: any) {
-      alert('❌ Lỗi: ' + (error.response?.data?.message || error.message));
+      showToast('❌ Lỗi: ' + (error.response?.data?.message || error.message), 'error');
     }
   };
 
@@ -116,38 +108,10 @@ function OrderManagement() {
     if (!confirm('✅ Đã xử lý xong sản phẩm?\n\nSố lượng sẽ được CỘNG LẠI vào lô và gửi lại cho đại lý kiểm định.')) return;
     try {
       const res = await nongdanService.xuLyHoanDon(maDonHang, maNongDan!);
-      alert(res.message || '✅ Đã gửi lại cho đại lý kiểm định.');
+      showToast(res.message || '✅ Đã gửi lại cho đại lý kiểm định.', 'success');
       loadData();
     } catch (error: any) {
-      alert('❌ Lỗi: ' + (error.response?.data?.message || error.message));
-    }
-  };
-
-  // === TẠO ĐƠN BÁN HÀNG ===
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-    try {
-      const selectedBatch = batches.find((b: any) => b.maLo === parseInt(formData.maLo));
-      if (selectedBatch && parseFloat(formData.soLuong) > (selectedBatch as any).soLuongHienTai) {
-        alert('❌ Số lượng vượt quá số lượng hiện có!');
-        return;
-      }
-      const payload = {
-        MaDaiLy: parseInt(formData.maDaiLy),
-        MaNongDan: maNongDan,
-        ChiTietDonHang: [{
-          MaLo: parseInt(formData.maLo),
-          SoLuong: parseFloat(formData.soLuong),
-          DonGia: parseFloat(formData.donGia)
-        }],
-        GhiChu: formData.ghiChu || null
-      };
-      await axios.post(API_ENDPOINTS.donHangDaiLy.create, payload);
-      alert('✅ Tạo đơn hàng thành công!');
-      setShowModal(false);
-      loadData();
-    } catch (error: any) {
-      alert('❌ ' + (error.response?.data?.message || 'Có lỗi xảy ra'));
+      showToast('❌ Lỗi: ' + (error.response?.data?.message || error.message), 'error');
     }
   };
 
@@ -157,7 +121,7 @@ function OrderManagement() {
   const getStatusBadge = (status: string) => {
     const map: Record<string, { cls: string; label: string }> = {
       'chua_nhan': { cls: 'badge-warning', label: '⏳ Chờ xác nhận' },
-      'cho_kiem_duyet': { cls: 'badge-info', label: '🔍 Chờ kiểm định' },
+      'cho_kiem_duyet': { cls: 'badge-info', label: '🔍 Chờ kiểm duyệt' },
       'da_nhan': { cls: 'badge-success', label: '✅ Đã nhập kho' },
       'hoan_don': { cls: 'badge-danger', label: '↩️ Hoàn đơn' },
       'da_huy': { cls: 'badge-danger', label: '❌ Đã hủy' },
@@ -173,16 +137,40 @@ function OrderManagement() {
 
   return (
     <div className="page-container">
+      {/* Toast Notification */}
+      {toast.show && (
+        <div style={{
+          position: 'fixed', top: '20px', right: '20px', zIndex: 10000,
+          minWidth: '300px', maxWidth: '500px', animation: 'slideIn 0.3s ease-out'
+        }}>
+          <div style={{
+            background: toast.type === 'success' ? '#10b981' : toast.type === 'error' ? '#ef4444' : '#3b82f6',
+            color: 'white', padding: '16px 20px', borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', gap: '12px'
+          }}>
+            <div style={{ fontSize: '24px' }}>
+              {toast.type === 'success' ? '✅' : toast.type === 'error' ? '❌' : 'ℹ️'}
+            </div>
+            <div style={{ flex: 1, fontSize: '15px', fontWeight: 500 }}>{toast.message}</div>
+            <button onClick={() => setToast({ ...toast, show: false })} style={{
+              background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white',
+              width: '24px', height: '24px', borderRadius: '50%', cursor: 'pointer', fontSize: '16px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>✕</button>
+          </div>
+        </div>
+      )}
+
       <div className="page-header">
         <h1>📦 Quản lý đơn hàng</h1>
       </div>
 
       {/* ===== STATS ===== */}
       <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: '24px' }}>
-        <div className="stat-card" style={{ borderLeft: `4px solid ${activeTab === 'moi' ? '#f59e0b' : '#e5e7eb'}`, cursor: 'pointer' }} onClick={() => setActiveTab('moi')}>
-          <div className="stat-icon" style={{ background: '#fef3c7' }}>📥</div>
-          <div className="stat-label">Đơn hàng mới</div>
-          <div className="stat-value">{donHangMoi.length}</div>
+        <div className="stat-card" style={{ borderLeft: `4px solid ${activeTab === 'choxacnhan' ? '#f59e0b' : '#e5e7eb'}`, cursor: 'pointer' }} onClick={() => setActiveTab('choxacnhan')}>
+          <div className="stat-icon" style={{ background: '#fef3c7' }}>⏳</div>
+          <div className="stat-label">Chờ xác nhận</div>
+          <div className="stat-value">{donHangChoXacNhan.length}</div>
         </div>
         <div className="stat-card" style={{ borderLeft: `4px solid ${activeTab === 'hoan' ? '#ef4444' : '#e5e7eb'}`, cursor: 'pointer' }} onClick={() => setActiveTab('hoan')}>
           <div className="stat-icon" style={{ background: '#fee2e2' }}>↩️</div>
@@ -196,19 +184,19 @@ function OrderManagement() {
         </div>
       </div>
 
-      {/* ===== TAB: ĐƠN HÀNG MỚI ===== */}
-      {activeTab === 'moi' && (
+      {/* ===== TAB: CHỜ XÁC NHẬN ===== */}
+      {activeTab === 'choxacnhan' && (
         <div className="table-container">
-          <h3 style={{ margin: '0 0 20px 0', color: '#333' }}>📥 Đơn hàng chưa xác nhận</h3>
-          {donHangMoi.length === 0 ? (
+          <h3 style={{ margin: '0 0 20px 0', color: '#333' }}>⏳ Đơn hàng chờ xác nhận (Đại lý đặt cho bạn)</h3>
+          {donHangChoXacNhan.length === 0 ? (
             <div className="empty-state" style={{ padding: '40px' }}>
               <div className="empty-icon">✅</div>
-              <p style={{ color: '#6b7280' }}>Không có đơn hàng mới cần xử lý</p>
+              <p style={{ color: '#6b7280' }}>Không có đơn hàng chờ xác nhận</p>
             </div>
           ) : (
             <>
               <div className="alert alert-info" style={{ marginBottom: '16px' }}>
-                <strong>💡 Hướng dẫn:</strong> Ấn <strong>✓</strong> để xác nhận (số lượng lô sẽ bị trừ, đơn chuyển sang chờ kiểm định). Ấn <strong>✕</strong> để hủy đơn.
+                <strong>💡 Hướng dẫn:</strong> Ấn <strong>✓ Xác nhận</strong> để chấp nhận đơn hàng (chuyển sang chờ kiểm duyệt). Ấn <strong>✕ Hủy</strong> để từ chối đơn hàng.
               </div>
               <table className="data-table">
                 <thead>
@@ -223,8 +211,8 @@ function OrderManagement() {
                   </tr>
                 </thead>
                 <tbody>
-                  {donHangMoi.map(dh => (
-                    <tr key={dh.maDonHang}>
+                  {donHangChoXacNhan.map(dh => (
+                    <tr key={dh.maDonHang} style={{ background: '#fffbeb' }}>
                       <td><strong>#{dh.maDonHang}</strong></td>
                       <td>{dh.tenDaiLy}</td>
                       <td>{formatDate(dh.ngayDat)}</td>
@@ -253,7 +241,7 @@ function OrderManagement() {
       {/* ===== TAB: ĐƠN HOÀN TRẢ ===== */}
       {activeTab === 'hoan' && (
         <div className="table-container">
-          <h3 style={{ margin: '0 0 20px 0', color: '#333' }}>↩️ Đơn hàng hoàn trả (Kiểm định không đạt)</h3>
+          <h3 style={{ margin: '0 0 20px 0', color: '#333' }}>↩️ Đơn hàng hoàn trả (Kiểm duyệt không đạt)</h3>
           {donHangHoanDon.length === 0 ? (
             <div className="empty-state" style={{ padding: '40px' }}>
               <div className="empty-icon">✅</div>
@@ -262,7 +250,7 @@ function OrderManagement() {
           ) : (
             <>
               <div className="alert alert-warning" style={{ marginBottom: '16px' }}>
-                <strong>⚠️ Lưu ý:</strong> Ấn <strong>✓</strong> để gửi lại kiểm định (số lượng được cộng lại vào lô). Ấn <strong>✕</strong> để hủy vĩnh viễn (sản phẩm lỗi/hỏng sẽ MẤT).
+                <strong>⚠️ Lưu ý:</strong> Ấn <strong>✓ Gửi lại</strong> để gửi lại kiểm duyệt (số lượng được cộng lại vào lô). Ấn <strong>✕ Hủy vĩnh viễn</strong> để hủy (sản phẩm lỗi/hỏng sẽ MẤT).
               </div>
               <table className="data-table">
                 <thead>
@@ -284,10 +272,10 @@ function OrderManagement() {
                       <td>{formatDate(dh.ngayDat)}</td>
                       <td>{dh.tongSoLuong} kg</td>
                       <td>{formatCurrency(dh.tongGiaTri)}</td>
-                      <td style={{ color: '#dc2626' }}>{dh.ghiChu || 'Không đạt kiểm định'}</td>
+                      <td style={{ color: '#dc2626' }}>{dh.ghiChu || 'Không đạt kiểm duyệt'}</td>
                       <td>
                         <div className="action-buttons" style={{ justifyContent: 'center' }}>
-                          <button className="btn btn-primary btn-sm" onClick={() => handleXuLyHoanDon(dh.maDonHang)} title="Gửi lại kiểm định">
+                          <button className="btn btn-primary btn-sm" onClick={() => handleXuLyHoanDon(dh.maDonHang)} title="Gửi lại kiểm duyệt">
                             ✓ Gửi lại
                           </button>
                           <button className="btn btn-danger btn-sm" onClick={() => handleHuy(dh.maDonHang, true)} title="Hủy vĩnh viễn">
@@ -348,7 +336,7 @@ function OrderManagement() {
                         )}
                         {order.trangThai === 'hoan_don' && (
                           <>
-                            <button className="btn btn-primary btn-sm" onClick={() => handleXuLyHoanDon(order.maDonHang)} title="Gửi lại kiểm định">
+                            <button className="btn btn-primary btn-sm" onClick={() => handleXuLyHoanDon(order.maDonHang)} title="Gửi lại kiểm duyệt">
                               ✓
                             </button>
                             <button className="btn btn-danger btn-sm" onClick={() => handleHuy(order.maDonHang, true)} title="Hủy vĩnh viễn">
@@ -370,60 +358,6 @@ function OrderManagement() {
         </div>
       )}
 
-      {/* ===== MODAL TẠO ĐƠN ===== */}
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>➕ Tạo đơn bán hàng cho đại lý</h2>
-              <button className="btn-close" onClick={() => setShowModal(false)}>✕</button>
-            </div>
-            <form onSubmit={handleSubmit}>
-              <div className="modal-body">
-                <div className="form-group">
-                  <label><span className="label-icon">🏪</span> Đại lý <span className="required">*</span></label>
-                  <select value={formData.maDaiLy} onChange={e => setFormData({...formData, maDaiLy: e.target.value})} required className="form-control">
-                    <option value="">-- Chọn đại lý --</option>
-                    {dailyList.map((d: any) => <option key={d.maDaiLy} value={d.maDaiLy}>{d.tenDaiLy}</option>)}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label><span className="label-icon">📦</span> Lô nông sản <span className="required">*</span></label>
-                  <select value={formData.maLo} onChange={e => setFormData({...formData, maLo: e.target.value})} required className="form-control">
-                    <option value="">-- Chọn lô --</option>
-                    {batches.map((b: any) => <option key={b.maLo} value={b.maLo}>{b.tenSanPham} - {b.tenTrangTrai} (Còn: {b.soLuongHienTai} kg)</option>)}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label><span className="label-icon">⚖️</span> Số lượng (kg) <span className="required">*</span></label>
-                  <input type="number" step="0.01" value={formData.soLuong} onChange={e => setFormData({...formData, soLuong: e.target.value})} required placeholder="Nhập số lượng" className="form-control" />
-                </div>
-                <div className="form-group">
-                  <label><span className="label-icon">💰</span> Đơn giá (VNĐ/kg) <span className="required">*</span></label>
-                  <input type="number" step="1000" value={formData.donGia} onChange={e => setFormData({...formData, donGia: e.target.value})} required placeholder="Nhập đơn giá" className="form-control" />
-                </div>
-                {formData.soLuong && formData.donGia && (
-                  <div className="form-group">
-                    <label>💵 Tổng giá trị</label>
-                    <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#10b981', padding: '12px', background: '#f0fdf4', borderRadius: '8px', textAlign: 'center' }}>
-                      {formatCurrency(parseFloat(formData.soLuong) * parseFloat(formData.donGia))}
-                    </div>
-                  </div>
-                )}
-                <div className="form-group">
-                  <label><span className="label-icon">📝</span> Ghi chú</label>
-                  <textarea value={formData.ghiChu} onChange={e => setFormData({...formData, ghiChu: e.target.value})} placeholder="Nhập ghi chú (nếu có)" rows={3} className="form-control" />
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>✕ Hủy</button>
-                <button type="submit" className="btn btn-primary">➕ Tạo đơn hàng</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
       <style>{`
         .btn-sm { padding: 8px 16px; font-size: 13px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s; }
         .btn-sm:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
@@ -431,6 +365,11 @@ function OrderManagement() {
         .btn.btn-success:hover { background: #059669; }
         .btn.btn-danger { background: #ef4444; color: white; }
         .btn.btn-danger:hover { background: #dc2626; }
+        .alert-info { background: #dbeafe; border: 1px solid #3b82f6; color: #1e40af; padding: 12px; border-radius: 8px; font-size: 14px; }
+        @keyframes slideIn {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
       `}</style>
     </div>
   );
