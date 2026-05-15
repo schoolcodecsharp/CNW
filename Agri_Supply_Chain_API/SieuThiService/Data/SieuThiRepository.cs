@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SieuThiService.Models.DTOs;
 using SieuThiService.Models.Entities;
 using Microsoft.Data.SqlClient;
@@ -40,7 +40,7 @@ namespace SieuThiService.Data
                 // Tạo đơn hàng chính (chưa có chi tiết)
                 var donHang = new DonHang
                 {
-                    LoaiDon = "sieu_thi",
+                    LoaiDon = "sieuthi_to_daily",  // Siêu thị đặt hàng từ Đại lý
                     NgayDat = DateTime.Now,
                     NgayGiao = request.NgayGiao,
                     TrangThai = "chua_nhan",
@@ -431,7 +431,7 @@ namespace SieuThiService.Data
                 // Tạo đơn hàng chính
                 var donHang = new DonHang
                 {
-                    LoaiDon = "sieu_thi",
+                    LoaiDon = "sieuthi_to_daily",  // Siêu thị đặt hàng từ Đại lý
                     NgayDat = DateTime.Now,
                     NgayGiao = request.NgayGiao,
                     TrangThai = "chua_nhan",
@@ -924,8 +924,8 @@ namespace SieuThiService.Data
                     return false;
                 }
 
-                // Xóa kho
-                _context.Khos.Remove(kho);
+                // Soft delete: Chuyển trạng thái sang 'da_xoa'
+                kho.TrangThai = "da_xoa";
                 _context.SaveChanges();
 
                 return true;
@@ -988,6 +988,7 @@ namespace SieuThiService.Data
         public List<SieuThiDTO> GetAll()
         {
             return _context.SieuThis
+                .Where(s => s.TrangThai != "da_xoa")  // Lọc bỏ đã xóa
                 .Select(s => new SieuThiDTO
                 {
                     MaSieuThi = s.MaSieuThi,
@@ -995,7 +996,8 @@ namespace SieuThiService.Data
                     TenSieuThi = s.TenSieuThi,
                     DiaChi = s.DiaChi,
                     SoDienThoai = s.SoDienThoai,
-                    Email = s.Email
+                    Email = s.Email,
+                    TrangThai = s.TrangThai
                 })
                 .ToList();
         }
@@ -1003,7 +1005,7 @@ namespace SieuThiService.Data
         public SieuThiDTO? GetById(int id)
         {
             return _context.SieuThis
-                .Where(s => s.MaSieuThi == id)
+                .Where(s => s.MaSieuThi == id && s.TrangThai != "da_xoa")  // Lọc bỏ đã xóa
                 .Select(s => new SieuThiDTO
                 {
                     MaSieuThi = s.MaSieuThi,
@@ -1011,7 +1013,8 @@ namespace SieuThiService.Data
                     TenSieuThi = s.TenSieuThi,
                     DiaChi = s.DiaChi,
                     SoDienThoai = s.SoDienThoai,
-                    Email = s.Email
+                    Email = s.Email,
+                    TrangThai = s.TrangThai
                 })
                 .FirstOrDefault();
         }
@@ -1074,14 +1077,30 @@ namespace SieuThiService.Data
             if (sieuThi == null)
                 return false;
 
-            _context.SieuThis.Remove(sieuThi);
+            // Soft delete: Chuyển trạng thái sang 'da_xoa'
+            sieuThi.TrangThai = "da_xoa";
+            
+            // Cascade: Xóa tài khoản liên quan
+            var taiKhoan = _context.TaiKhoans.Find(sieuThi.MaTaiKhoan);
+            if (taiKhoan != null)
+            {
+                taiKhoan.TrangThai = "da_xoa";
+            }
+            
+            // Cascade: Xóa các kho của siêu thị
+            var khos = _context.Khos.Where(k => k.MaSieuThi == id).ToList();
+            foreach (var kho in khos)
+            {
+                kho.TrangThai = "da_xoa";
+            }
+            
             _context.SaveChanges();
             return true;
         }
 
         public List<SieuThiDTO> Search(string? ten, string? sdt)
         {
-            var query = _context.SieuThis.AsQueryable();
+            var query = _context.SieuThis.Where(s => s.TrangThai != "da_xoa");
 
             if (!string.IsNullOrEmpty(ten))
             {
@@ -1101,7 +1120,8 @@ namespace SieuThiService.Data
                     TenSieuThi = s.TenSieuThi,
                     DiaChi = s.DiaChi,
                     SoDienThoai = s.SoDienThoai,
-                    Email = s.Email
+                    Email = s.Email,
+                    TrangThai = s.TrangThai
                 })
                 .ToList();
         }

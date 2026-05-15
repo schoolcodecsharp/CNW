@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using DaiLyService.Models.DTOs;
 using System.Data;
 
@@ -96,7 +96,12 @@ namespace DaiLyService.Data
             cmd.Parameters.AddWithValue("@MaDaiLy", maDaiLy);
 
             conn.Open();
-            return cmd.ExecuteNonQuery() > 0;
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                return (int)reader["RowsAffected"] > 0;
+            }
+            return false;
         }
 
         public List<DaiLyPhanHoi> Search(string? tenDaiLy, string? soDienThoai)

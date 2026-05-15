@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using NongDanService.Models.DTOs;
 using System.Data;
 
@@ -35,6 +35,31 @@ namespace NongDanService.Data
             catch (SqlException ex)
             {
                 _logger.LogError(ex, "SQL error occurred while getting all farmers");
+                throw new Exception("Lỗi truy vấn cơ sở dữ liệu", ex);
+            }
+            return list;
+        }
+
+        public List<NongDanDTO> GetAllAdmin()
+        {
+            var list = new List<NongDanDTO>();
+            try
+            {
+                using var conn = new SqlConnection(_connectionString);
+                using var cmd = new SqlCommand("sp_Admin_GetAllNongDan", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                conn.Open();
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    list.Add(MapToDTO(reader));
+                }
+                _logger.LogInformation("Retrieved {Count} farmers (admin) from database", list.Count);
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "SQL error occurred while getting all farmers (admin)");
                 throw new Exception("Lỗi truy vấn cơ sở dữ liệu", ex);
             }
             return list;
@@ -175,7 +200,8 @@ namespace NongDanService.Data
                 HoTen = reader.IsDBNull("HoTen") ? null : reader.GetString("HoTen"),
                 SoDienThoai = reader.IsDBNull("SoDienThoai") ? null : reader.GetString("SoDienThoai"),
                 Email = reader.IsDBNull("Email") ? null : reader.GetString("Email"),
-                DiaChi = reader.IsDBNull("DiaChi") ? null : reader.GetString("DiaChi")
+                DiaChi = reader.IsDBNull("DiaChi") ? null : reader.GetString("DiaChi"),
+                TrangThai = reader.IsDBNull("TrangThai") ? null : reader.GetString("TrangThai")
             };
         }
     }

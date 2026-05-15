@@ -104,7 +104,7 @@ namespace AdminService.Data
                 return (success, message);
             }
 
-            return (false, "L?i kh�ng x�c �?nh");
+            return (false, "Loi khong xac dinh");
         }
 
         private TaiKhoanDto MapToTaiKhoanDto(SqlDataReader reader)

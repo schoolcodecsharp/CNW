@@ -1,4 +1,4 @@
-﻿using NongDanService.Data;
+using NongDanService.Data;
 using NongDanService.Models.DTOs;
 
 namespace NongDanService.Services
@@ -13,6 +13,8 @@ namespace NongDanService.Services
         }
 
         public List<NongDanDTO> GetAll() => _repo.GetAll();
+
+        public List<NongDanDTO> GetAllAdmin() => _repo.GetAllAdmin();
 
         public NongDanDTO? GetById(int id) => _repo.GetById(id);
 

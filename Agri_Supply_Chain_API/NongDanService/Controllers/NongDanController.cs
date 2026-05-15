@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using NongDanService.Models.DTOs;
 using NongDanService.Services;
 
@@ -25,6 +25,33 @@ namespace NongDanService.Controllers
             try
             {
                 var data = _nongDanService.GetAll();
+                return Ok(new
+                {
+                    success = true,
+                    message = "Lấy danh sách nông dân thành công",
+                    data = data,
+                    count = data.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Lỗi server: " + ex.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// Lấy tất cả nông dân (kể cả đã xóa) - Dành cho Admin
+        /// </summary>
+        [HttpGet("get-all-admin")]
+        public IActionResult GetAllAdmin()
+        {
+            try
+            {
+                var data = _nongDanService.GetAllAdmin();
                 return Ok(new
                 {
                     success = true,
