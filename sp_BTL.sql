@@ -228,6 +228,7 @@ CREATE OR ALTER PROCEDURE sp_NongDan_Update
     @DiaChi NVARCHAR(255) = NULL
 AS
 BEGIN
+    SET NOCOUNT ON;
     BEGIN TRY
         UPDATE NongDan
         SET 
@@ -237,10 +238,11 @@ BEGIN
             DiaChi = ISNULL(@DiaChi, DiaChi)
         WHERE MaNongDan = @MaNongDan;
         
-        SELECT 'SUCCESS' AS Status, 'Cập nhật thành công' AS Message;
+        SELECT @@ROWCOUNT AS RowsAffected;
     END TRY
     BEGIN CATCH
-        SELECT 'ERROR' AS Status, ERROR_MESSAGE() AS Message;
+        SELECT 0 AS RowsAffected;
+        THROW;
     END CATCH
 END;
 GO
