@@ -1,148 +1,104 @@
 # 🌾 Hệ thống Quản lý Chuỗi Cung ứng Nông sản
 
-## 📋 Giới thiệu
+Hệ thống quản lý chuỗi cung ứng nông sản từ trang trại đến siêu thị với tính năng truy xuất nguồn gốc.
 
-Hệ thống quản lý chuỗi cung ứng nông sản từ nông dân → đại lý → siêu thị với các tính năng:
-- Quản lý đơn hàng
-- Kiểm định chất lượng
-- Quản lý kho và tồn kho
-- Theo dõi lô nông sản
+## 📋 Cấu trúc Database
 
-## 🏗️ Kiến trúc hệ thống
+### File SQL chính (chạy theo thứ tự):
 
-### Backend (ASP.NET Core 8.0)
-- **Gateway**: Port 7217
-- **AuthService**: Port 7217 (Authentication & Authorization)
-- **NongDanService**: Port 7090 (Farmer management)
-- **DaiLyService**: Port 7002 (Distributor management)
-- **SieuThiService**: Port 7087 (Supermarket management)
+1. **`database_BTL.sql`** - Schema database (bảng, ràng buộc, indexes)
+2. **`sp_BTL.sql`** - Stored procedures gốc
+3. **`PATCH_SOFT_DELETE_FIXED.sql`** - Patch soft delete (xóa mềm)
+4. **`PATCH_ADD_TRANGTHAI_TO_CREATE.sql`** - Patch thêm TrangThai mặc định khi tạo mới
+5. **`Du_lieu.sql`** - Dữ liệu mẫu
 
-### Frontend (React + TypeScript)
-- **Port**: 5173
-- **Framework**: React 18 + Vite
-- **UI**: Custom CSS components
+## 🚀 Cách chạy Database
 
-### Database
-- **SQL Server**: BTL_HDV1
-- **Server**: NVT
-
-## 🚀 Cài đặt và Chạy
-
-### 1. Database
+### Bước 1: Tạo Database
 ```sql
--- Chạy file tạo database và bảng
-USE master;
-GO
-EXEC sp_executesql N'USE [BTL_HDV1]';
-GO
-
--- Import file database_BTL.sql
--- Import file sp_BTL.sql (stored procedures)
+-- Mở SQL Server Management Studio
+-- Chạy file: database_BTL.sql
 ```
 
-### 2. Backend
-```bash
-cd Agri_Supply_Chain_API
-dotnet restore
-dotnet build
-dotnet run --project Gateway
+### Bước 2: Tạo Stored Procedures
+```sql
+-- Chạy file: sp_BTL.sql
 ```
 
-### 3. Frontend
-```bash
-cd Fontend
-npm install
-npm run dev
+### Bước 3: Áp dụng Soft Delete
+```sql
+-- Chạy file: PATCH_SOFT_DELETE_FIXED.sql
 ```
 
-## 👥 Tài khoản test
+### Bước 4: Thêm TrangThai mặc định
+```sql
+-- Chạy file: PATCH_ADD_TRANGTHAI_TO_CREATE.sql
+```
 
-| Loại tài khoản | Username | Password |
-|----------------|----------|----------|
-| Nông dân       | nd1      | 123456   |
-| Đại lý         | dl1      | 123456   |
-| Siêu thị       | st1      | 123456   |
+### Bước 5: Insert dữ liệu mẫu
+```sql
+-- Chạy file: Du_lieu.sql
+```
 
-## 📊 Luồng hoạt động
+## 📊 Tính năng Soft Delete
 
-### Đơn hàng Nông dân → Đại lý
-1. Nông dân tạo đơn hàng → `chua_nhan`
-2. Đại lý kiểm định:
-   - ✅ Đạt → Chọn kho → `da_nhan` (nhập kho)
-   - ❌ Không đạt → `hoan_don` (hoàn về nông dân)
+### Nguyên tắc:
+- **Tạo mới**: TrangThai = 'hoat_dong'
+- **Xóa**: TrangThai = 'da_xoa' (không xóa vật lý)
+- **Hiển thị**: Chỉ hiển thị TrangThai != 'da_xoa'
+- **Admin**: Xem tất cả (kể cả đã xóa)
 
-### Đơn hàng Siêu thị → Đại lý
-1. Siêu thị tạo đơn hàng → `chua_nhan`
-2. Đại lý xác nhận:
-   - ✅ Xác nhận → Chọn kho → Trừ tồn kho → `cho_kiem_duyet`
-   - ❌ Hủy → `da_huy`
-3. Siêu thị kiểm định:
-   - ✅ Đạt → `da_nhan` (nhập kho siêu thị)
-   - ❌ Không đạt → `hoan_don` (hoàn về đại lý)
-4. Nếu hoàn đơn, đại lý xử lý:
-   - ✅ Gửi lại → Chọn kho → `cho_kiem_duyet`
-   - ❌ Hủy vĩnh viễn → `da_huy`
+### Cascade Delete:
+- Xóa Nông dân → Xóa Trang trại + Tài khoản
+- Xóa Đại lý → Xóa Kho + Tài khoản
+- Xóa Siêu thị → Xóa Kho + Tài khoản
 
-## 📁 Cấu trúc thư mục
+## 🔑 Tài khoản mặc định
+
+```
+Nông dân:  nd1 / 123456
+Đại lý:    dl1 / 123456
+Siêu thị:  st1 / 123456
+Admin:     admin1 / 123456
+```
+
+## 🛠️ Tech Stack
+
+- **Backend**: ASP.NET Core 8.0
+- **Database**: SQL Server
+- **Frontend**: React + TypeScript
+- **ORM**: Entity Framework Core
+
+## 📁 Cấu trúc Project
 
 ```
 CNW/
-├── Agri_Supply_Chain_API/      # Backend services
-│   ├── Gateway/                # API Gateway
-│   ├── AuthService/            # Authentication service
-│   ├── NongDanService/         # Farmer service
-│   ├── DaiLyService/           # Distributor service
-│   └── SieuThiService/         # Supermarket service
-├── Fontend/                    # React frontend
-│   ├── src/
-│   │   ├── components/         # Reusable components
-│   │   ├── pages/              # Page components
-│   │   ├── services/           # API services
-│   │   └── context/            # React context
-│   └── public/
-├── database_BTL.sql            # Database schema
-└── sp_BTL.sql                  # Stored procedures
+├── database_BTL.sql                    # Schema database
+├── sp_BTL.sql                          # Stored procedures
+├── PATCH_SOFT_DELETE_FIXED.sql         # Patch soft delete
+├── PATCH_ADD_TRANGTHAI_TO_CREATE.sql   # Patch TrangThai
+├── Du_lieu.sql                         # Dữ liệu mẫu
+├── Agri_Supply_Chain_API/              # Backend API
+│   ├── AdminService/
+│   ├── AuthService/
+│   ├── NongDanService/
+│   ├── DaiLyService/
+│   └── SieuThiService/
+└── Fontend/                            # Frontend React
+    └── src/
+        ├── pages/
+        ├── components/
+        └── services/
 ```
 
-## 🔧 Công nghệ sử dụng
+## 📝 Lưu ý
 
-### Backend
-- ASP.NET Core 8.0
-- Entity Framework Core
-- SQL Server
-- JWT Authentication
+1. Chạy file SQL theo đúng thứ tự
+2. Đảm bảo SQL Server đang chạy
+3. Connection string: `Server=NVT;Database=BTL_HDV1;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true`
+4. Sau khi chạy xong, reload trang web để thấy dữ liệu
 
-### Frontend
-- React 18
-- TypeScript
-- Vite
-- Axios
-- React Router
+---
 
-## 📝 Ghi chú
-
-- Hệ thống sử dụng stored procedures cho các thao tác phức tạp
-- Authentication sử dụng JWT tokens
-- Frontend sử dụng Context API cho state management
-- Tất cả API đều có validation và error handling
-
-## 🐛 Troubleshooting
-
-### Backend không chạy
-- Kiểm tra SQL Server đang chạy
-- Kiểm tra connection string trong appsettings.json
-- Chạy `dotnet restore` và `dotnet build`
-
-### Frontend không kết nối được API
-- Kiểm tra backend đang chạy
-- Kiểm tra API endpoints trong `src/services/apiConfig.ts`
-- Kiểm tra CORS settings trong backend
-
-### Database lỗi
-- Chạy lại file `database_BTL.sql`
-- Chạy lại file `sp_BTL.sql`
-- Kiểm tra SQL Server authentication
-
-## 📞 Liên hệ
-
-Dự án bài tập lớn môn Công nghệ Web
+**Phát triển bởi**: Nhóm CNW  
+**Năm**: 2026

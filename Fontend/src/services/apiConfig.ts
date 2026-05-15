@@ -19,13 +19,25 @@ export const API_ENDPOINTS = {
     getById: (id: number) => `${API_BASE_URLS.admin}/api/Admin/${id}`,
     create: `${API_BASE_URLS.admin}/api/Admin`,
     update: (id: number) => `${API_BASE_URLS.admin}/api/Admin/${id}`,
-    delete: (id: number) => `${API_BASE_URLS.admin}/api/Admin/${id}`
+    delete: (id: number) => `${API_BASE_URLS.admin}/api/Admin/${id}`,
+    // Admin management endpoints (xem tất cả kể cả đã xóa)
+    getAllDaiLy: `${API_BASE_URLS.admin}/api/Admin/daily`,
+    getDaiLyById: (id: number) => `${API_BASE_URLS.admin}/api/Admin/daily/${id}`,
+    createDaiLy: `${API_BASE_URLS.admin}/api/Admin/daily`,
+    updateDaiLy: (id: number) => `${API_BASE_URLS.admin}/api/Admin/daily/${id}`,
+    deleteDaiLy: (id: number) => `${API_BASE_URLS.admin}/api/Admin/daily/${id}`,
+    getAllSieuThi: `${API_BASE_URLS.admin}/api/Admin/sieuthi`,
+    getSieuThiById: (id: number) => `${API_BASE_URLS.admin}/api/Admin/sieuthi/${id}`,
+    createSieuThi: `${API_BASE_URLS.admin}/api/Admin/sieuthi`,
+    updateSieuThi: (id: number) => `${API_BASE_URLS.admin}/api/Admin/sieuthi/${id}`,
+    deleteSieuThi: (id: number) => `${API_BASE_URLS.admin}/api/Admin/sieuthi/${id}`
   },
   
   // Nong Dan Service
   nongDan: {
     base: API_BASE_URLS.nongdan,
     getAll: `${API_BASE_URLS.nongdan}/api/nong-dan/get-all`,
+    getAllAdmin: `${API_BASE_URLS.nongdan}/api/nong-dan/get-all-admin`,
     getById: (id: number) => `${API_BASE_URLS.nongdan}/api/nong-dan/get-by-id/${id}`,
     create: `${API_BASE_URLS.nongdan}/api/nong-dan/create`,
     update: (id: number) => `${API_BASE_URLS.nongdan}/api/nong-dan/update/${id}`,
