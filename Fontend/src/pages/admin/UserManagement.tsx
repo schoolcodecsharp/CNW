@@ -33,9 +33,9 @@ function UserManagement() {
       
       // Load tất cả người dùng từ các service khác nhau
       const [nongdanRes, dailyRes, sieuthiRes] = await Promise.all([
-        axios.get(API_ENDPOINTS.nongDan.getAll).catch(() => ({ data: { data: [] } })),
-        axios.get(API_ENDPOINTS.daiLy.getAll).catch(() => ({ data: { data: [] } })),
-        axios.get(API_ENDPOINTS.sieuThi.getAll).catch(() => ({ data: { data: [] } }))
+        axios.get(API_ENDPOINTS.nongDan.getAllAdmin).catch(() => ({ data: { data: [] } })),
+        axios.get(API_ENDPOINTS.admin.getAllDaiLy).catch(() => ({ data: { data: [] } })),
+        axios.get(API_ENDPOINTS.admin.getAllSieuThi).catch(() => ({ data: { data: [] } }))
       ]);
 
       // Gộp và format danh sách người dùng
@@ -49,7 +49,7 @@ function UserManagement() {
           phone: u.soDienThoai,
           email: u.email,
           address: u.diaChi,
-          status: 'active'
+          status: u.trangThai || 'hoat_dong'
         })),
         ...(dailyRes.data.data || []).map(u => ({
           ...u,
@@ -60,7 +60,7 @@ function UserManagement() {
           phone: u.soDienThoai,
           email: u.email,
           address: u.diaChi,
-          status: 'active'
+          status: u.trangThai || 'hoat_dong'
         })),
         ...(sieuthiRes.data.data || []).map(u => ({
           ...u,
@@ -71,7 +71,7 @@ function UserManagement() {
           phone: u.soDienThoai,
           email: u.email,
           address: u.diaChi,
-          status: 'active'
+          status: u.trangThai || 'hoat_dong'
         }))
       ];
 
@@ -325,7 +325,9 @@ function UserManagement() {
                   <td>{user.email || 'N/A'}</td>
                   <td>{user.address || 'N/A'}</td>
                   <td>
-                    <span className="badge badge-success">Hoạt động</span>
+                    <span className={`badge ${user.status === 'hoat_dong' ? 'badge-success' : 'badge-danger'}`}>
+                      {user.status === 'hoat_dong' ? 'Hoạt động' : 'Đã xóa'}
+                    </span>
                   </td>
                   <td>
                     <div className="action-buttons">
@@ -441,7 +443,9 @@ function UserManagement() {
                         <div className="detail-icon">✅</div>
                         <div className="detail-content">
                           <span className="detail-label">Trạng thái</span>
-                          <span className="badge badge-success">Hoạt động</span>
+                          <span className={`badge ${selectedUser.status === 'hoat_dong' ? 'badge-success' : 'badge-danger'}`}>
+                            {selectedUser.status === 'hoat_dong' ? 'Hoạt động' : 'Đã xóa'}
+                          </span>
                         </div>
                       </div>
                     </div>

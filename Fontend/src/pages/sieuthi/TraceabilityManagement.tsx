@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../services/apiConfig';
 import { useAuth } from '../../context/AuthContext';
@@ -9,6 +9,62 @@ function TraceabilityManagement() {
   const [searchCode, setSearchCode] = useState('');
   const [traceData, setTraceData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [availableBatches, setAvailableBatches] = useState<any[]>([]);
+
+  // Load available batches
+  useEffect(() => {
+    loadAvailableBatches();
+  }, []);
+
+  const loadAvailableBatches = async () => {
+    try {
+      if (!user || !user.maTaiKhoan) {
+        return;
+      }
+
+      // Lấy ID siêu thị
+      const sieuThiRes = await axios.get(API_ENDPOINTS.sieuThi.getAll);
+      const currentSieuThi = sieuThiRes.data.data?.find(
+        (st: any) => st.maTaiKhoan === user.maTaiKhoan
+      );
+      
+      if (!currentSieuThi) {
+        return;
+      }
+
+      // Tải danh sách kho của siêu thị
+      const warehousesRes = await axios.get(API_ENDPOINTS.kho.getBySieuThi(currentSieuThi.maSieuThi));
+      
+      if (warehousesRes.data.success) {
+        const warehouses = warehousesRes.data.data || [];
+        
+        // Load tồn kho từ tất cả các kho
+        const allInventory: any[] = [];
+        for (const warehouse of warehouses) {
+          try {
+            const response = await axios.get(`https://localhost:7217/api/KhoHang/${warehouse.maKho}`);
+            if (response.data && response.data.tonKhos) {
+              allInventory.push(...response.data.tonKhos);
+            }
+          } catch (error) {
+            console.error(`Error loading inventory for warehouse ${warehouse.maKho}:`, error);
+          }
+        }
+        
+        setAvailableBatches(allInventory);
+        console.log('Loaded batches in inventory:', allInventory.length);
+      }
+    } catch (error) {
+      console.error('Error loading batches:', error);
+    }
+  };
+
+  const handleBatchSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedMaLo = e.target.value;
+    if (selectedMaLo) {
+      setSearchCode(selectedMaLo);
+    }
+  };
 
   const handleSearch = async (e: any) => {
     e.preventDefault();
@@ -185,27 +241,59 @@ function TraceabilityManagement() {
 
       <div className="search-section">
         <form onSubmit={handleSearch} className="search-form">
-          <div className="form-group">
-            <label>
-              <span className="label-icon">📱</span>
-              Nhập mã QR hoặc mã lô
-            </label>
-            <div className="search-input-group">
-              <input
-                type="text"
-                value={searchCode}
-                onChange={(e) => setSearchCode(e.target.value)}
-                placeholder="Nhập mã để tra cứu..."
-                className="form-control"
-              />
-              <button type="submit" className="btn btn-primary" disabled={loading}>
-                {loading ? '⏳ Đang tìm...' : '🔍 Tra cứu'}
-              </button>
-              {traceData && (
-                <button type="button" className="btn btn-secondary" onClick={handleReset}>
-                  ↻ Làm mới
-                </button>
+          <div className="form-row">
+            <div className="form-group flex-1">
+              <label>
+                <span className="label-icon">📦</span>
+                Chọn lô hàng có sẵn
+              </label>
+              <select 
+                className="form-control select-batch"
+                onChange={handleBatchSelect}
+                value=""
+              >
+                <option value="">-- Chọn lô hàng từ kho --</option>
+                {availableBatches.map((batch) => (
+                  <option key={batch.maLo} value={batch.maLo}>
+                    Lô #{batch.maLo} - {batch.tenSanPham || 'N/A'} ({batch.soLuong} {batch.donViTinh || 'kg'})
+                  </option>
+                ))}
+              </select>
+              {availableBatches.length > 0 && (
+                <div className="batch-count">
+                  ✅ {availableBatches.length} lô hàng có sẵn
+                </div>
               )}
+            </div>
+          </div>
+
+          <div className="divider">
+            <span>HOẶC</span>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group flex-1">
+              <label>
+                <span className="label-icon">📱</span>
+                Nhập mã QR hoặc mã lô
+              </label>
+              <div className="search-input-group">
+                <input
+                  type="text"
+                  value={searchCode}
+                  onChange={(e) => setSearchCode(e.target.value)}
+                  placeholder="Nhập mã để tra cứu..."
+                  className="form-control"
+                />
+                <button type="submit" className="btn btn-primary" disabled={loading}>
+                  {loading ? '⏳ Đang tìm...' : '🔍 Tra cứu'}
+                </button>
+                {traceData && (
+                  <button type="button" className="btn btn-secondary" onClick={handleReset}>
+                    ↻ Làm mới
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </form>
@@ -345,7 +433,7 @@ function TraceabilityManagement() {
       {!traceData && !loading && (
         <div className="empty-state">
           <div className="empty-icon">🔍</div>
-          <p>Nhập mã QR hoặc mã lô để tra cứu thông tin nguồn gốc sản phẩm</p>
+          <p>Chọn lô hàng hoặc nhập mã để tra cứu</p>
         </div>
       )}
 
@@ -361,6 +449,71 @@ function TraceabilityManagement() {
         .search-form {
           max-width: 800px;
           margin: 0 auto;
+        }
+
+        .form-row {
+          display: flex;
+          gap: 15px;
+          margin-bottom: 20px;
+        }
+
+        .flex-1 {
+          flex: 1;
+        }
+
+        .select-batch {
+          font-size: 15px;
+          padding: 12px;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          background: #f9fafb;
+          cursor: pointer;
+          transition: all 0.3s;
+        }
+
+        .select-batch:hover {
+          border-color: #8b5cf6;
+          background: white;
+        }
+
+        .select-batch:focus {
+          border-color: #8b5cf6;
+          background: white;
+          outline: none;
+          box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        .batch-count {
+          margin-top: 8px;
+          font-size: 13px;
+          color: #10b981;
+          font-weight: 500;
+        }
+
+        .divider {
+          text-align: center;
+          margin: 30px 0;
+          position: relative;
+        }
+
+        .divider::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 50%;
+          height: 1px;
+          background: #e5e7eb;
+        }
+
+        .divider span {
+          position: relative;
+          background: white;
+          padding: 0 20px;
+          color: #9ca3af;
+          font-size: 13px;
+          font-weight: 600;
+          letter-spacing: 1px;
         }
 
         .search-input-group {
@@ -556,13 +709,20 @@ function TraceabilityManagement() {
         .empty-state {
           text-align: center;
           padding: 80px 20px;
-          background: #f9fafb;
+          background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
           border-radius: 12px;
+          border: 2px dashed #e5e7eb;
         }
 
         .empty-icon {
           font-size: 64px;
           margin-bottom: 20px;
+          animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
         }
 
         .empty-state p {

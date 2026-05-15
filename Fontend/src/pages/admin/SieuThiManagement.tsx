@@ -27,7 +27,7 @@ function SieuThiManagement() {
   const loadSieuThi = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(API_ENDPOINTS.sieuThi.getAll);
+      const response = await axios.get(API_ENDPOINTS.admin.getAllSieuThi);
       setSieuThiList(response.data.data || []);
     } catch (error) {
       console.error('Error loading sieu thi:', error);
@@ -76,7 +76,7 @@ function SieuThiManagement() {
     }
 
     try {
-      const response = await axios.delete(API_ENDPOINTS.sieuThi.delete(sieuThi.maSieuThi));
+      const response = await axios.delete(API_ENDPOINTS.admin.deleteSieuThi(sieuThi.maSieuThi));
       
       // Tải lại danh sách ngay lập tức
       await loadSieuThi();
@@ -110,7 +110,7 @@ function SieuThiManagement() {
           Email: formData.email,
           DiaChi: formData.diaChi
         };
-        await axios.post(API_ENDPOINTS.sieuThi.create, payload);
+        await axios.post(API_ENDPOINTS.admin.createSieuThi, payload);
         alert('✅ Thêm siêu thị thành công!');
       } else if (modalMode === 'edit') {
         // Khi sửa, gửi dữ liệu với PascalCase (không sửa tài khoản)
@@ -120,7 +120,7 @@ function SieuThiManagement() {
           Email: formData.email || null,
           DiaChi: formData.diaChi || null
         };
-        await axios.put(API_ENDPOINTS.sieuThi.update(selectedSieuThi.maSieuThi), payload);
+        await axios.put(API_ENDPOINTS.admin.updateSieuThi(selectedSieuThi.maSieuThi), payload);
         alert('✅ Cập nhật siêu thị thành công!');
       }
 
@@ -193,7 +193,9 @@ function SieuThiManagement() {
                   <td>{sieuThi.email || 'N/A'}</td>
                   <td>{sieuThi.diaChi || 'N/A'}</td>
                   <td>
-                    <span className="badge badge-success">Hoạt động</span>
+                    <span className={`badge ${sieuThi.trangThai === 'hoat_dong' ? 'badge-success' : 'badge-danger'}`}>
+                      {sieuThi.trangThai === 'hoat_dong' ? 'Hoạt động' : 'Đã xóa'}
+                    </span>
                   </td>
                   <td>
                     <div className="action-buttons">

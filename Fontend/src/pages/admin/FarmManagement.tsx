@@ -174,7 +174,9 @@ function FarmManagement() {
                   <td>{farm.soChungNhan || 'N/A'}</td>
                   <td>{farm.tenNongDan || 'N/A'}</td>
                   <td>
-                    <span className="badge badge-success">Hoạt động</span>
+                    <span className={`badge ${farm.trangThai === 'hoat_dong' ? 'badge-success' : 'badge-danger'}`}>
+                      {farm.trangThai === 'hoat_dong' ? 'Hoạt động' : 'Đã xóa'}
+                    </span>
                   </td>
                   <td>
                     <div className="action-buttons">

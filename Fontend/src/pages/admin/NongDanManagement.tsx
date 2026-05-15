@@ -27,7 +27,7 @@ function NongDanManagement() {
   const loadNongDan = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(API_ENDPOINTS.nongDan.getAll);
+      const response = await axios.get(API_ENDPOINTS.nongDan.getAllAdmin);
       setNongDanList(response.data.data || []);
     } catch (error) {
       console.error('Error loading nong dan:', error);
@@ -193,7 +193,9 @@ function NongDanManagement() {
                   <td>{nongDan.email || 'N/A'}</td>
                   <td>{nongDan.diaChi || 'N/A'}</td>
                   <td>
-                    <span className="badge badge-success">Hoạt động</span>
+                    <span className={`badge ${nongDan.trangThai === 'hoat_dong' ? 'badge-success' : 'badge-danger'}`}>
+                      {nongDan.trangThai === 'hoat_dong' ? 'Hoạt động' : 'Đã xóa'}
+                    </span>
                   </td>
                   <td>
                     <div className="action-buttons">

@@ -27,7 +27,7 @@ function DaiLyManagement() {
   const loadDaiLy = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(API_ENDPOINTS.daiLy.getAll);
+      const response = await axios.get(API_ENDPOINTS.admin.getAllDaiLy);
       setDailyList(response.data.data || []);
     } catch (error) {
       console.error('Error loading dai ly:', error);
@@ -76,7 +76,7 @@ function DaiLyManagement() {
     }
 
     try {
-      const response = await axios.delete(API_ENDPOINTS.daiLy.delete(daily.maDaiLy));
+      const response = await axios.delete(API_ENDPOINTS.admin.deleteDaiLy(daily.maDaiLy));
       
       // Tải lại danh sách ngay lập tức
       await loadDaiLy();
@@ -110,7 +110,7 @@ function DaiLyManagement() {
           Email: formData.email,
           DiaChi: formData.diaChi
         };
-        await axios.post(API_ENDPOINTS.daiLy.create, payload);
+        await axios.post(API_ENDPOINTS.admin.createDaiLy, payload);
         alert('✅ Thêm đại lý thành công!');
       } else if (modalMode === 'edit') {
         // Khi sửa, gửi dữ liệu với PascalCase (không sửa tài khoản)
@@ -120,7 +120,7 @@ function DaiLyManagement() {
           Email: formData.email || null,
           DiaChi: formData.diaChi || null
         };
-        await axios.put(API_ENDPOINTS.daiLy.update(selectedDaily.maDaiLy), payload);
+        await axios.put(API_ENDPOINTS.admin.updateDaiLy(selectedDaily.maDaiLy), payload);
         alert('✅ Cập nhật đại lý thành công!');
       }
 
@@ -193,7 +193,9 @@ function DaiLyManagement() {
                   <td>{daily.email || 'N/A'}</td>
                   <td>{daily.diaChi || 'N/A'}</td>
                   <td>
-                    <span className="badge badge-success">Hoạt động</span>
+                    <span className={`badge ${daily.trangThai === 'hoat_dong' ? 'badge-success' : 'badge-danger'}`}>
+                      {daily.trangThai === 'hoat_dong' ? 'Hoạt động' : 'Đã xóa'}
+                    </span>
                   </td>
                   <td>
                     <div className="action-buttons">

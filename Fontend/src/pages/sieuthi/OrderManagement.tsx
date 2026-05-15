@@ -32,6 +32,19 @@ function OrderManagement() {
     try {
       setLoading(true);
       
+      // Load danh sách đại lý song song (không phụ thuộc siêu thị)
+      const dailyPromise = axios.get(API_ENDPOINTS.daiLy.getAll)
+        .then(res => {
+          console.log('Đại lý response:', res.data);
+          const list = res.data.data || res.data || [];
+          console.log('Số lượng đại lý:', list.length);
+          setDailyList(Array.isArray(list) ? list : []);
+        })
+        .catch(err => {
+          console.error('Error loading dai ly:', err);
+          setDailyList([]);
+        });
+
       const sieuThiRes = await axios.get(API_ENDPOINTS.sieuThi.getAll);
       console.log('Siêu thị response:', sieuThiRes.data);
       
@@ -41,6 +54,7 @@ function OrderManagement() {
       
       if (!currentSieuThi) {
         console.error('Không tìm thấy siêu thị cho user:', user);
+        await dailyPromise; // Đợi load đại lý xong
         setLoading(false);
         return;
       }
@@ -48,14 +62,19 @@ function OrderManagement() {
       console.log('Current siêu thị:', currentSieuThi);
       setMaSieuThi(currentSieuThi.maSieuThi);
 
-      const ordersRes = await axios.get(API_ENDPOINTS.donHangSieuThi.getBySieuThi(currentSieuThi.maSieuThi));
-      console.log('Orders response:', ordersRes.data);
-      setAllOrders(ordersRes.data.data || []);
+      // Load orders song song với đại lý
+      const ordersPromise = axios.get(API_ENDPOINTS.donHangSieuThi.getBySieuThi(currentSieuThi.maSieuThi))
+        .then(res => {
+          console.log('Orders response:', res.data);
+          setAllOrders(res.data.data || []);
+        })
+        .catch(err => {
+          console.error('Error loading orders:', err);
+          setAllOrders([]);
+        });
 
-      const dailyRes = await axios.get(API_ENDPOINTS.daiLy.getAll);
-      console.log('Đại lý response:', dailyRes.data);
-      console.log('Số lượng đại lý:', dailyRes.data.data?.length || 0);
-      setDailyList(dailyRes.data.data || []);
+      // Đợi tất cả hoàn thành
+      await Promise.all([dailyPromise, ordersPromise]);
 
     } catch (error) {
       console.error('Error loading data:', error);
@@ -78,15 +97,22 @@ function OrderManagement() {
 
   const loadBatchesByDaily = async (maDaiLy: number) => {
     // Nếu đã tải rồi thì không tải lại
-    if (dailyBatches[maDaiLy]) return;
+    if (dailyBatches[maDaiLy]) {
+      console.log('Using cached batches for daily:', maDaiLy, dailyBatches[maDaiLy]);
+      return;
+    }
 
     try {
       setLoadingBatches(true);
+      console.log('Loading batches for daily:', maDaiLy);
+      
       // Lấy danh sách kho của đại lý
       const khoRes = await axios.get(API_ENDPOINTS.kho.getByDaiLy(maDaiLy));
       const khoList = khoRes.data.data || [];
+      console.log('Kho list:', khoList);
       
       if (khoList.length === 0) {
+        console.warn('Đại lý không có kho nào');
         setDailyBatches(prev => ({ ...prev, [maDaiLy]: [] }));
         setLoadingBatches(false);
         return;
@@ -95,16 +121,19 @@ function OrderManagement() {
       // Lấy tồn kho của tất cả kho của đại lý
       const tonKhoRes = await axios.get(API_ENDPOINTS.tonKho.getAll);
       const allTonKho = tonKhoRes.data.data || [];
+      console.log('All ton kho:', allTonKho);
       
       // Lọc tồn kho thuộc các kho của đại lý
       const maKhoList = khoList.map((k: any) => k.maKho);
       const tonKhoDaily = allTonKho.filter((tk: any) => 
         maKhoList.includes(tk.maKho) && tk.soLuong > 0
       );
+      console.log('Ton kho of daily:', tonKhoDaily);
 
       // Lấy thông tin lô nông sản
       const loNongSanRes = await axios.get(API_ENDPOINTS.loNongSan.getAll);
       const allBatches = loNongSanRes.data.data || [];
+      console.log('All batches:', allBatches);
       
       // Kết hợp thông tin
       const availableBatches = tonKhoDaily.map((tk: any) => {
@@ -115,6 +144,8 @@ function OrderManagement() {
           donViTinh: batch?.donViTinh || 'kg'
         };
       });
+      
+      console.log('Available batches for daily:', availableBatches);
 
       setDailyBatches(prev => ({
         ...prev,
@@ -129,6 +160,7 @@ function OrderManagement() {
   };
 
   const handleDailyChange = async (maDaiLy: string) => {
+    console.log('Selected daily:', maDaiLy);
     setFormData({...formData, maDaiLy, maLo: '', soLuong: '', donGia: ''});
     if (maDaiLy) {
       await loadBatchesByDaily(parseInt(maDaiLy));
@@ -324,7 +356,7 @@ function OrderManagement() {
                     className="form-control"
                   >
                     <option value="">-- Chọn đại lý --</option>
-                    {dailyList.map((daily: any) => (
+                    {dailyList.filter((daily: any) => daily.trangThai !== 'da_xoa').map((daily: any) => (
                       <option key={daily.maDaiLy} value={daily.maDaiLy}>
                         {daily.tenDaiLy}
                       </option>
